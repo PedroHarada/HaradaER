@@ -1,0 +1,3 @@
+"""HaradaER: modelagem Entidade-Relacionamento compatível com o TerraER 3.14."""
+
+__version__ = "0.0.1"

@@ -8,3 +8,4 @@ dist/
 
 # jar do TerraER (só consulta)
 *.jar
+.ruff_cache/
