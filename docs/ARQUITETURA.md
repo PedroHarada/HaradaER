@@ -1,6 +1,6 @@
 # HaradaER — Arquitetura e Design
 
-Versão 0.4 · 2026-10-19 · Rascunho
+Versão 0.5 · 2026-10-19 · Rascunho
 
 Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
@@ -328,8 +328,8 @@ Os fixtures são cópias dos arquivos em `docs/referencia-terraer/`.
 
 | Dependência | Uso | Obrigatória |
 |---|---|---|
-| Python | Linguagem: 3.11 ou mais novo (QA-12) | Sim |
-| PySide6 | Interface (Qt 6): 6.8 ou mais novo | Sim, só para `gui` |
+| Python | Linguagem: 3.14 (QA-12) | Sim |
+| PySide6 | Interface (Qt 6): 6.12 | Sim, só para `gui` |
 | `pytest`, `pytest-qt` | Testes | Só desenvolvimento |
 | JDK | Regenerar amostras e a matriz de validação; teste de ida e volta | Só desenvolvimento |
 
@@ -361,7 +361,7 @@ Estado: **Decidida** = confirmada pelo autor.
 | Regras de DDL desconhecidas (QA-04) | RF-13 não pode ser concluído por dedução | Tarefa de análise antes de implementar; golden files gerados pelo TerraER |
 | Números Java diferentes dos de Python | Arquivo diferente, possivelmente rejeitado | `java_double_str` com testes de borda contra o TerraER |
 | Gestos fora do Linux/Wayland (QA-11) | RF-15 não verificado em outros sistemas | Fora da v1: só Linux/Wayland; teclado e menu como alternativa; `gui` isola o tratamento de gestos |
-| Verificação só em Python 3.14 | Piso 3.11 ainda não testado | No M0, rodar a suíte em 3.11 e 3.14 e ajustar o piso se algo falhar |
+| Suporte só a Python 3.14 e PySide6 6.12 | Quem tiver outra versão pode não conseguir instalar ou rodar | Aceito na v1; declarar `requires-python = ">=3.14"` e revisar quando outras versões forem necessárias |
 | Formato de arquivo com tag que o TerraER ignora ou rejeita (QA-07) | Perda ou erro ao abrir | Só gravar tags conhecidas (RNF-02) |
 
 ## 11. Roteiro de implementação
@@ -370,7 +370,7 @@ Cada marco termina com algo que roda e passa em testes.
 
 | Marco | Entrega | Pronto quando |
 |---|---|---|
-| M0 | Esqueleto: `pyproject.toml` (Python ≥ 3.11, PySide6 ≥ 6.8), pacotes, `pytest`, teste "núcleo sem Qt"; suíte rodando em Python 3.11 e 3.14 | Os testes rodam vazios e passam nas duas versões |
+| M0 | Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
 | M1 | `xmlfmt` e `figures`: ler e gravar as 3 amostras | Critério 1 passa para as 3 amostras |
 | M2 | Modelo, `rules` (validação e recomendação) | Tabela confere com `validacao-terraer.json` |
 | M3 | Interface só de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | RF-15 funciona no Linux; golden files aparecem corretos |
@@ -383,5 +383,5 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
 ## 12. Pendências deste documento
 
 - Estilos padrão e tamanhos de criação já levantados (`INVESTIGACOES.md` seção 5); incorporá-los à tabela `ElementKind` no M4.
-- Validar no M0 o piso Python 3.11 / PySide6 6.8 (QA-12).
+- Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).

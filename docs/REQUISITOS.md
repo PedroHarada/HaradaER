@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.5 · 2026-10-19 · Rascunho
+Versão 0.6 · 2026-10-19 · Rascunho
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -226,7 +226,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RNF-04 | Leitura tolerante: aceitar qualquer ordem de filhos em `<a>`, com ou sem quebras de linha, e ids em qualquer ordem, desde que consistentes. |
 | RNF-05 | Escrita conservadora: seguir a seção 4.1 (ASCII com referências numéricas, sem declaração XML, sem DOCTYPE, números no formato Java). |
 | RNF-06 | Interface em português, com opção de inglês, como o TerraER (`Labels_pt` / `Labels_en`). |
-| RNF-07 | **Plataforma da v1:** Linux com Wayland, que é onde o HaradaER é desenvolvido e testado. **Python 3.11 ou mais novo** e **PySide6 6.8 ou mais novo**, testando em Python 3.11 e 3.14. Windows, macOS e Linux com X11 não são alvo da v1: o código não deve impedi-los (nada específico de Linux fora de `gui`), mas não são verificados. |
+| RNF-07 | **Plataforma da v1:** Linux com Wayland, que é onde o HaradaER é desenvolvido e testado, com **Python 3.14** e **PySide6 6.12** (as versões verificadas). Outras versões do Python, Windows, macOS e Linux com X11 não são alvo da v1: o código não deve impedi-los (nada específico de Linux fora de `gui`), mas não são verificados. |
 | RNF-08 | Arquitetura em camadas: um **núcleo** (modelo, leitura/escrita do `.xml`, validação e, no futuro, DDL) que não importa nada de interface gráfica, e uma interface gráfica fina por cima. Isso permite testar a compatibilidade (seção 7) sem tela. Uma CLI é opcional e fica fora da v1 salvo decisão contrária. |
 | RNF-09 | A interface gráfica usa **Qt**, o mesmo sistema do Octave, via **PySide6** (LGPL; funcionou no teste de gestos, Qt 6.12.0). Organização de janela como a do Octave: painéis acopláveis, redimensionáveis e que podem ser ocultados, em volta da área central do diagrama. Painéis previstos: paleta de elementos, inspetor de objetos (RF-16) e mensagens da verificação do modelo (RF-09). A disposição dos painéis é lembrada entre sessões. Lista de painéis confirmada pelo autor. |
 | RNF-10 | **Abertura segura de arquivos recebidos.** O `.xml` pode vir de terceiros. A leitura não pode resolver entidades externas nem DTD, e deve limitar tamanho e profundidade, para evitar ataques de expansão de entidades e leitura de arquivos locais. Um arquivo inválido ou truncado gera mensagem de erro e **não** derruba o programa nem altera o arquivo. |
@@ -261,7 +261,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 | QA-09 | Instrução SQL | **Resolvida.** Só no atributo derivado, gravada em `sql`; leitura e gravação na v1, edição adiada |
 | QA-10 | Licença do TerraER | Informada pelo autor (GPLv3); não verificável no `.jar` |
 | QA-11 | Gestos no Windows, macOS e X11; ctrl + rolagem | **Fora da v1 (decisão do autor):** a v1 considera só esta máquina (Linux/Wayland). Ctrl + rolagem como atalho de zoom não foi exercitado; implementar e testar aqui no M3 |
-| QA-12 | Versão mínima do Python e do PySide6 | **Decidida (sugestão aceita):** Python ≥ 3.11 e PySide6 ≥ 6.8, testando em 3.11 e 3.14. Só foi verificado em Python 3.14.8 com PySide6 6.12.0 (que exige Python 3.10 a 3.15); a validação em 3.11 acontece no M0 |
+| QA-12 | Versão mínima do Python e do PySide6 | **Decidida (autor):** a v1 mira só Python 3.14 e PySide6 6.12, as versões instaladas e verificadas nesta máquina. Não haverá piso em Python 3.11; versões mais antigas ficam sem suporte declarado |
 | QA-13 | Copiar e colar com o TerraER | **Resolvida (decisão do autor):** na v1 só o arquivo é compatível; a área de transferência do TerraER fica fora do escopo |
 | QA-14 | GIF | **Resolvida (decisão do autor):** exportar PNG, JPG, SVG e PDF; sem GIF |
 
