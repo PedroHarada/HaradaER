@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.6 · 2026-10-19 · Rascunho
+Versão 0.7 · 2026-10-19 · Rascunho
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -109,9 +109,10 @@ Detalhes completos nas amostras de `docs/referencia-terraer/`.
 
 ### 4.1 Estrutura
 
-- **Sem** declaração `<?xml ...?>` e **sem** DOCTYPE. O arquivo gravado é **ASCII puro**: todo caractere não ASCII vira referência numérica hexadecimal minúscula (`ç` → `&#xe7;`, `中` → `&#x4e2d;`), e `& < > " '` viram `&amp; &lt; &gt; &quot; &apos;`. Na leitura, aceitar também UTF-8 direto.
-- Quebras de linha dentro de textos são gravadas como `\n` literal, sem escape.
-- Números: inteiros sem casa decimal (`100`, `-3.5` mantém); decimais como `Double.toString` do Java (`16.344114303588867`), com notação científica fora da faixa 10⁻³…10⁷ (`1.0E-5`, `9.99999999999999E9`).
+- **Sem** declaração `<?xml ...?>` e **sem** DOCTYPE. O arquivo gravado é **ASCII puro**: `& < > " '` viram `&amp; &lt; &gt; &quot; &apos;`, `\n` fica literal, e todo outro caractere abaixo de 0x20 ou a partir de 0x7f vira referência hexadecimal minúscula (`ç` → `&#xe7;`, tabulação → `&#x9;`). Caracteres acima de U+FFFF (emojis) são gravados como **dois** pedaços (`😀` → `&#xd83d;&#xde00;`); o TerraER corrompe `&#x1f600;`. O TerraER também grava caracteres de controle como `&#x1;`, que XML puro proíbe: o HaradaER recusa esse arquivo com erro claro. Na leitura, aceitar também UTF-8 direto.
+- Quebras de linha dentro de textos são gravadas como `\n` literal, sem escape. Em **atributos**, um `\n` literal é normalizado para espaço pelo parser XML padrão; só afeta rótulos de generalização com quebra de linha, e fica como limitação conhecida.
+- Elemento sem conteúdo é gravado como `<tag/>` (inclusive texto vazio: `<string/>`); atributo vazio fica `sql=""`; valor nulo não é gravado.
+- Números: inteiros sem casa decimal (`100`, `-0`); decimais como `Double.toString` do Java sem o `.0` final (`16.344114303588867`), em notação científica fora de 10⁻³ ≤ |x| < 10⁷ (`1.0E-5`, `1.0E7`, `1.0E10`). O Java mostra ao menos dois dígitos (`4.9E-324`).
 - Uma única linha, **sem indentação**.
 - Raiz `<drawing>` → filho `<figures>` → uma figura por filho, na ordem de empilhamento (z-order).
 - Extensão `.xml`.
@@ -120,6 +121,7 @@ Detalhes completos nas amostras de `docs/referencia-terraer/`.
 
 - Todo objeto recebe `id="<hex>"`, sequencial em ordem de escrita, a partir de `0`, em hexadecimal minúsculo (`0`…`f`, `10`, `1a`…).
 - Uma referência a objeto já escrito usa `<tag ref="<id>"/>`. Exemplo: `<Owner><ent ref="0"/></Owner>`.
+- **Ordem de empilhamento:** se uma conexão vem antes do nó na lista de figuras, o nó é escrito por inteiro **dentro** do `Owner` da conexão, e depois aparece no desenho só como `<ent ref="2"/>`. Os ids seguem a ordem em que cada objeto aparece pela primeira vez. Ver `referencia-terraer/amostra-ordem-empilhamento.xml`.
 
 ### 4.3 Elementos compostos
 
@@ -270,6 +272,9 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 - `docs/referencia-terraer/amostra-basica.xml`: 2 entidades, 1 relacionamento, 2 atributos, conexões `llabelUm`, `llabelMuitos` e `lcaf`.
 - `docs/referencia-terraer/amostra-todos-os-tipos.xml`: um exemplar de cada elemento e de cada conexão.
 - `docs/INVESTIGACOES.md`: resultados das investigações sobre o comportamento do TerraER (QA-01 a QA-14), com as decisões que elas abrem.
-- `docs/referencia-terraer/amostra-escapes-e-numeros.xml`: caracteres especiais, quebra de linha e números extremos.
+- `docs/referencia-terraer/amostra-escapes-e-numeros.xml`, `amostra-numeros.xml`, `amostra-unicode.xml` e `amostra-vazios.xml`: caracteres especiais, números extremos, emoji e valores vazios.
+- `docs/referencia-terraer/amostra-ordem-empilhamento.xml`: conexões antes dos nós (dono inline e `ref`).
+- `docs/referencia-terraer/amostra-figuras-de-apoio.xml`: texto livre, formas, linhas, bézier, grupo e imagem.
+- `docs/referencia-terraer/amostra-caracteres-invalidos.xml`: caracteres de controle que o TerraER grava e o XML puro recusa (o HaradaER devolve erro claro).
 - `docs/referencia-terraer/ddl-saida-terraer.txt`, `matriz-validacao.txt` e `leitura-casos/`: saídas brutas das investigações.
 - `docs/referencia-terraer/harness/`: programas Java que usam o `TerraER3.14.jar` para gerar as amostras e medir a validação. Para reproduzir: extrair o `TerraER3.14.jar` numa pasta `jar/` (que contém também `swing-layout.jar`, `MRJAdapter.jar` e `appframework-0.42.jar`), então `javac -cp "jar:jar/swing-layout.jar:jar/MRJAdapter.jar:jar/appframework-0.42.jar" -d out harness/*.java` e `java -Djava.awt.headless=true -cp "out:<mesmo classpath>" Gen2 write saida.xml` (ou `Gen2 read entrada.xml saida.xml`, ou `Matrix`).

@@ -1,6 +1,6 @@
 # HaradaER — Arquitetura e Design
 
-Versão 0.5 · 2026-10-19 · Rascunho
+Versão 0.6 · 2026-10-19 · Rascunho
 
 Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
@@ -49,9 +49,11 @@ HaradaER/
 ├── pyproject.toml
 ├── src/haradaer/
 │   ├── core/
-│   │   ├── model/        # Document, Figure, Part, Style, Value
-│   │   ├── xmlfmt/       # formato "DOM storable": ids, refs, valores, escape, números
-│   │   ├── figures/      # tabela tag → tipo de figura; leitura/gravação de cada uma
+│   │   ├── errors.py     # ArquivoInvalidoError
+│   │   ├── io.py         # load/save/loads/dumps (salvar com arquivo temporário)
+│   │   ├── model/        # Element (árvore com identidade), Document
+│   │   ├── xmlfmt/       # reader, writer, escape, numbers (formato exato do TerraER)
+│   │   ├── figures/      # tags (tabelas), types (NodeFigure...), validation
 │   │   ├── commands/     # Command, History e os comandos de edição
 │   │   ├── rules/        # matriz de validação, recomendação de conexão
 │   │   ├── ddl/          # (pós-v1) ErView, esquema relacional, gerador SQL
@@ -134,6 +136,15 @@ Pontos de design:
 - **`SupportFigure`** guarda figuras que o HaradaER não edita por ser ER (RF-12): lê, mostra e regrava sem mudar nada.
 - **Identificadores do arquivo (`id="3a"`) não vivem no modelo.** Ids são recalculados na gravação (seção 4.2). Referências são feitas por identidade de objeto (`Connector.owner`).
 - **Visão ER derivada.** Validação (e o DDL, no futuro) precisam saber "quais atributos pertencem a qual entidade". Isso é calculado a partir das conexões `lcaf` por uma função `ErView(document)`, sem ser gravado.
+
+#### Estado do modelo no M1
+
+O M1 implementou o modelo de forma mais simples do que o diagrama acima, e isso vale até o M3/M4:
+
+- **`Element`** é a árvore do arquivo, com identidade: o mesmo objeto aparece em vários lugares (a referência `ref` é trocada pelo próprio elemento lido). Guarda tag, atributos como texto (na ordem do arquivo), filhos e texto.
+- **`NodeFigure`, `ConnectionFigure` e `SupportFigure`** são subclasses de `Element` com acessores que só leem: `name`, `attribute_type`, `nullable`, `sql`, `parts`, `points`, `start`, `end`, `generalization_label`.
+- `Style`, `Value`, `Part` e `Connector` tipados **ainda não existem**. Entram como visões sobre `Element` quando a edição precisar (M4). Por isso a leitura e a gravação já são exatas: nada é reinterpretado no caminho.
+- Valores numéricos ficam como o texto do arquivo (`"50"`, `"1.0E-5"`); `format_number` serve para escrever valores novos.
 
 ### 4.2 Formato de arquivo (`xmlfmt` e `figures`)
 
@@ -371,7 +382,7 @@ Cada marco termina com algo que roda e passa em testes.
 | Marco | Entrega | Pronto quando |
 |---|---|---|
 | M0 | Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
-| M1 | `xmlfmt` e `figures`: ler e gravar as 3 amostras | Critério 1 passa para as 3 amostras |
+| M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
 | M2 | Modelo, `rules` (validação e recomendação) | Tabela confere com `validacao-terraer.json` |
 | M3 | Interface só de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | RF-15 funciona no Linux; golden files aparecem corretos |
 | M4 | Edição: criar, mover, conectar, editar texto, desfazer, salvar | Critérios 2 e 4 passam; critério 3 manual |

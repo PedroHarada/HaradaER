@@ -192,3 +192,18 @@ Decididas pelo autor em 2026-10-19. Regra aplicada: o que pôde sair da v1 saiu;
 | 8 | Medida de texto | `QFontMetricsF` com fonte equivalente à do TerraER; pequena diferença aceita |
 | 9 | Cardinalidade | Só `1` e `N`, pela tag |
 | 10 | Direção da ligação de atributo | **Sem impacto.** O HaradaER lê as duas direções e grava atributo→dono; o TerraER aceita ambas (validação simétrica e DDL com os dois casos) |
+
+## 11. Achados durante o M1 (leitura e gravação)
+
+Programas: `harness/Gen10.java`, `Gen11.java`, `Gen12.java`. Amostras em `referencia-terraer/`.
+
+| Assunto | O que o TerraER faz |
+|---|---|
+| Escape de texto | `& < > " '` viram entidades; `\n` fica literal; **todo** outro caractere abaixo de 0x20 ou a partir de 0x7f vira `&#x<hex>;`, inclusive os que XML puro proíbe (`&#x1;`, `&#x8;`, `&#xd800;`). Vale para texto e para atributos |
+| Emoji (acima de U+FFFF) | Gravados como par de surrogates (`&#xd83d;&#xde00;`). Lendo `&#x1f600;` o TerraER corrompe o texto (vira `U+F600`); lendo o par, fica certo. O leitor do HaradaER junta o par antes do parse e o gravador reescreve como par |
+| Caractere de controle no texto | Arquivo que um parser XML padrão recusa. O HaradaER devolve erro claro (RNF-14). O TerraER o abre, então é uma diferença de comportamento aceita |
+| Texto vazio | `<string/>`. Atributo vazio fica `sql=""`; valor nulo não é gravado |
+| Quebra de linha em atributo | Gravada literal; o parser XML padrão a normaliza para espaço (limitação conhecida) |
+| Ordem de empilhamento | Conexão antes do nó: o nó é escrito inline dentro do `Owner` e depois aparece como `<ent ref="2"/>` no desenho. Remover um nó do desenho do JHotDraw apaga as conexões ligadas a ele |
+| Números | `Double.toString` do Java sem o `.0` final. `-0.0` → `-0`; `1.0E7` e `1.0E10` mantêm o `.0`; o menor positivo é `4.9E-324` (o Java mostra ao menos dois dígitos) |
+| Figuras de apoio | `t`, `tn`, `ti`, `ta`, `r`, `e`, `diamond`, `circ` seguem o mesmo molde das partes. `l` e `b` guardam `<points><p colinear="true" x y/>` (sem `c1x`...). `g` tem `<children>`. `image` tem `<imageData>` com Base64 quebrado em linhas de 76 caracteres |
