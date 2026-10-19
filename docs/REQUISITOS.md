@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.2 · 2026-10-19 · Rascunho
+Versão 0.5 · 2026-10-19 · Rascunho
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -35,13 +35,17 @@ Os arquivos em `docs/referencia-terraer/` são a saída real do TerraER e servem
 - Toda a notação ER do TerraER (seção 3).
 - Verificação do modelo (validação de conexões).
 - Exportação para imagem.
-- Geração de DDL SQL.
 - Interface Qt com painéis acopláveis e gestos de trackpad (RNF-09, RF-15).
 
 **Fora do escopo (v1):**
 - Banco de dados real, engenharia reversa a partir de SQL, edição colaborativa.
 - Qualquer extensão do formato que o TerraER não leia (ver RNF-02).
 - Interface de linha de comando (RNF-08).
+- Compatibilidade da área de transferência com a do TerraER (copiar e colar de elementos entre os dois programas).
+- Exportação para GIF.
+- Geração de DDL SQL (RF-13): adiada para depois da v1; o levantamento do TerraER já está feito (`INVESTIGACOES.md` seção 6).
+- Edição da instrução SQL do atributo derivado e Modo de Edição Rápida (RF-20): adiados. A instrução SQL já gravada num arquivo continua sendo lida e regravada.
+- Impressão (RF-14).
 
 ## 3. Elementos do modelo
 
@@ -58,8 +62,8 @@ Tag XML = nome usado no arquivo. Nomes entre parênteses são as classes origina
 | Entidade associativa (entidade-relacionamento) | `entrel` | Retângulo com losango. |
 | Atributo | `atr` | Elipse. Tem tipo e anulabilidade. |
 | Atributo chave | `atrchave` | Texto em negrito e sublinhado. Tem tipo e anulabilidade. |
-| Atributo chave parcial | `atrchaveparcial` | Texto em negrito, contorno tracejado. Tem tipo e anulabilidade. |
-| Atributo derivado | `atrderivado` | Elipse tracejada. **Sem** tipo nem anulabilidade. |
+| Atributo chave parcial | `atrchaveparcial` | Elipse com texto em negrito e **tracejado** (o tracejado é do texto). Tem tipo e anulabilidade. |
+| Atributo derivado | `atrderivado` | Elipse tracejada. **Sem** tipo nem anulabilidade. Tem a instrução SQL opcional, gravada no atributo `sql` (ver `INVESTIGACOES.md` seção 8). |
 | Atributo multivalorado | `atrmulti` | Elipse de borda dupla. Tem tipo e anulabilidade. |
 | Generalização: união | `uniao` | Círculo com "u". |
 | Generalização: disjunção | `disjuncao` | Círculo com "d". |
@@ -95,7 +99,7 @@ Gravados no atributo XML `attributeType` com o **tipo SQL**, não com o nome do 
 | NUMBER | `NUMBER(9,2)` | |
 | DATE | `DATE` | |
 
-> **Atenção.** No enum do TerraER, `INTEGER` tem tipo SQL `NUMBER` e `NUMBER` tem `NUMBER(9,2)`. Um atributo chave novo (tipo padrão INTEGER) foi gravado como `attributeType="NUMBER"` nas amostras. O HaradaER deve gravar exatamente esses valores, sem "corrigi-los" (RNF-03). Como o TerraER relê o valor `NUMBER` (INTEGER ou outro) ainda não foi verificado (QA-06).
+> **Atenção.** No enum do TerraER, `INTEGER` tem tipo SQL `NUMBER` e `NUMBER` tem `NUMBER(9,2)`. Um atributo chave novo (tipo padrão INTEGER) foi gravado como `attributeType="NUMBER"` nas amostras. O HaradaER deve gravar exatamente esses valores, sem "corrigi-los" (RNF-03). Ao reler, o TerraER interpreta `NUMBER` como INTEGER e `NUMBER(9,2)` como NUMBER. Um valor fora dos cinco acima é lido **sem erro**, mas o TerraER falha ao salvar o arquivo (`INVESTIGACOES.md` seção 1); por isso o HaradaER nunca deve gravar outro valor.
 
 `nullable` é `true` ou `false`.
 
@@ -105,7 +109,9 @@ Detalhes completos nas amostras de `docs/referencia-terraer/`.
 
 ### 4.1 Estrutura
 
-- Codificação **UTF-8**, **sem** declaração `<?xml ...?>` e **sem** DOCTYPE.
+- **Sem** declaração `<?xml ...?>` e **sem** DOCTYPE. O arquivo gravado é **ASCII puro**: todo caractere não ASCII vira referência numérica hexadecimal minúscula (`ç` → `&#xe7;`, `中` → `&#x4e2d;`), e `& < > " '` viram `&amp; &lt; &gt; &quot; &apos;`. Na leitura, aceitar também UTF-8 direto.
+- Quebras de linha dentro de textos são gravadas como `\n` literal, sem escape.
+- Números: inteiros sem casa decimal (`100`, `-3.5` mantém); decimais como `Double.toString` do Java (`16.344114303588867`), com notação científica fora da faixa 10⁻³…10⁷ (`1.0E-5`, `9.99999999999999E9`).
 - Uma única linha, **sem indentação**.
 - Raiz `<drawing>` → filho `<figures>` → uma figura por filho, na ordem de empilhamento (z-order).
 - Extensão `.xml`.
@@ -130,6 +136,7 @@ Entidade, relacionamento e demais nós são **grupos**: contêm `<children>` com
 - Estilo vai em `<a>` (atributos de aparência): `strokeType` (enum `DOUBLE`), `innerStrokeWidthFactor` (`3`), `strokeDashes` (lista de doubles), `fillColor` (`<color rgba="#aarrggbb"/>`), `fontBold`, `fontUnderlined`, `fontSize`, `text`.
 - `x`, `y`, `w`, `h` são números decimais (inteiros sem `.0`).
 - Atributos de tipo ficam no próprio elemento: `<atr id=".." nullable="true" attributeType="CHAR(128)">`.
+- O atributo derivado guarda a instrução SQL: `<atrderivado id=".." sql="SELECT ...">`.
 
 ### 4.4 Conexões
 
@@ -150,6 +157,7 @@ Entidade, relacionamento e demais nós são **grupos**: contêm `<children>` com
 ### 4.5 Tolerâncias observadas
 
 - A **ordem** dos filhos dentro de `<a>` não é significativa: o TerraER relê e regrava em outra ordem (teste de ida e volta).
+- Leitura no TerraER (`INVESTIGACOES.md` seção 2): tag desconhecida **impede abrir o arquivo**; atributo ou chave de estilo desconhecidos são ignorados; declaração XML, indentação, DOCTYPE e UTF-8 direto são aceitos; `id` repetido ou `ref` inexistente fazem falhar.
 - Textos padrão de novos elementos mudam com o idioma (inglês em headless: `rel. 0`, `W. ENT. 0`, `key att. 0`; o jar tem `Labels_pt`). O texto gravado é o do usuário, então o idioma não afeta a compatibilidade.
 
 ## 5. Regras de validação de conexões
@@ -177,7 +185,7 @@ Dono × atributo em `lcaf` (qualquer direção; o par de ids segue a origem):
 | `entrel` | `atr`, `atrchave`, `atrderivado`, `atrmulti` |
 | `atr` | `atr` (atributo composto) |
 
-> A tabela de `lcaf` reflete a medição bruta, que também aceitou combinações na direção atributo→dono (por exemplo `atr→ent`, `atrchave→entrel`, `atrchaveparcial→entfraca`). Fica aberto confirmar se alguma é artefato da medição (QA-03).
+> A tabela de `lcaf` vale **nas duas direções**: a validação do TerraER é simétrica (por exemplo, `atr→ent` é tão válido quanto `ent→atr`). Ver QA-03 e `INVESTIGACOES.md` seção 4.
 
 O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction`): dados dois elementos, lista as ligações válidas entre eles (RF-10).
 
@@ -197,34 +205,37 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-08 | Localizar elementos no modelo. |
 | RF-09 | Verificação do modelo: destacar em vermelho as conexões inválidas (seção 5), com opção de ligar e desligar. |
 | RF-10 | Recomendação de conexão entre dois elementos selecionados (e dos elementos possíveis para uma conexão). |
-| RF-11 | Exportar para imagem (PNG, JPG, GIF) e copiar o modelo para a área de transferência. |
-| RF-12 | Preservar sem alteração figuras e atributos desconhecidos ou de apoio lidos de um arquivo (texto livre, formas, imagens), regravando-os iguais. |
-| RF-13 | Gerar o DDL SQL do modelo e exibi-lo, com opção de copiar. A análise do TerraER confirmou `CREATE TABLE`, colunas e `NOT NULL`; chaves primárias/estrangeiras e o mapeamento dos relacionamentos **não foram verificados** (QA-04). |
-| RF-14 | **(Desejável)** Imprimir. Pode ficar para depois da v1. |
-| **RF-15** | **Gestos de trackpad (obrigatório).** Na área do diagrama: pinça com dois dedos para zoom e rolagem com dois dedos para mover a visão. O zoom e a rolagem por teclado e menu continuam disponíveis como alternativa. Teste em Linux/Wayland com PySide6 6.12.0 confirmou: o zoom chega como `QNativeGestureEvent` do tipo `ZoomNativeGesture` (591 eventos, valores de -0,043 a +0,059 por evento, que se acumulam na escala) e a rolagem como `QWheelEvent` com `pixelDelta` e fases `ScrollBegin`/`ScrollUpdate` (145 eventos). A API `QPinchGesture` **não** disparou no Wayland; usar o evento nativo. Windows e macOS ainda precisam do mesmo teste (QA-11). |
+| RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
+| RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
+| RF-13 | **(Fora da v1)** Gerar o DDL SQL do modelo. Regras e defeitos do TerraER levantados em `INVESTIGACOES.md` seção 6. Quando voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido com as mesmas convenções. |
+| RF-14 | **(Fora da v1)** Imprimir. |
+| **RF-15** | **Gestos de trackpad (obrigatório).** Na área do diagrama: pinça com dois dedos para zoom e rolagem com dois dedos para mover a visão. O zoom e a rolagem por teclado e menu continuam disponíveis como alternativa. Teste em Linux/Wayland com PySide6 6.12.0 confirmou: o zoom chega como `QNativeGestureEvent` do tipo `ZoomNativeGesture` (591 eventos, valores de -0,043 a +0,059 por evento, que se acumulam na escala) e a rolagem como `QWheelEvent` com `pixelDelta` e fases `ScrollBegin`/`ScrollUpdate` (145 eventos). A API `QPinchGesture` **não** disparou no Wayland; usar o evento nativo. Na v1 os gestos são considerados só no Linux/Wayland desta máquina, onde foram verificados; nos demais sistemas valem apenas as alternativas de teclado e menu (QA-11). |
 | RF-16 | Inspetor de objetos: painel com a lista/árvore dos elementos do modelo, que permite selecionar um elemento e localizá-lo no diagrama (o TerraER tem o "Inspetor de Objetos"). |
 | RF-17 | Perguntar se deseja salvar as alterações ao fechar um documento modificado ou sair (Salvar / Não salvar / Cancelar), e mostrar mensagem clara quando não for possível gravar o arquivo. |
 | RF-18 | Edição do nome diretamente sobre o elemento (campo de texto flutuante), sem abrir diálogo. |
 | RF-19 | Uma janela por documento (decisão do autor, igual ao TerraER): cada modelo abre na sua própria janela, com painéis, zoom e histórico de desfazer independentes, e vários modelos podem ficar abertos ao mesmo tempo. Sem abas. |
-| RF-20 | Modo de Edição Rápida (`fastediting`) e instrução SQL por elemento ("Incluir respectiva instrução SQL"), ambos existentes no TerraER. O comportamento exato ainda não foi levantado (QA-08, QA-09); este requisito se completa depois dessa análise. |
+| RF-20 | **Instrução SQL do atributo derivado:** ler e gravar o atributo `sql` de `atrderivado` sem perdê-lo (RNF-01). **Fora da v1:** editar essa instrução na interface e o Modo de Edição Rápida (`INVESTIGACOES.md` seções 7 e 8). |
 
 ### 6.2 Requisitos não funcionais
 
 | ID | Requisito |
 |---|---|
 | **RNF-01** | **Compatibilidade bidirecional com o `.xml` do TerraER 3.14** (seção 1.1). |
-| RNF-02 | O HaradaER **não deve gravar** tags, atributos ou metadados que o TerraER desconheça. A fábrica do TerraER só conhece as tags da seção 3 (`IllegalArgumentException` para classes fora dela na escrita); o comportamento na leitura de tag desconhecida não foi testado (QA-07), então a regra é conservadora. Qualquer dado extra do HaradaER fica em arquivo separado, nunca dentro do `.xml`. |
+| RNF-02 | O HaradaER **não pode gravar** tags que o TerraER desconheça: o TerraER recusa abrir o arquivo inteiro (verificado). Atributos e chaves de estilo desconhecidos são ignorados na leitura, mas descartados ao salvar de novo, então também não servem para guardar dados do HaradaER. Qualquer dado extra fica em arquivo separado, nunca dentro do `.xml`. |
 | RNF-03 | Reproduzir quirks do formato, como `INTEGER` gravado como `NUMBER` (seção 3.3), sem "corrigi-los". |
 | RNF-04 | Leitura tolerante: aceitar qualquer ordem de filhos em `<a>`, com ou sem quebras de linha, e ids em qualquer ordem, desde que consistentes. |
-| RNF-05 | Escrita conservadora: seguir a seção 4.1 (UTF-8, sem declaração XML, sem DOCTYPE). |
+| RNF-05 | Escrita conservadora: seguir a seção 4.1 (ASCII com referências numéricas, sem declaração XML, sem DOCTYPE, números no formato Java). |
 | RNF-06 | Interface em português, com opção de inglês, como o TerraER (`Labels_pt` / `Labels_en`). |
-| RNF-07 | Rodar em Linux, Windows e macOS, em Python 3. |
-| RNF-08 | Arquitetura em camadas: um **núcleo** (modelo, leitura/escrita do `.xml`, validação, DDL) que não importa nada de interface gráfica, e uma interface gráfica fina por cima. Isso permite testar a compatibilidade (seção 7) sem tela. Uma CLI é opcional e fica fora da v1 salvo decisão contrária. |
-| RNF-09 | A interface gráfica usa **Qt**, o mesmo sistema do Octave, via **PySide6** (LGPL; funcionou no teste de gestos, Qt 6.12.0). Organização de janela como a do Octave: painéis acopláveis, redimensionáveis e que podem ser ocultados, em volta da área central do diagrama. Painéis previstos: paleta de elementos, inspetor de objetos (RF-16) e mensagens da verificação do modelo (RF-09). A disposição dos painéis é lembrada entre sessões. A lista de painéis é uma proposta a confirmar. |
+| RNF-07 | **Plataforma da v1:** Linux com Wayland, que é onde o HaradaER é desenvolvido e testado. **Python 3.11 ou mais novo** e **PySide6 6.8 ou mais novo**, testando em Python 3.11 e 3.14. Windows, macOS e Linux com X11 não são alvo da v1: o código não deve impedi-los (nada específico de Linux fora de `gui`), mas não são verificados. |
+| RNF-08 | Arquitetura em camadas: um **núcleo** (modelo, leitura/escrita do `.xml`, validação e, no futuro, DDL) que não importa nada de interface gráfica, e uma interface gráfica fina por cima. Isso permite testar a compatibilidade (seção 7) sem tela. Uma CLI é opcional e fica fora da v1 salvo decisão contrária. |
+| RNF-09 | A interface gráfica usa **Qt**, o mesmo sistema do Octave, via **PySide6** (LGPL; funcionou no teste de gestos, Qt 6.12.0). Organização de janela como a do Octave: painéis acopláveis, redimensionáveis e que podem ser ocultados, em volta da área central do diagrama. Painéis previstos: paleta de elementos, inspetor de objetos (RF-16) e mensagens da verificação do modelo (RF-09). A disposição dos painéis é lembrada entre sessões. Lista de painéis confirmada pelo autor. |
 | RNF-10 | **Abertura segura de arquivos recebidos.** O `.xml` pode vir de terceiros. A leitura não pode resolver entidades externas nem DTD, e deve limitar tamanho e profundidade, para evitar ataques de expansão de entidades e leitura de arquivos locais. Um arquivo inválido ou truncado gera mensagem de erro e **não** derruba o programa nem altera o arquivo. |
 | RNF-11 | **Gravação segura.** Salvar escreve primeiro num arquivo temporário e só então substitui o original, para que uma falha no meio nunca corrompa um modelo existente. |
 | RNF-12 | **Testes automatizados** do núcleo, sem tela: golden files, ida e volta e estrutura (seção 7). A verificação com as classes do TerraER exige um JDK, mas só nos testes, nunca para usar o HaradaER. |
-| RNF-13 | **Reimplementação independente.** O HaradaER não copia código, ícones, imagens nem textos do `TerraER3.14.jar`; o jar é só fonte de consulta e não é distribuído com o projeto. O formato de arquivo é compatível, mas a implementação é nova. A licença do TerraER deve ser conferida antes de publicar o HaradaER (QA-10). |
+| RNF-14 | **Erros de leitura claros.** Se o arquivo tiver tag desconhecida, raiz diferente de `drawing`, `id` repetido, referência a id inexistente ou XML truncado, o HaradaER **não abre** o arquivo e mostra uma mensagem que diz o problema e, quando houver, a tag ou o `id` envolvido. Nunca derruba o programa e nunca altera o arquivo. |
+| RNF-15 | **Tolerância na leitura, como o TerraER:** aceitar declaração `<?xml?>`, indentação, UTF-8 direto, `id` ausente ou que não seja hexadecimal, e `DOCTYPE` (ignorado sem buscar DTD nem processar entidades; um `DOCTYPE` com subconjunto interno é recusado por segurança, RNF-10). Atributos e chaves de estilo desconhecidos são ignorados. |
+| RNF-16 | **Tipo de atributo inválido.** Um `attributeType` fora dos cinco valores válidos é aceito na leitura, com aviso ao usuário, e tratado como o tipo padrão do elemento; o HaradaER nunca grava valor inválido. |
+| RNF-13 | **Reimplementação independente.** O HaradaER não copia código, ícones, imagens nem textos do `TerraER3.14.jar`; o jar é só fonte de consulta e não é distribuído com o projeto. O formato de arquivo é compatível, mas a implementação é nova. Segundo o autor, o TerraER é distribuído sob GPLv3 (com menções a donationware / software livre acadêmico); isso não pôde ser verificado no `.jar`, que não contém texto de licença (`INVESTIGACOES.md` seção 9). Copiar ou traduzir código do TerraER implicaria GPLv3 para o HaradaER; a reimplementação independente evita isso. |
 
 ## 7. Critérios de aceitação da compatibilidade
 
@@ -235,24 +246,30 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 
 ## 8. Questões em aberto
 
-| ID | Questão |
-|---|---|
-| QA-01 | Posição e tamanho exatos das figuras ao gravar: o TerraER recalcula tamanho a partir do texto? Definir se o HaradaER mede texto com a mesma fonte. |
-| QA-02 | Como o TerraER grava rótulos de cardinalidade editados pelo usuário (as amostras não mostram `1`/`N` alterados). Requer teste na GUI. |
-| QA-03 | Direção das ligações de atributo (`lcaf`): algumas combinações atributo→dono passaram na validação; confirmar quais o TerraER aceita ao desenhar. |
-| QA-04 | Regras de geração de DDL (`GenerateTables`/`GenerateDDLAction`): mapeamento de relacionamentos 1:1, 1:N, N:N, generalização e atributos multivalorados. Requer análise dedicada antes do RF-13. |
-| QA-05 | Estilos padrão (cores, fontes, espessuras) de cada elemento recém-criado, para o desenho do HaradaER ser visualmente igual ao do TerraER. |
-| QA-06 | Como o TerraER interpreta `attributeType` ao reler (`NUMBER` vs `NUMBER(9,2)`). |
-| QA-07 | Como o leitor do TerraER reage a tag ou atributo desconhecido (ignora ou falha). |
-| QA-08 | O que faz o Modo de Edição Rápida (`FastEditingModeAction`). |
-| QA-09 | A "instrução SQL" por elemento é gravada no `.xml`? Como (as amostras não têm), e como entra no DDL. |
-| QA-10 | Licença e condições de uso do TerraER, para decidir como creditar e distribuir o HaradaER. |
-| QA-11 | Gestos de trackpad no Windows e no macOS (só o Linux/Wayland foi testado), e comportamento no Linux/X11. Inclui ctrl + rolagem como atalho de zoom, que não foi exercitado no teste. |
-| QA-12 | Versão mínima do Python e do PySide6 a suportar (o teste usou Python 3.14.8 e PySide6 6.12.0). |
-| QA-13 | Copiar/colar entre HaradaER e TerraER: o TerraER usa um formato próprio de área de transferência (`Drawing-Clip`, tipo `image/x-jhotdraw`); decidir se o HaradaER deve ser compatível. |
+Detalhes e evidências em `INVESTIGACOES.md`.
+
+| ID | Questão | Estado |
+|---|---|---|
+| QA-01 | Tamanho da figura vs. texto | **Investigada.** Forma cresce até texto + 20 e nunca encolhe; texto centralizado. Comportamento ao arrastar alças não medido. Medir texto sem a fonte do Java fica como diferença aceita (decisão 8) |
+| QA-02 | Cardinalidade editada | **Resolvida.** `1` e `N` são fixos pela tag e não editáveis; só o rótulo de generalização é editável (`labelGeneralizacaoText`) |
+| QA-03 | Direção de `lcaf` | **Resolvida.** O TerraER aceita as duas direções (validação simétrica e DDL com os dois casos). O HaradaER lê as duas e grava atributo→dono |
+| QA-04 | Regras de DDL | **Investigada**; DDL adiado para depois da v1 (RF-13) |
+| QA-05 | Estilos padrão | **Resolvida** para estilo; tamanhos de criação **inferidos** do bytecode (seção 5 de `INVESTIGACOES.md`) |
+| QA-06 | Leitura de `attributeType` | **Resolvida.** Ver seção 3.3 |
+| QA-07 | Tag desconhecida | **Resolvida.** O TerraER recusa o arquivo (RNF-02) |
+| QA-08 | Modo de Edição Rápida | **Investigada** (inferida do bytecode); adiado para depois da v1 (RF-20) |
+| QA-09 | Instrução SQL | **Resolvida.** Só no atributo derivado, gravada em `sql`; leitura e gravação na v1, edição adiada |
+| QA-10 | Licença do TerraER | Informada pelo autor (GPLv3); não verificável no `.jar` |
+| QA-11 | Gestos no Windows, macOS e X11; ctrl + rolagem | **Fora da v1 (decisão do autor):** a v1 considera só esta máquina (Linux/Wayland). Ctrl + rolagem como atalho de zoom não foi exercitado; implementar e testar aqui no M3 |
+| QA-12 | Versão mínima do Python e do PySide6 | **Decidida (sugestão aceita):** Python ≥ 3.11 e PySide6 ≥ 6.8, testando em 3.11 e 3.14. Só foi verificado em Python 3.14.8 com PySide6 6.12.0 (que exige Python 3.10 a 3.15); a validação em 3.11 acontece no M0 |
+| QA-13 | Copiar e colar com o TerraER | **Resolvida (decisão do autor):** na v1 só o arquivo é compatível; a área de transferência do TerraER fica fora do escopo |
+| QA-14 | GIF | **Resolvida (decisão do autor):** exportar PNG, JPG, SVG e PDF; sem GIF |
 
 ## 9. Material de referência
 
 - `docs/referencia-terraer/amostra-basica.xml`: 2 entidades, 1 relacionamento, 2 atributos, conexões `llabelUm`, `llabelMuitos` e `lcaf`.
 - `docs/referencia-terraer/amostra-todos-os-tipos.xml`: um exemplar de cada elemento e de cada conexão.
+- `docs/INVESTIGACOES.md`: resultados das investigações sobre o comportamento do TerraER (QA-01 a QA-14), com as decisões que elas abrem.
+- `docs/referencia-terraer/amostra-escapes-e-numeros.xml`: caracteres especiais, quebra de linha e números extremos.
+- `docs/referencia-terraer/ddl-saida-terraer.txt`, `matriz-validacao.txt` e `leitura-casos/`: saídas brutas das investigações.
 - `docs/referencia-terraer/harness/`: programas Java que usam o `TerraER3.14.jar` para gerar as amostras e medir a validação. Para reproduzir: extrair o `TerraER3.14.jar` numa pasta `jar/` (que contém também `swing-layout.jar`, `MRJAdapter.jar` e `appframework-0.42.jar`), então `javac -cp "jar:jar/swing-layout.jar:jar/MRJAdapter.jar:jar/appframework-0.42.jar" -d out harness/*.java` e `java -Djava.awt.headless=true -cp "out:<mesmo classpath>" Gen2 write saida.xml` (ou `Gen2 read entrada.xml saida.xml`, ou `Matrix`).
