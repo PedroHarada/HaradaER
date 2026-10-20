@@ -46,12 +46,14 @@ def qt6ct():
     def escrever(paleta: str, *, propria: bool = True) -> Path:
         cores.write_text(
             f"[ColorScheme]\nactive_colors={paleta}\ninactive_colors={paleta}\n"
-            f"disabled_colors={paleta}\n"
+            f"disabled_colors={paleta}\n",
+            encoding="utf-8",
         )
         (pasta / "qt6ct.conf").write_text(
             "# comentário como no arquivo do autor\n[Appearance]\n"
             f"color_scheme_path={cores}\ncustom_palette={'true' if propria else 'false'}\n"
-            "style=Fusion\n"
+            "style=Fusion\n",
+            encoding="utf-8",
         )
         return cores
 
@@ -101,3 +103,12 @@ def test_tema_do_sistema_que_sumiu_volta_ao_claro(qt6ct):
     qt6ct(ROXO, propria=False)
     manager()._system_changed()
     assert current_theme() is LIGHT
+
+
+def test_arquivo_do_qt6ct_ilegivel_nao_derruba_o_haradaer(qt6ct):
+    """Um qt6ct.conf noutra codificação (ou quebrado) só faz o tema do sistema sumir."""
+    config = Path(os.environ["XDG_CONFIG_HOME"]) / "qt6ct" / "qt6ct.conf"
+    config.write_bytes("[Appearance]\n# coment\xe1rio\ncustom_palette=true\n".encode("latin-1"))
+    assert system_theme() is None
+    config.write_text("isto não é um .ini [", encoding="utf-8")
+    assert system_theme() is None

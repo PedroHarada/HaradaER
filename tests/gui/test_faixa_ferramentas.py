@@ -89,10 +89,22 @@ def test_escolher_uma_ferramenta_escondida_rola_ate_ela(qtbot):
     assert visivel.contains(canto)
 
 
-def test_janela_larga_nao_mostra_setas(qtbot):
-    j = janela_com_largura(qtbot, 2200)
-    assert not j.tool_strip.overflows()
-    assert not j.tool_strip.left.isVisible() and not j.tool_strip.right.isVisible()
+def test_quando_tudo_cabe_as_setas_somem(qtbot):
+    """Só a faixa, com poucos botões: não depende do tamanho da tela do sistema."""
+    from PySide6.QtGui import QAction
+
+    from haradaer.gui.tool_strip import ToolStrip
+
+    faixa = ToolStrip()
+    qtbot.addWidget(faixa)
+    for nome in ("A", "B"):
+        faixa.add_action(QAction(nome, faixa))
+    faixa.finish()
+    faixa.resize(600, faixa.height())
+    faixa.show()
+    QApplication.processEvents()
+    assert not faixa.overflows()
+    assert not faixa.left.isVisible() and not faixa.right.isVisible()
 
 
 def test_disposicao_salva_nao_mexe_na_faixa(qtbot):

@@ -62,9 +62,14 @@ def _qt6ct_config() -> Path:
 
 
 def _ler_ini(caminho: Path) -> configparser.ConfigParser:
+    """Lê um .ini do qt6ct. Um arquivo ilegível (codificação estranha, sintaxe quebrada) vale
+    como vazio: o tema do sistema some, mas o HaradaER abre normalmente."""
     leitor = configparser.ConfigParser(interpolation=None, strict=False)
     leitor.optionxform = str  # type: ignore[assignment,method-assign]  # mantém maiúsculas
-    leitor.read(caminho, encoding="utf-8")
+    try:
+        leitor.read(caminho, encoding="utf-8")
+    except UnicodeDecodeError, configparser.Error, OSError:
+        return configparser.ConfigParser(interpolation=None)
     return leitor
 
 
