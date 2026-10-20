@@ -82,6 +82,25 @@ v1, como a geração de DDL e a impressão.
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)
 
+## Baixar sem instalar
+
+Cada versão publicada em **Releases** traz executáveis prontos para Linux (Ubuntu 22.04+, Arch,
+Fedora...), Windows 10/11 e macOS 14+ com chip Apple, sem precisar de Python. As instruções de
+como abrir (e o aviso de "programa não reconhecido" no Windows e no macOS) estão na página de
+cada versão.
+
+## Lançar uma versão
+
+```
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
+(`packaging/HaradaER.spec`) e publica a versão em Releases. Se algum teste falhar, nada é
+publicado. Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento. A cada envio ao
+`main` e a cada pull request, só o lint e os testes rodam (no Linux).
+
 ## Desenvolvimento
 
 ```
