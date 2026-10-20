@@ -9,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import QRectF
-from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QGraphicsScene
 
 from haradaer.core.appearance import describe_figure
@@ -19,6 +18,8 @@ from haradaer.core.model.element import Element
 from haradaer.core.rules import Issue
 from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene.items import FigureItem
+from haradaer.gui.theme import Theme, current_theme
+from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.verification import issue_text
 
 MARGIN = 40.0
@@ -28,7 +29,8 @@ MIN_AREA = QRectF(0, 0, 1600, 1200)  # espaço para desenhar num modelo novo
 class DiagramScene(QGraphicsScene):
     def __init__(self) -> None:
         super().__init__()
-        self.setBackgroundBrush(QColor("white"))
+        self.setBackgroundBrush(current_theme().canvas)
+        theme_manager().changed.connect(self._theme_changed)
         # Diagramas de ER são pequenos; sem índice, a busca por posição vale logo após criar.
         self.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
         self._medidor = QtMeasurer()
@@ -70,6 +72,10 @@ class DiagramScene(QGraphicsScene):
         for item in self._itens.values():
             area = area.united(item.content_rect())
         return area
+
+    def _theme_changed(self, tema: Theme) -> None:
+        self.setBackgroundBrush(tema.canvas)
+        self.update()
 
     def item_containing(self, figura: Element) -> FigureItem | None:
         """O item da figura, ou o do grupo em que ela está."""

@@ -15,6 +15,7 @@ from PySide6.QtGui import QColor, QImage, QPageSize, QPainter, QPdfWriter
 from PySide6.QtSvg import QSvgGenerator
 
 from haradaer.gui.scene.diagram_scene import DiagramScene
+from haradaer.gui.theme import LIGHT
 
 EXPORT_MARGIN = 20.0
 RASTER_SCALE = 2.0  # PNG e JPG com o dobro de pixels, para ficarem nítidos ao ampliar
@@ -41,12 +42,15 @@ def export_area(cena: DiagramScene) -> QRectF:
 
 @contextmanager
 def _painting(cena: DiagramScene) -> Iterator[None]:
-    anterior = cena.exporting
+    """Exporta sempre no tema claro: fundo branco e linhas pretas, qualquer que seja o da tela."""
+    anterior, fundo = cena.exporting, cena.backgroundBrush()
     cena.exporting = True
+    cena.setBackgroundBrush(LIGHT.canvas)
     try:
         yield
     finally:
         cena.exporting = anterior
+        cena.setBackgroundBrush(fundo)
 
 
 def _render(cena: DiagramScene, painter: QPainter, destino: QRectF, area: QRectF) -> None:

@@ -38,3 +38,15 @@ def caixas_nunca_travam(monkeypatch):
 
     for nome in ("critical", "warning", "information"):
         monkeypatch.setattr(QMessageBox, nome, inesperada)
+
+
+@pytest.fixture(autouse=True)
+def tema_claro_no_fim():
+    """O tema é do programa inteiro: cada teste começa e termina no claro."""
+    from haradaer.gui.theme import LIGHT, apply_theme, current_theme
+
+    if current_theme() is not LIGHT:
+        apply_theme(LIGHT, save=False)
+    yield
+    if current_theme() is not LIGHT:
+        apply_theme(LIGHT, save=False)

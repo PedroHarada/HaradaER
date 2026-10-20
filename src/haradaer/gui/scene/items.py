@@ -27,10 +27,11 @@ from haradaer.core.appearance import (
     Stroke,
     TextOp,
 )
-from haradaer.core.appearance.style import RGBA
-from haradaer.core.figures.types import ConnectionFigure
+from haradaer.core.appearance.style import BLACK, RGBA
+from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.element import Element
 from haradaer.gui.qt_utils import QtMeasurer, qcolor, qfont
+from haradaer.gui.theme import LIGHT, Theme, current_theme
 
 _MEDIDOR = QtMeasurer()
 
@@ -145,6 +146,15 @@ def op_bounds(op: DrawOp) -> QRectF:
     return QRectF(op.x, op.y, op.w, op.h)
 
 
+def ink_op(op: DrawOp, tinta: RGBA, *, textos: bool = True) -> DrawOp:
+    """A operação com o preto trocado pela cor de tinta (linhas sempre; texto se `textos`)."""
+    if isinstance(op, (PolylineOp, ArcOp)) and op.stroke.color == BLACK:
+        return replace(op, stroke=replace(op.stroke, color=tinta))
+    if textos and isinstance(op, TextOp) and op.color == BLACK:
+        return replace(op, color=tinta)
+    return op
+
+
 HIT_WIDTH = 10.0  # largura da área de clique de uma linha
 SELECTION_COLOR = QColor(40, 120, 255)
 PROBLEM_COLOR: RGBA = (220, 0, 0, 255)  # a mesma da prévia de conexão inválida
@@ -224,12 +234,24 @@ class FigureItem(QGraphicsItem):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         exportando = getattr(self.scene(), "exporting", False)
-        for op in self.ops:
+        tema = LIGHT if exportando else current_theme()
+        for op in self._themed_ops(tema):
             if self.problem and not exportando and isinstance(op, (PolylineOp, ArcOp)):
                 op = replace(op, stroke=replace(op.stroke, color=PROBLEM_COLOR))
             paint_op(painter, op)
         if self.isSelected() and not exportando:
             self._paint_selection(painter)
+
+    def _themed_ops(self, tema: Theme) -> list[DrawOp]:
+        """No tema escuro, o preto do que fica direto sobre o fundo vira a cor de tinta do tema:
+        linhas e rótulos das conexões, linhas livres e texto solto. O texto dentro das formas
+        continua preto, porque as formas mantêm as cores claras do TerraER."""
+        if not tema.is_dark:
+            return self.ops
+        if isinstance(self.figure, NodeFigure):
+            return self.ops
+        texto_solto = self.is_connection or not any(isinstance(op, ShapeOp) for op in self.ops)
+        return [ink_op(op, tema.ink, textos=texto_solto) for op in self.ops]
 
     def _paint_selection(self, painter: QPainter) -> None:
         if self.is_connection:

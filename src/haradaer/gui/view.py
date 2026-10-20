@@ -45,6 +45,7 @@ from haradaer.gui.editor import Editor
 from haradaer.gui.inline_edit import InlineEdit
 from haradaer.gui.qt_utils import qfont
 from haradaer.gui.scene.items import FigureItem, op_bounds
+from haradaer.gui.theme import current_theme
 
 MIN_ZOOM = 0.05
 MAX_ZOOM = 20.0
@@ -58,7 +59,6 @@ INVALID_COLOR = QColor(220, 0, 0)
 
 GRID_SIZE = 10.0  # unidades do desenho
 GRID_MIN_PX = 6.0  # abaixo disso a grade é desenhada com passo maior (só a vista)
-GRID_COLOR = QColor(225, 228, 235)
 HANDLE_PX = 7.0  # lado das alças de redimensionar, em pixels da tela
 MID_HANDLE_PX = 5.0  # alça do meio de um trecho da linha (arrastar cria um vértice)
 LINE_HIT_PX = 6.0  # distância, em pixels, para o duplo clique acertar a linha
@@ -223,7 +223,7 @@ class DiagramView(QGraphicsView):
         passo = self.grid
         while passo * self.zoom < GRID_MIN_PX:
             passo *= 5
-        pen = QPen(GRID_COLOR, 1)
+        pen = QPen(current_theme().grid, 1)
         pen.setCosmetic(True)
         painter.setPen(pen)
         x = math.floor(rect.left() / passo) * passo

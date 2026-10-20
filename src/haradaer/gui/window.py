@@ -41,6 +41,8 @@ from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.settings import RecentFiles, save_window_layout, window_layout
+from haradaer.gui.theme import THEMES, apply_theme, current_theme
+from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
     SHORT_NAMES,
     connection_icon,
@@ -225,6 +227,17 @@ class DocumentWindow(QMainWindow):
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
         exibir.addActions([self.action_validate, self.action_grid])
+        tema = exibir.addMenu("&Tema")
+        temas = QActionGroup(self)
+        self.theme_actions: dict[str, QAction] = {}
+        for nome, opcao in THEMES.items():
+            acao = QAction(opcao.label, self, checkable=True)
+            acao.setChecked(nome == current_theme().name)
+            acao.triggered.connect(lambda _=False, t=opcao: apply_theme(t))
+            temas.addAction(acao)
+            tema.addAction(acao)
+            self.theme_actions[nome] = acao
+        theme_manager().changed.connect(self._theme_changed)
         exibir.addSeparator()
         exibir.addActions(
             [self.inspector_dock.toggleViewAction(), self.properties_dock.toggleViewAction()]
@@ -288,6 +301,17 @@ class DocumentWindow(QMainWindow):
             adicionar(Tool("connect", tag), nome)
         self.tool_strip.finish()
         self._tool_actions[SELECT].setChecked(True)
+
+    def _theme_changed(self, tema) -> None:
+        """Marca o tema no menu e redesenha os ícones da faixa (as linhas seguem o tema)."""
+        self.theme_actions[tema.name].setChecked(True)
+        self.tool_strip.refresh_style()
+        for tool, acao in self._tool_actions.items():
+            if tool.kind == "create":
+                acao.setIcon(element_icon(tool.tag))
+            elif tool.kind == "connect":
+                acao.setIcon(connection_icon(tool.tag))
+        self.view.viewport().update()
 
     def _tool_changed(self, tool: Tool) -> None:
         self._tool_actions[tool].setChecked(True)

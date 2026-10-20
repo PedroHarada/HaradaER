@@ -10,6 +10,7 @@ from PySide6.QtCore import QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from haradaer.gui.settings import RecentFiles
+from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.window import DocumentWindow
 
 
@@ -77,6 +78,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     app = QApplication(argumentos)
     app.setApplicationName("HaradaER")
     install_translator(app)
+    apply_theme(saved_theme(), save=False)
     gerenciador = WindowManager()
     caminhos = [Path(a) for a in argumentos[1:]]
     if not caminhos:

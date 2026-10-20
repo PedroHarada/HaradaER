@@ -21,7 +21,15 @@ from PySide6.QtWidgets import (
 from haradaer.gui.tool_icons import ICON_SIZE
 
 ARROW_STEP = 120  # pixels por clique nas setas
-BUTTON_STYLE = "QToolButton { padding: 1px 2px; font-size: 8pt; }"
+# A folha de estilo (fonte menor) faz o Qt desenhar os destaques com cores fixas, claras;
+# por isso eles são definidos aqui com as cores da paleta, que seguem o tema claro ou escuro.
+BUTTON_STYLE = (
+    "QToolButton { padding: 1px 2px; font-size: 8pt; border: 1px solid transparent;"
+    " border-radius: 3px; }"
+    "QToolButton:hover { background: palette(midlight); }"
+    "QToolButton:checked { background: palette(midlight); border-color: palette(highlight); }"
+    "QToolButton:pressed { background: palette(mid); }"
+)
 
 
 class ToolStrip(QWidget):
@@ -88,6 +96,13 @@ class ToolStrip(QWidget):
         """Depois do último botão: o espaço que sobra fica à direita."""
         self._linha.addStretch(1)
         self._fit_height()
+
+    def refresh_style(self) -> None:
+        """Depois de trocar o tema: o Qt só resolve as cores `palette(...)` da folha de estilo
+        quando ela é aplicada, então ela é aplicada de novo."""
+        for botao in self._botoes.values():
+            botao.setStyleSheet("")
+            botao.setStyleSheet(BUTTON_STYLE)
 
     def button_for(self, acao: QAction) -> QToolButton:
         return self._botoes[acao]

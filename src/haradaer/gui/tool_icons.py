@@ -18,7 +18,8 @@ from haradaer.core.geometry import node_rect
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number
 from haradaer.gui.qt_utils import QtMeasurer
-from haradaer.gui.scene.items import op_bounds, paint_op
+from haradaer.gui.scene.items import ink_op, op_bounds, paint_op
+from haradaer.gui.theme import current_theme
 
 ICON_SIZE = QSize(40, 26)
 _ESCALA_TELA = 2  # desenha com o dobro de pixels, para ficar nítido em telas de alta densidade
@@ -72,7 +73,9 @@ def _blank() -> QPixmap:
 
 
 def _render(ops: list[DrawOp]) -> QIcon:
-    """Desenha as operações centralizadas e reduzidas para caber no ícone."""
+    """Desenha as operações centralizadas e reduzidas para caber no ícone. As linhas e os textos
+    soltos seguem o tema (no escuro, ficam claros para aparecer sobre a barra)."""
+    tinta = current_theme().ink
     largura, altura = ICON_SIZE.width(), ICON_SIZE.height()
     imagem = _blank()
     area = QRectF()
@@ -89,7 +92,7 @@ def _render(ops: list[DrawOp]) -> QIcon:
     painter.scale(escala, escala)
     painter.translate(-area.center())
     for op in ops:
-        paint_op(painter, op)
+        paint_op(painter, ink_op(op, tinta, textos=False))
     painter.end()
     return QIcon(imagem)
 
@@ -138,8 +141,10 @@ def connection_icon(tag: str) -> QIcon:
     conexao = create_connection(tag, origem, destino, rect_o, rect_d)
     conexao.attrs.pop("labelGeneralizacaoText", None)
     ops: list[DrawOp] = []
-    for figura in (origem, destino, conexao):
+    for figura in (origem, destino):
         ops.extend(describe_figure(figura, _medidor))
+    tinta = current_theme().ink  # o rótulo 1/N fica sobre a barra: segue o tema
+    ops.extend(ink_op(op, tinta) for op in describe_figure(conexao, _medidor))
     return _render(ops)
 
 
