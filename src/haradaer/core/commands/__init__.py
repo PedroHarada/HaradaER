@@ -2,17 +2,22 @@
 
 from haradaer.core.commands.edit import (
     ALIGNMENTS,
+    add_bend_command,
     add_node_command,
     align_command,
     bring_to_front_command,
     can_move,
     change_connection_type_command,
     connect_command,
+    connection_path,
     connections_of,
     min_node_size,
+    move_bend_command,
     move_command,
     name_string,
     new_node,
+    reconnect_command,
+    remove_bend_command,
     remove_command,
     rename_command,
     resize_command,
@@ -20,10 +25,17 @@ from haradaer.core.commands.edit import (
     set_attribute_type_command,
     set_generalization_label_command,
     set_nullable_command,
+    straighten_command,
 )
 from haradaer.core.commands.history import Command, Composite, History
 
 __all__ = [
+    "add_bend_command",
+    "connection_path",
+    "move_bend_command",
+    "reconnect_command",
+    "remove_bend_command",
+    "straighten_command",
     "ALIGNMENTS",
     "Command",
     "Composite",

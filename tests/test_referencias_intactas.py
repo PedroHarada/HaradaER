@@ -27,6 +27,8 @@ ESPERADO = {
     "criados-no-haradaer/paralelas.xml": "433b74a9e3bf7def6ce726aa3e019794",
     "criados-no-haradaer/regravado-pelo-terraer.xml": "3b9b14e9f6c2678b0f17a05083dda8fa",
     "criados-no-haradaer/todos-os-tipos.xml": "47881341193f577bd3d3a9110d7d48e4",
+    "criados-no-haradaer/vertices-regravado-pelo-terraer.xml": "4c9631cf4ae5c793ced54cae5b7cfddc",
+    "criados-no-haradaer/vertices.xml": "8de4ac1916e0f59792fadc6995a0f472",
     "leitura-casos/tipo_FOO_.xml": "3a3d35a4905f3a73c59663af70279e17",
     "leitura-casos/tipo_NUMBER_.xml": "5c88eed5cde0a7d12a80866225b87b1d",
     "leitura-casos/tipo_semattr.xml": "34e3e377c61c3d793c41ab2f7f3020c7",

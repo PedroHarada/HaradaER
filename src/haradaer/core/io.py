@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import stat
 import tempfile
 from pathlib import Path
 
@@ -27,6 +28,20 @@ def load(caminho: str | os.PathLike[str]) -> Document:
     return loads(Path(caminho).read_bytes())
 
 
+def _permissoes(destino: Path) -> int:
+    """As do arquivo que vai ser substituído; para um arquivo novo, as de costume (umask).
+
+    O arquivo temporário nasce só com permissão do dono, e sem isto o arquivo salvo perderia a
+    leitura para os outros usuários.
+    """
+    try:
+        return stat.S_IMODE(destino.stat().st_mode)
+    except FileNotFoundError:
+        mascara = os.umask(0)
+        os.umask(mascara)
+        return 0o666 & ~mascara
+
+
 def save(documento: Document, caminho: str | os.PathLike[str]) -> None:
     """Grava num arquivo temporário e só então substitui o destino (RNF-11)."""
     destino = Path(caminho)
@@ -39,6 +54,7 @@ def save(documento: Document, caminho: str | os.PathLike[str]) -> None:
             arquivo.write(dados)
             arquivo.flush()
             os.fsync(arquivo.fileno())
+        os.chmod(nome_temporario, _permissoes(destino))
         os.replace(nome_temporario, destino)
     except BaseException:
         Path(nome_temporario).unlink(missing_ok=True)

@@ -18,25 +18,33 @@ import shiboken6
 from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QColor,
+    QContextMenuEvent,
     QKeyEvent,
     QMouseEvent,
     QNativeGestureEvent,
     QPainter,
+    QPainterPath,
     QPen,
     QWheelEvent,
 )
-from PySide6.QtWidgets import QGraphicsLineItem, QGraphicsScene, QGraphicsView
+from PySide6.QtWidgets import (
+    QGraphicsLineItem,
+    QGraphicsPathItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QMenu,
+)
 
-from haradaer.core.appearance import FontSpec
+from haradaer.core.appearance import FontSpec, TextOp
 from haradaer.core.appearance.describe import font_of
-from haradaer.core.commands import can_move
+from haradaer.core.commands import can_move, connection_path
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
-from haradaer.core.geometry import node_rect
+from haradaer.core.geometry import nearest_segment, node_rect
 from haradaer.core.rules import is_valid_connection
 from haradaer.gui.editor import Editor
 from haradaer.gui.inline_edit import InlineEdit
 from haradaer.gui.qt_utils import qfont
-from haradaer.gui.scene.items import FigureItem
+from haradaer.gui.scene.items import FigureItem, op_bounds
 
 MIN_ZOOM = 0.05
 MAX_ZOOM = 20.0
@@ -52,6 +60,8 @@ GRID_SIZE = 10.0  # unidades do desenho
 GRID_MIN_PX = 6.0  # abaixo disso a grade é desenhada com passo maior (só a vista)
 GRID_COLOR = QColor(225, 228, 235)
 HANDLE_PX = 7.0  # lado das alças de redimensionar, em pixels da tela
+MID_HANDLE_PX = 5.0  # alça do meio de um trecho da linha (arrastar cria um vértice)
+LINE_HIT_PX = 6.0  # distância, em pixels, para o duplo clique acertar a linha
 HANDLE_COLOR = QColor(40, 120, 255)
 
 # Alças: nome -> (lado horizontal, lado vertical) que ela mexe; -1 esquerda/cima, 1 direita/baixo.
@@ -130,6 +140,9 @@ class DiagramView(QGraphicsView):
         self._drag_anchor: tuple[NodeFigure, float, float] | None = None
         self._drag_moved = (0.0, 0.0)
         self._resizing: tuple[NodeFigure, str, tuple[float, float, float, float]] | None = None
+        self._bend_drag: tuple[ConnectionFigure, int] | None = None
+        self._reconnecting: tuple[ConnectionFigure, str] | None = None
+        self._reconnect_preview: QGraphicsPathItem | None = None
         scene.selectionChanged.connect(self._repaint_handles)
         scene.changed.connect(self._repaint_handles)
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
@@ -261,15 +274,175 @@ class DiagramView(QGraphicsView):
 
     def drawForeground(self, painter: QPainter, rect: QRectF) -> None:
         super().drawForeground(painter, rect)
-        alcas = self.handle_rects()
-        if not alcas:
-            return
         pen = QPen(HANDLE_COLOR, 1)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(QColor("white"))
-        for quadro in alcas.values():
+        for quadro in self.handle_rects().values():
             painter.drawRect(quadro)
+        for tipo, _, quadro in self.connection_handles():
+            if tipo == "mid":
+                painter.setBrush(HANDLE_COLOR)
+                painter.drawEllipse(quadro)
+            else:
+                painter.setBrush(HANDLE_COLOR if tipo in ("start", "end") else QColor("white"))
+                painter.drawRect(quadro)
+
+    # --- alças da linha de uma conexão --------------------------------------------------------
+
+    def editable_connection(self) -> ConnectionFigure | None:
+        """A conexão que mostra alças de vértice: só quando ela é a única selecionada."""
+        if self.tool.kind != "select" or not shiboken6.isValid(self._scene):
+            return None
+        figuras = self._scene.selected_figures()
+        if len(figuras) == 1 and isinstance(figuras[0], ConnectionFigure):
+            if len(figuras[0].points) >= 2:
+                return figuras[0]
+        return None
+
+    def connection_handles(self) -> list[tuple[str, int, QRectF]]:
+        """Alças da conexão selecionada: pontas ("start", "end"), vértices ("bend", índice) e
+        meio de cada trecho ("mid", índice do trecho), em coordenadas da cena."""
+        conexao = self.editable_connection()
+        if conexao is None:
+            return []
+        caminho = connection_path(conexao)
+        lado, meio = HANDLE_PX / self.zoom, MID_HANDLE_PX / self.zoom
+
+        def quadro(x: float, y: float, tamanho: float) -> QRectF:
+            return QRectF(x - tamanho / 2, y - tamanho / 2, tamanho, tamanho)
+
+        alcas = [("start", 0, quadro(*caminho[0], lado)), ("end", 0, quadro(*caminho[-1], lado))]
+        alcas += [("bend", i, quadro(x, y, lado)) for i, (x, y) in enumerate(caminho[1:-1])]
+        for i, ((x1, y1), (x2, y2)) in enumerate(zip(caminho, caminho[1:], strict=False)):
+            alcas.append(("mid", i, quadro((x1 + x2) / 2, (y1 + y2) / 2, meio)))
+        return alcas
+
+    def _connection_handle_at(self, pos: QPointF) -> tuple[str, int] | None:
+        folga = 2 / self.zoom
+        for tipo, indice, quadro in self.connection_handles():
+            if quadro.adjusted(-folga, -folga, folga, folga).contains(pos):
+                return (tipo, indice)
+        return None
+
+    def _begin_line_edit(self, alca: tuple[str, int], pos: QPointF) -> None:
+        conexao = self.editable_connection()
+        assert conexao is not None and self.editor is not None
+        tipo, indice = alca
+        if tipo in ("start", "end"):
+            self._reconnecting = (conexao, tipo)
+            self._reconnect_preview = QGraphicsPathItem()
+            self._reconnect_preview.setZValue(1e9)
+            self._scene.addItem(self._reconnect_preview)
+            self._update_reconnect(pos)
+            return
+        self._scene.hold_extent(True)
+        if tipo == "mid":
+            self.editor.history.begin_macro("Adicionar vértice")
+            self.editor.add_bend(conexao, indice, (self.snap(pos.x()), self.snap(pos.y())))
+        else:
+            self.editor.history.begin_macro("Mover vértice")
+        self._bend_drag = (conexao, indice)
+
+    def _drag_bend(self, pos: QPointF) -> None:
+        assert self._bend_drag is not None and self.editor is not None
+        conexao, indice = self._bend_drag
+        ponto = (self.snap(pos.x()), self.snap(pos.y()))
+        if connection_path(conexao)[indice + 1] != ponto:
+            self.editor.move_bend(conexao, indice, ponto)
+
+    def _end_bend_drag(self) -> None:
+        if self._bend_drag is not None and self.editor is not None:
+            self._bend_drag = None
+            self.editor.history.end_macro()
+            self._scene.hold_extent(False)
+
+    def _update_reconnect(self, pos: QPointF) -> None:
+        assert self._reconnecting is not None and self._reconnect_preview is not None
+        conexao, ponta = self._reconnecting
+        caminho = connection_path(conexao)
+        if ponta == "start":
+            caminho[0] = (pos.x(), pos.y())
+        else:
+            caminho[-1] = (pos.x(), pos.y())
+        linha = QPainterPath(QPointF(*caminho[0]))
+        for ponto in caminho[1:]:
+            linha.lineTo(QPointF(*ponto))
+        alvo = self._reconnect_target(pos)
+        cor = QColor(80, 80, 80)
+        if alvo is not None:
+            inicio = alvo if ponta == "start" else conexao.start
+            fim = conexao.end if ponta == "start" else alvo
+            if inicio is not None and fim is not None:
+                valida = is_valid_connection(conexao.tag, inicio.tag, fim.tag)
+                cor = VALID_COLOR if valida else INVALID_COLOR
+        pen = QPen(cor, 2, Qt.PenStyle.DashLine)
+        pen.setCosmetic(True)
+        self._reconnect_preview.setPen(pen)
+        self._reconnect_preview.setPath(linha)
+
+    def _reconnect_target(self, pos: QPointF) -> NodeFigure | None:
+        assert self._reconnecting is not None
+        conexao, ponta = self._reconnecting
+        outro = conexao.end if ponta == "start" else conexao.start
+        item = self._item_at(pos, nodes_only=True)
+        if item is None or not isinstance(item.figure, NodeFigure) or item.figure is outro:
+            return None
+        return item.figure
+
+    def _finish_reconnect(self, pos: QPointF | None) -> None:
+        if self._reconnecting is None:
+            return
+        alvo = self._reconnect_target(pos) if pos is not None else None
+        conexao, ponta = self._reconnecting
+        self._reconnecting = None
+        if self._reconnect_preview is not None:
+            self._scene.removeItem(self._reconnect_preview)
+            self._reconnect_preview = None
+        if alvo is not None and self.editor is not None:
+            self.editor.reconnect(conexao, ponta, alvo)
+            self._scene.select_only(conexao)
+
+    def _on_line(self, conexao: ConnectionFigure, pos: QPointF) -> tuple[int, float]:
+        return nearest_segment(connection_path(conexao), (pos.x(), pos.y()))
+
+    def _label_hit(self, item: FigureItem, pos: QPointF) -> bool:
+        """O clique caiu no rótulo de texto da conexão (o da generalização é editável)."""
+        return any(isinstance(op, TextOp) and op_bounds(op).contains(pos) for op in item.ops)
+
+    def connection_menu(self, conexao: ConnectionFigure, pos: QPointF) -> QMenu:
+        """Menu do botão direito sobre uma conexão."""
+        assert self.editor is not None
+        editor = self.editor
+        menu = QMenu(self)
+        alca = self._connection_handle_at(pos)
+        if alca is not None and alca[0] == "bend":
+            menu.addAction("&Remover vértice", lambda: editor.remove_bend(conexao, alca[1]))
+        else:
+            trecho, _ = self._on_line(conexao, pos)
+            ponto = (self.snap(pos.x()), self.snap(pos.y()))
+            menu.addAction(
+                "&Adicionar vértice aqui", lambda: editor.add_bend(conexao, trecho, ponto)
+            )
+        endireitar = menu.addAction("&Endireitar linha", lambda: editor.straighten(conexao))
+        endireitar.setEnabled(len(conexao.points) > 2)
+        return menu
+
+    def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        if self.tool.kind != "select" or self.editor is None:
+            super().contextMenuEvent(event)
+            return
+        pos = self.mapToScene(event.pos())
+        item = self._item_at(pos)
+        conexao = self.editable_connection()
+        if conexao is None or self._connection_handle_at(pos) is None:
+            if item is None or not item.is_connection:
+                super().contextMenuEvent(event)
+                return
+            assert isinstance(item.figure, ConnectionFigure)
+            self._scene.select_only(item.figure)
+            conexao = item.figure
+        self.connection_menu(conexao, pos).exec(event.globalPos())
 
     def _begin_resize(self, alca: str) -> None:
         no = self.resizable()
@@ -312,6 +485,8 @@ class DiagramView(QGraphicsView):
     def _cancel_interaction(self) -> None:
         self._end_connection()
         self._end_resize()
+        self._end_bend_drag()
+        self._finish_reconnect(None)
         if self._inline is not None:
             self._inline.cancel()
 
@@ -334,6 +509,10 @@ class DiagramView(QGraphicsView):
             alca = self._handle_at(pos)
             if alca is not None:
                 self._begin_resize(alca)
+                return
+            alca_linha = self._connection_handle_at(pos)
+            if alca_linha is not None:
+                self._begin_line_edit(alca_linha, pos)
                 return
             if self.tool.kind == "create":
                 self._create(
@@ -372,14 +551,27 @@ class DiagramView(QGraphicsView):
         if self._resizing is not None:
             self._resize_to(self._scene_pos(event))
             return
+        if self._bend_drag is not None:
+            self._drag_bend(self._scene_pos(event))
+            return
+        if self._reconnecting is not None:
+            self._update_reconnect(self._scene_pos(event))
+            return
         if self._drag_from is not None and self.editor is not None:
             self._drag_to(event)
             return
         if self.tool.kind == "select" and event.buttons() == Qt.MouseButton.NoButton:
-            alca = self._handle_at(self._scene_pos(event))
-            self.viewport().setCursor(
-                _HANDLE_CURSORS[alca] if alca is not None else Qt.CursorShape.ArrowCursor
-            )
+            pos = self._scene_pos(event)
+            alca = self._handle_at(pos)
+            alca_linha = self._connection_handle_at(pos)
+            if alca is not None:
+                cursor = _HANDLE_CURSORS[alca]
+            elif alca_linha is not None:
+                pontas = alca_linha[0] in ("start", "end")
+                cursor = Qt.CursorShape.CrossCursor if pontas else Qt.CursorShape.SizeAllCursor
+            else:
+                cursor = Qt.CursorShape.ArrowCursor
+            self.viewport().setCursor(cursor)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -400,6 +592,12 @@ class DiagramView(QGraphicsView):
         if self._resizing is not None and event.button() == Qt.MouseButton.LeftButton:
             self._end_resize()
             return
+        if self._bend_drag is not None and event.button() == Qt.MouseButton.LeftButton:
+            self._end_bend_drag()
+            return
+        if self._reconnecting is not None and event.button() == Qt.MouseButton.LeftButton:
+            self._finish_reconnect(self._scene_pos(event))
+            return
         if self._drag_from is not None:
             if self._dragging and self.editor is not None:
                 self.editor.end_move()
@@ -410,7 +608,21 @@ class DiagramView(QGraphicsView):
 
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         if self.tool.kind == "select" and self.editor is not None:
-            item = self._item_at(self._scene_pos(event))
+            pos = self._scene_pos(event)
+            alca = self._connection_handle_at(pos)
+            conexao = self.editable_connection()
+            if alca is not None and alca[0] == "bend" and conexao is not None:
+                self.editor.remove_bend(conexao, alca[1])  # como o TerraER
+                return
+            item = self._item_at(pos)
+            if item is not None and item.is_connection and not self._label_hit(item, pos):
+                assert isinstance(item.figure, ConnectionFigure)
+                trecho, distancia = self._on_line(item.figure, pos)
+                if distancia * self.zoom <= LINE_HIT_PX:  # duplo clique na linha: novo vértice
+                    ponto = (self.snap(pos.x()), self.snap(pos.y()))
+                    self.editor.add_bend(item.figure, trecho, ponto)
+                    self._scene.select_only(item.figure)
+                    return
             if item is not None:
                 self._edit_text(item.figure)
                 return

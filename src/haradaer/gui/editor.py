@@ -8,14 +8,18 @@ from __future__ import annotations
 
 from haradaer.core.commands import (
     History,
+    add_bend_command,
     add_node_command,
     align_command,
     bring_to_front_command,
     change_connection_type_command,
     connect_command,
     min_node_size,
+    move_bend_command,
     move_command,
     new_node,
+    reconnect_command,
+    remove_bend_command,
     remove_command,
     rename_command,
     resize_command,
@@ -23,6 +27,7 @@ from haradaer.core.commands import (
     set_attribute_type_command,
     set_generalization_label_command,
     set_nullable_command,
+    straighten_command,
 )
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import node_rect
@@ -105,3 +110,21 @@ class Editor:
         comando = change_connection_type_command(self.document, conexao, tag)
         if comando.commands:
             self.history.execute(comando)
+
+    def add_bend(self, conexao: ConnectionFigure, trecho: int, ponto: tuple[float, float]) -> None:
+        self.history.execute(add_bend_command(self.document, conexao, trecho, ponto))
+
+    def move_bend(self, conexao: ConnectionFigure, indice: int, ponto: tuple[float, float]) -> None:
+        self.history.execute(move_bend_command(self.document, conexao, indice, ponto))
+
+    def remove_bend(self, conexao: ConnectionFigure, indice: int) -> None:
+        self.history.execute(remove_bend_command(self.document, conexao, indice))
+
+    def straighten(self, conexao: ConnectionFigure) -> None:
+        if len(conexao.points) > 2:
+            self.history.execute(straighten_command(self.document, conexao))
+
+    def reconnect(self, conexao: ConnectionFigure, ponta: str, no: NodeFigure) -> None:
+        atual = conexao.start if ponta == "start" else conexao.end
+        if no is not atual:
+            self.history.execute(reconnect_command(self.document, conexao, ponta, no))

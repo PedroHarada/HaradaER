@@ -1,5 +1,7 @@
 """Critério 1 de REQUISITOS.md (seção 7): ler e regravar os arquivos do TerraER sem mudar nada."""
 
+import os
+
 import pytest
 
 from haradaer.core import io
@@ -54,3 +56,21 @@ def test_salvar_nao_corrompe_o_original_se_falhar(referencia, tmp_path, monkeypa
         io.save(documento, destino)
     assert destino.read_bytes() == b"conteudo antigo"
     assert [p.name for p in tmp_path.iterdir()] == ["modelo.xml"]
+
+
+def test_salvar_mantem_as_permissoes_do_arquivo(referencia, tmp_path):
+    """A gravação segura usa um arquivo temporário, que nasce só com permissão do dono."""
+    documento = io.loads((referencia / "amostra-basica.xml").read_bytes())
+    existente = tmp_path / "compartilhado.xml"
+    existente.write_text("x")
+    existente.chmod(0o644)
+    io.save(documento, existente)
+    assert existente.stat().st_mode & 0o777 == 0o644
+
+    novo = tmp_path / "novo.xml"
+    mascara = os.umask(0o022)
+    try:
+        io.save(documento, novo)
+    finally:
+        os.umask(mascara)
+    assert novo.stat().st_mode & 0o777 == 0o644

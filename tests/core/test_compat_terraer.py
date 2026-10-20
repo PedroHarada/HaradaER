@@ -86,3 +86,19 @@ def test_conexoes_repetidas_e_letras_sobrevivem_ao_terraer(referencia):
         assert nossa[4] == pytest.approx(dela[4], abs=1e-6)
     textos = [Style.of(c).string("text") for c in dele.figures if c.tag.startswith("llabel")]
     assert textos == ["N", "M", "P", None]
+
+
+def test_vertices_editados_e_ponta_reconectada_sobrevivem_ao_terraer(referencia):
+    """Vértices adicionados, movidos e removidos, linha endireitada e ponta reconectada,
+    feitos no HaradaER (`gera_no_haradaer.py --vertices`) e regravados pelo TerraER."""
+    pasta = referencia / "criados-no-haradaer"
+    nossos_nos, nossas = nos_e_ligacoes(io.loads((pasta / "vertices.xml").read_bytes()))
+    nos_dele, delas = nos_e_ligacoes(
+        io.loads((pasta / "vertices-regravado-pelo-terraer.xml").read_bytes())
+    )
+    assert [n[:4] for n in nossos_nos] == [n[:4] for n in nos_dele]
+    assert [len(c[4]) // 2 for c in nossas] == [4, 2, 3]  # pontos de cada linha
+    assert len(nossas) == len(delas) == 3
+    for nossa, dela in zip(nossas, delas, strict=True):
+        assert nossa[:4] == dela[:4]
+        assert nossa[4] == pytest.approx(dela[4], abs=1e-6)

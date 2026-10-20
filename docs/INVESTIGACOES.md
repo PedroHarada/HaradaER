@@ -280,3 +280,22 @@ O que o HaradaER faz (decisão do autor: "desvio limpo"):
 - Inverte entidade → relacionamento, numera N, M, P... e grava a letra igual ao TerraER (conferido: o TerraER relê as letras e regrava os mesmos pontos, `criados-no-haradaer/paralelas.xml`).
 - **Desvio diferente do TerraER, de propósito:** dobras a 1/3 e 2/3 do caminho de centro a centro, deslocadas 70 na perpendicular, alternando de lado e se afastando (70, −70, 140, −140...). A linha fica em forma de colchete, sem cruzar, e as conexões extras nunca se sobrepõem. O arquivo continua compatível: o TerraER só guarda os pontos.
 - Ao mover, as dobras ficam; se as duas pontas andam juntas, a linha inteira acompanha.
+
+## 16. Editar a linha das conexões (vértices e pontas)
+
+Como o TerraER faz (bytecode do JHotDraw): duplo clique na linha cria um vértice (`LineConnectionFigure.handleMouseClick` → `splitSegment`); arrastar a alça de um vértice o move (`BezierNodeHandle`); duplo clique na alça o remove, se a linha tiver mais de dois pontos (`trackDoubleClick` → `removeNode`); arrastar a alça de uma ponta até outro elemento reconecta a conexão.
+
+O que o HaradaER faz, com uma conexão selecionada:
+
+| Ação | Gesto |
+|---|---|
+| Adicionar vértice | Arrastar o ponto do meio de um trecho, ou duplo clique na linha (como no TerraER), ou botão direito › Adicionar vértice aqui |
+| Mover vértice | Arrastar o quadrado branco (com a grade ligada, encaixa) |
+| Remover vértice | Duplo clique no quadrado (como no TerraER), ou botão direito › Remover vértice |
+| Endireitar | Botão direito › Endireitar linha (tira todos os vértices) |
+| Reconectar ponta | Arrastar o quadrado azul de uma ponta até outro elemento; a prévia fica verde ou vermelha conforme o par seja aceito |
+
+As pontas sempre se religam mirando o vértice mais próximo. Reconectar mantém o tipo, o sentido, a letra e os vértices, como a alça de ponta do TerraER. Cada gesto é um passo de desfazer. O rótulo de texto da conexão também passou a ser clicável, para o duplo clique no rótulo da generalização continuar editando o texto.
+
+Conferido: `criados-no-haradaer/vertices.xml` (feito pelos comandos, `gera_no_haradaer.py --vertices`) é relido e regravado pelo TerraER com os mesmos pontos e as mesmas ligações (`vertices-regravado-pelo-terraer.xml`), e as duas imagens ficam iguais.
+

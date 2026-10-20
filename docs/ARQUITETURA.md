@@ -166,7 +166,7 @@ Dois níveis, espelhando o TerraER:
 - Serializador próprio, escrito à mão, **não** `ElementTree`: precisamos controlar ordem de atributos, escape e números.
 - Percorre as figuras em ordem, atribui ids sequenciais em hexadecimal minúsculo na ordem de escrita e emite `ref` quando o objeto já foi escrito.
 - Regras exatas de escape e de números: `REQUISITOS.md` seção 4.1 (ASCII com `&#xe7;`, `Double.toString` do Java, inteiros sem `.0`).
-- Salva em arquivo temporário e renomeia (RNF-11).
+- Salva em arquivo temporário e renomeia (RNF-11), mantendo as permissões do arquivo substituído (ou as de costume, num arquivo novo).
 
 **Números no formato Java.** Python imprime `1e-05` e `1.0E-5` é o esperado. Uma função `java_double_str` implementa a regra do `Double.toString` (notação científica abaixo de 10⁻³ e a partir de 10⁷, mantissa com ao menos um dígito decimal). Ela é coberta por testes contra valores reais do TerraER (`amostra-escapes-e-numeros.xml`).
 
@@ -429,6 +429,7 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
   - **Alinhar** usa a caixa da seleção, como o `AlignAction` do JHotDraw. As conexões são religadas uma vez só, com a posição final de todos os elementos.
   - **Empilhamento:** trazer para a frente e enviar para trás mantêm a ordem entre as figuras escolhidas. Uma conexão enviada para trás dos seus elementos é gravada com o dono por dentro do `Owner`, como no TerraER.
 - Depois do M5d (teste geral da v1): conexões repetidas entre o mesmo par saem com duas dobras, sem cruzar e alternando de lado (`parallel_bends` em `core/geometry.py`); entidade → relacionamento é gravado ao contrário e as conexões "N" são numeradas N, M, P... como no TerraER; linhas com dobras são religadas mirando a dobra (`route_ends`). Detalhes em `INVESTIGACOES.md`, seção 15.
+- Edição da linha das conexões: adicionar, mover e remover vértices, endireitar e reconectar uma ponta (`add_bend_command`, `move_bend_command`, `remove_bend_command`, `straighten_command`, `reconnect_command`; alças em `DiagramView.connection_handles`). Detalhes em `INVESTIGACOES.md`, seção 16.
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
 

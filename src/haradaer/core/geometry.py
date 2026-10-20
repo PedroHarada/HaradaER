@@ -93,3 +93,25 @@ def parallel_bends(origem: Rect, destino: Rect, ordem: int) -> list[Point]:
     desvio = PARALLEL_OFFSET * ((ordem + 1) // 2) * lado
     nx, ny = -dy / comprimento * desvio, dx / comprimento * desvio
     return [(x1 + dx / 3 + nx, y1 + dy / 3 + ny), (x1 + 2 * dx / 3 + nx, y1 + 2 * dy / 3 + ny)]
+
+
+def nearest_segment(caminho: list[Point], ponto: Point) -> tuple[int, float]:
+    """Trecho da linha mais perto do ponto: (índice do trecho, distância).
+
+    O trecho `i` vai do ponto `i` ao `i + 1` do caminho.
+    """
+    melhor, menor = 0, float("inf")
+    for i, ((x1, y1), (x2, y2)) in enumerate(zip(caminho, caminho[1:], strict=False)):
+        dx, dy = x2 - x1, y2 - y1
+        comprimento2 = dx * dx + dy * dy
+        t = (
+            0.0
+            if comprimento2 == 0
+            else ((ponto[0] - x1) * dx + (ponto[1] - y1) * dy) / comprimento2
+        )
+        t = min(max(t, 0.0), 1.0)
+        px, py = x1 + t * dx, y1 + t * dy
+        distancia = ((ponto[0] - px) ** 2 + (ponto[1] - py) ** 2) ** 0.5
+        if distancia < menor:
+            melhor, menor = i, distancia
+    return melhor, menor

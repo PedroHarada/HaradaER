@@ -2,9 +2,12 @@
 
 - `todos-os-tipos.xml`: os 13 elementos e as 9 conexões;
 - `paralelas.xml` (com `--paralelas`): três conexões "N" e uma "1" chegando no mesmo
-  relacionamento, duas delas entre o mesmo par (desvio e letras N, M, P).
+  relacionamento, duas delas entre o mesmo par (desvio e letras N, M, P);
+- `vertices.xml` (com `--vertices`): vértices adicionados, movidos e removidos, uma linha
+  endireitada e uma ponta reconectada a outro elemento.
 
-Uso, a partir da raiz do projeto: `.venv/bin/python <este arquivo> [--paralelas] saida.xml`.
+Uso, a partir da raiz do projeto:
+`.venv/bin/python <este arquivo> [--paralelas | --vertices] saida.xml`.
 """
 
 import sys
@@ -13,13 +16,18 @@ from haradaer.core import io
 from haradaer.core.appearance import FixedMeasurer
 from haradaer.core.commands import (
     History,
+    add_bend_command,
     add_node_command,
     connect_command,
+    move_bend_command,
     move_command,
     new_node,
+    reconnect_command,
+    remove_bend_command,
     rename_command,
     set_attribute_type_command,
     set_nullable_command,
+    straighten_command,
 )
 from haradaer.core.figures.factory import KINDS
 from haradaer.core.model.document import Document
@@ -75,8 +83,37 @@ def paralelas(destino: str) -> None:
     print("ok", len(doc.figures))
 
 
+def vertices(destino: str) -> None:
+    doc, historico = Document.new(), History()
+    entidade = new_node("ent", 60, 320, MEDIDOR)
+    relacao = new_node("rel", 300, 60, MEDIDOR)
+    outra = new_node("ent", 520, 320, MEDIDOR)
+    atributo = new_node("atr", 60, 520, MEDIDOR)
+    for no in (entidade, relacao, outra, atributo):
+        historico.execute(add_node_command(doc, no))
+    historico.execute(connect_command(doc, "llabelMuitos", entidade, relacao))
+    em_l = doc.figures[-1]
+    historico.execute(add_bend_command(doc, em_l, 0, (100, 100)))
+    historico.execute(add_bend_command(doc, em_l, 0, (300, 30)))
+    historico.execute(move_bend_command(doc, em_l, 0, (340, 20)))
+    historico.execute(add_bend_command(doc, em_l, 2, (90, 200)))
+    historico.execute(remove_bend_command(doc, em_l, 2))
+    historico.execute(connect_command(doc, "llabelUm", outra, relacao))
+    reta = doc.figures[-1]
+    historico.execute(add_bend_command(doc, reta, 0, (600, 100)))
+    historico.execute(straighten_command(doc, reta))
+    historico.execute(connect_command(doc, "lcaf", atributo, entidade))
+    ligacao = doc.figures[-1]
+    historico.execute(add_bend_command(doc, ligacao, 0, (300, 450)))
+    historico.execute(reconnect_command(doc, ligacao, "end", outra))
+    io.save(doc, destino)
+    print("ok", len(doc.figures))
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "--paralelas":
         paralelas(sys.argv[2])
+    elif sys.argv[1] == "--vertices":
+        vertices(sys.argv[2])
     else:
         main(sys.argv[1])

@@ -184,6 +184,8 @@ class FigureItem(QGraphicsItem):
                     faixa = QPainterPathStroker()
                     faixa.setWidth(HIT_WIDTH)
                     area.addPath(faixa.createStroke(polyline_path(op.points)))
+                elif isinstance(op, TextOp):  # o rótulo (1, N, característica) também é clicável
+                    area.addRect(op_bounds(op))
             return area
         for op in self.ops:
             if isinstance(op, ShapeOp):

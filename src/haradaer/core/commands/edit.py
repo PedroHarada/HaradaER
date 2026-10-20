@@ -16,6 +16,7 @@ from haradaer.core.figures.factory import (
     LABELED_GENERALIZATIONS,
     MANY_TAGS,
     TEXT_MARGIN,
+    bend_point,
     create_connection,
     create_node,
     many_letter,
@@ -625,3 +626,97 @@ def set_generalization_label_command(
     comando = SetAttr(documento, conexao, conexao, "labelGeneralizacaoText", texto)
     comando.label = "Mudar rótulo"
     return comando
+
+
+# ---------------------------------------------------------------- vértices e pontas da linha
+
+
+def connection_path(conexao: ConnectionFigure) -> list[tuple[float, float]]:
+    """Todos os pontos da linha: ponta inicial, dobras e ponta final."""
+    return [_xy(p) for p in conexao.points]
+
+
+def _path_command(
+    documento: Document,
+    conexao: ConnectionFigure,
+    dobras: list[tuple[float, float]],
+    rotulo: str,
+    inicio: Element | None = None,
+    fim: Element | None = None,
+) -> Command:
+    """Troca as dobras da linha e religa as pontas às bordas (mirando a dobra mais próxima)."""
+    pontos = conexao.child("points")
+    if pontos is None or len(pontos.children) < 2:
+        raise ValueError("conexão sem linha")
+    inicio = inicio if inicio is not None else conexao.start
+    fim = fim if fim is not None else conexao.end
+    primeiro, ultimo = pontos.children[0], pontos.children[-1]
+    rect_inicio = node_rect(inicio) if inicio is not None else None
+    rect_fim = node_rect(fim) if fim is not None else None
+    if rect_inicio is not None and rect_fim is not None:
+        (x1, y1), (x2, y2) = route_ends(rect_inicio, rect_fim, dobras)
+        primeiro, ultimo = _moved_point(primeiro, x1, y1), _moved_point(ultimo, x2, y2)
+    novos = [primeiro, *(bend_point(x, y) for x, y in dobras), ultimo]
+    comando = SetChildren(documento, conexao, pontos, novos)
+    comando.label = rotulo
+    return comando
+
+
+def _bends(conexao: ConnectionFigure) -> list[tuple[float, float]]:
+    return connection_path(conexao)[1:-1]
+
+
+def add_bend_command(
+    documento: Document, conexao: ConnectionFigure, trecho: int, ponto: tuple[float, float]
+) -> Command:
+    """Põe uma dobra no `trecho` (0 = da ponta inicial à 1ª dobra), no ponto dado."""
+    dobras = _bends(conexao)
+    if not 0 <= trecho <= len(dobras):
+        raise ValueError(f"trecho inexistente: {trecho}")
+    return _path_command(
+        documento, conexao, [*dobras[:trecho], ponto, *dobras[trecho:]], "Adicionar vértice"
+    )
+
+
+def move_bend_command(
+    documento: Document, conexao: ConnectionFigure, indice: int, ponto: tuple[float, float]
+) -> Command:
+    """Leva a dobra `indice` (0 = a primeira) para o ponto dado."""
+    dobras = _bends(conexao)
+    if not 0 <= indice < len(dobras):
+        raise ValueError(f"vértice inexistente: {indice}")
+    dobras[indice] = ponto
+    return _path_command(documento, conexao, dobras, "Mover vértice")
+
+
+def remove_bend_command(documento: Document, conexao: ConnectionFigure, indice: int) -> Command:
+    dobras = _bends(conexao)
+    if not 0 <= indice < len(dobras):
+        raise ValueError(f"vértice inexistente: {indice}")
+    del dobras[indice]
+    return _path_command(documento, conexao, dobras, "Remover vértice")
+
+
+def straighten_command(documento: Document, conexao: ConnectionFigure) -> Command:
+    """Tira todas as dobras: a linha volta a ir de centro a centro."""
+    return _path_command(documento, conexao, [], "Endireitar linha")
+
+
+def reconnect_command(
+    documento: Document, conexao: ConnectionFigure, ponta: str, no: NodeFigure
+) -> Command:
+    """Liga a ponta `"start"` ou `"end"` da conexão a outro elemento (como arrastar a ponta no
+    TerraER). As dobras ficam; o tipo, o sentido e a letra da conexão não mudam."""
+    if ponta not in ("start", "end"):
+        raise ValueError(f"ponta desconhecida: {ponta}")
+    outro = conexao.end if ponta == "start" else conexao.start
+    if no is outro:
+        raise ValueError("uma conexão precisa de dois elementos diferentes")
+    envoltorio = conexao.child("startConnector" if ponta == "start" else "endConnector")
+    if envoltorio is None:
+        raise ValueError("conexão sem conector")
+    conector = Element("rConnector", children=[Element("Owner", children=[no])], has_id=True)
+    comandos: list[Command] = [SetChildren(documento, conexao, envoltorio, [conector])]
+    inicio, fim = (no, conexao.end) if ponta == "start" else (conexao.start, no)
+    comandos.append(_path_command(documento, conexao, _bends(conexao), "", inicio, fim))
+    return Composite(comandos, "Reconectar")
