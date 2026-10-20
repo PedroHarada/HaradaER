@@ -98,7 +98,8 @@ git push origin v1.0.0
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
 (`packaging/HaradaER.spec`) e publica a versão em Releases. Se algum teste falhar, nada é
-publicado. Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento. A cada envio ao
+publicado. Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento. Cada versão nova substitui a anterior em
+Releases (as etiquetas antigas continuam no git). A cada envio ao
 `main` e a cada pull request, só o lint e os testes rodam (no Linux).
 
 ## Desenvolvimento
