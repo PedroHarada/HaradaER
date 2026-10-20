@@ -8,7 +8,7 @@ from __future__ import annotations
 from haradaer.core.rules import INCOMPLETE, INVALID_PAIR, Issue
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 
-_NOMES = dict(ELEMENTS) | dict(CONNECTIONS)
+_NOMES = dict(ELEMENTS) | dict(CONNECTIONS) | {"g": "Grupo", "lcf": "Ligação de atributo"}
 
 _FALTANDO = {
     "ambas": "as duas pontas estão soltas",

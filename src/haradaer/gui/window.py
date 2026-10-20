@@ -6,7 +6,7 @@ import errno
 from pathlib import Path
 
 import shiboken6
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QMimeData, Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -19,6 +19,11 @@ from PySide6.QtWidgets import (
 )
 
 from haradaer.core import io
+from haradaer.core.commands import (
+    PASTE_OFFSET,
+    fix_attribute_types_command,
+    invalid_attribute_types,
+)
 from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.figures.types import NodeFigure
 from haradaer.core.model.document import Document
@@ -40,6 +45,7 @@ from haradaer.gui.verification import name_of, pairs_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 
 TITLE = "HaradaER"
+CLIPBOARD_MIME = "application/x-haradaer-figuras"  # pedaço de arquivo no formato do TerraER
 UNTITLED = "Sem título"
 
 ALIGN_NAMES = [
@@ -81,6 +87,8 @@ class DocumentWindow(QMainWindow):
         super().__init__()
         self.path: Path | None = None
         self.recent = recent if recent is not None else RecentFiles()
+        self._last_paste: str | None = None
+        self._paste_count = 0
         self.diagram_scene = DiagramScene()
         self.view = DiagramView(self.diagram_scene)
         self.setCentralWidget(self.view)
@@ -139,6 +147,13 @@ class DocumentWindow(QMainWindow):
         self.action_delete = self._action("E&xcluir", QKeySequence.StandardKey.Delete, self._delete)
         editar.addActions([self.action_undo, self.action_redo])
         editar.addSeparator()
+        self.action_cut = self._action("Recor&tar", QKeySequence.StandardKey.Cut, self.cut)
+        self.action_copy = self._action("&Copiar", QKeySequence.StandardKey.Copy, self.copy)
+        self.action_paste = self._action("C&olar", QKeySequence.StandardKey.Paste, self.paste)
+        self.action_duplicate = self._action("D&uplicar", "Ctrl+D", self.duplicate)
+        editar.addActions([self.action_cut, self.action_copy, self.action_paste])
+        editar.addAction(self.action_duplicate)
+        editar.addSeparator()
         editar.addAction(self.action_delete)
         editar.addSeparator()
         self.action_select_all = self._action(
@@ -161,6 +176,10 @@ class DocumentWindow(QMainWindow):
         self.action_front = self._action("&Trazer para a frente", "Ctrl+]", self._bring_to_front)
         self.action_back = self._action("&Enviar para trás", "Ctrl+[", self._send_to_back)
         organizar.addActions([self.action_front, self.action_back])
+        organizar.addSeparator()
+        self.action_group = self._action("A&grupar", "Ctrl+G", self.group)
+        self.action_ungroup = self._action("&Desagrupar", "Ctrl+Shift+G", self.ungroup)
+        organizar.addActions([self.action_group, self.action_ungroup])
         organizar.addSeparator()
         alinhar = organizar.addMenu("&Alinhar")
         self.align_actions: dict[str, QAction] = {}
@@ -329,10 +348,29 @@ class DocumentWindow(QMainWindow):
             return False
         self._attach(documento, caminho)
         self.recent.add(caminho)
+        self._fix_invalid_attribute_types()
         self.view.zoom_actual()
         self.view.horizontalScrollBar().setValue(self.view.horizontalScrollBar().minimum())
         self.view.verticalScrollBar().setValue(self.view.verticalScrollBar().minimum())
         return True
+
+    def _fix_invalid_attribute_types(self) -> None:
+        """RNF-16: tipo de atributo inválido vira o tipo padrão, com aviso (o TerraER abriria o
+        arquivo, mas falharia ao salvar). A troca fica no histórico e pode ser desfeita."""
+        invalidos = invalid_attribute_types(self._editor.document)
+        if not invalidos:
+            return
+        linhas = [f"• {no.name or '(sem nome)'}: {no.attribute_type}" for no in invalidos[:10]]
+        if len(invalidos) > 10:
+            linhas.append(f"... e mais {len(invalidos) - 10}")
+        self._editor.history.execute(fix_attribute_types_command(self._editor.document))
+        QMessageBox.warning(
+            self,
+            "Tipos de atributo inválidos",
+            "Estes atributos tinham um tipo que o TerraER não reconhece e passaram a usar o tipo "
+            "padrão. O TerraER abriria o arquivo, mas não conseguiria salvá-lo.\n\n"
+            + "\n".join(linhas),
+        )
 
     def save(self) -> bool:
         """Grava no arquivo atual (ou pergunta onde). Devolve `False` se não gravou."""
@@ -459,27 +497,81 @@ class DocumentWindow(QMainWindow):
         self.properties.show_figures(selecionadas)
 
     def _select_from_inspector(self, figuras: list) -> None:
-        chaves = {id(f) for f in figuras}
-        self.diagram_scene.select_where(lambda f: id(f) in chaves)
+        """Seleciona as figuras; um elemento dentro de grupo seleciona o grupo."""
+        itens = {self.diagram_scene.item_containing(f) for f in figuras} - {None}
+        self.diagram_scene.select_where(lambda f: self.diagram_scene.item_for(f) in itens)
         if len(figuras) == 1:
             self._show_in_view(figuras[0])
 
     def _show_in_view(self, figura) -> None:
-        item = self.diagram_scene.item_for(figura)
+        item = self.diagram_scene.item_containing(figura)
         if item is not None:
             self.view.ensureVisible(item, 40, 40)
 
     def locate(self, figura) -> None:
         """Seleciona a figura e a traz para o centro do desenho (RF-08)."""
-        self.diagram_scene.select_only(figura)
-        item = self.diagram_scene.item_for(figura)
+        item = self.diagram_scene.item_containing(figura)
         if item is not None:
+            self.diagram_scene.select_only(item.figure)
             self.view.centerOn(item)
 
     def _find(self) -> None:
         self.inspector_dock.show()
         self.inspector_dock.raise_()
         self.inspector.focus_search()
+
+    # --- copiar, colar, duplicar, agrupar --------------------------------------------------------
+
+    def copy(self) -> bool:
+        texto = self._editor.copy_text(self.diagram_scene.selected_figures())
+        if texto is None:
+            self.statusBar().showMessage("Nada para copiar.", 3000)
+            return False
+        dados = QMimeData()
+        dados.setData(CLIPBOARD_MIME, texto.encode("ascii"))
+        QApplication.clipboard().setMimeData(dados)
+        return True
+
+    def cut(self) -> None:
+        if self.copy():
+            self._delete()
+
+    def paste(self) -> bool:
+        dados = QApplication.clipboard().mimeData()
+        if dados is None or not dados.hasFormat(CLIPBOARD_MIME):
+            return False
+        texto = bytes(dados.data(CLIPBOARD_MIME).data()).decode("ascii", errors="replace")
+        # colar de novo o mesmo conteúdo desloca mais um pouco, para não cair em cima
+        vezes = self._paste_count + 1 if texto == self._last_paste else 1
+        novas = self._editor.paste(texto, PASTE_OFFSET * vezes)
+        if novas is None:
+            self.statusBar().showMessage("A área de transferência não tem um modelo.", 3000)
+            return False
+        self._last_paste, self._paste_count = texto, vezes
+        self._select_figures(novas)
+        return True
+
+    def duplicate(self) -> None:
+        novas = self._editor.duplicate(self.diagram_scene.selected_figures())
+        if novas:
+            self._select_figures(novas)
+
+    def group(self) -> None:
+        grupo = self._editor.group(self.diagram_scene.selected_figures())
+        if grupo is not None:
+            self.diagram_scene.select_only(grupo)
+
+    def ungroup(self) -> None:
+        soltas = []
+        for figura in self.diagram_scene.selected_figures():
+            if figura.tag == "g":
+                soltas += self._editor.ungroup(figura)
+        if soltas:
+            self._select_figures(soltas)
+
+    def _select_figures(self, figuras: list) -> None:
+        chaves = {id(f) for f in figuras}
+        self.diagram_scene.select_where(lambda f: id(f) in chaves)
 
     def _delete(self) -> None:
         self._editor.delete(self.diagram_scene.selected_figures())

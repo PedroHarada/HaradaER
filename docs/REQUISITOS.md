@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.9 · 2026-10-19 · Rascunho
+Versão 1.0 · 2026-10-20 · Revisão da v1
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -289,4 +289,63 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 - `docs/referencia-terraer/amostra-figuras-de-apoio.xml`: texto livre, formas, linhas, bézier, grupo e imagem.
 - `docs/referencia-terraer/amostra-caracteres-invalidos.xml`: caracteres de controle que o TerraER grava e o XML puro recusa (o HaradaER devolve erro claro).
 - `docs/referencia-terraer/ddl-saida-terraer.txt`, `matriz-validacao.txt` e `leitura-casos/`: saídas brutas das investigações.
+- `docs/referencia-terraer/amostra-paralelas.xml` e `amostra-paralelas-dupla.xml`: três conexões "N" entre o mesmo par, feitas pela ferramenta de conexão do TerraER (desvio e letras N, M, P).
+- `docs/referencia-terraer/criados-no-haradaer/`: arquivos criados pelos comandos do HaradaER, o que o TerraER regravou deles e as imagens dos dois programas (evidência do RNF-01 e do critério 4).
 - `docs/referencia-terraer/harness/`: programas Java que usam o `TerraER3.14.jar` para gerar as amostras e medir a validação. Para reproduzir: extrair o `TerraER3.14.jar` numa pasta `jar/` (que contém também `swing-layout.jar`, `MRJAdapter.jar` e `appframework-0.42.jar`), então `javac -cp "jar:jar/swing-layout.jar:jar/MRJAdapter.jar:jar/appframework-0.42.jar" -d out harness/*.java` e `java -Djava.awt.headless=true -cp "out:<mesmo classpath>" Gen2 write saida.xml` (ou `Gen2 read entrada.xml saida.xml`, ou `Matrix`).
+
+## 10. Estado da v1 (revisão de 2026-10-20)
+
+Conferência de cada requisito com o programa e os testes (414 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a opção de inglês (RNF-06) e os painéis de paleta e mensagens (RNF-09).
+
+**Requisitos funcionais**
+
+| ID | Estado | Onde / observação |
+|---|---|---|
+| RF-01 | Pronto | Novo, abrir, salvar, salvar como, abrir recente (M4, M5d) |
+| RF-02 | Pronto | Os 13 elementos e as 9 conexões na barra (M4) |
+| RF-03 | Pronto | Mover, redimensionar, excluir, copiar, recortar, colar (também entre janelas), duplicar, agrupar e desagrupar |
+| RF-04 | Pronto | Nome e rótulo da generalização: no desenho e em Propriedades |
+| RF-05 | Pronto | Tipo SQL e anulabilidade em Propriedades (M5c) |
+| RF-06 | Pronto | Desfazer e refazer de toda edição |
+| RF-07 | Pronto | Zoom, grade, alinhar, frente/trás, selecionar do mesmo tipo (M3, M5b) |
+| RF-08 | Pronto | Localizar (Ctrl+F) no inspetor (M5c) |
+| RF-09 | Pronto | Conexões com problema em vermelho, liga/desliga em Exibir (M5a) |
+| RF-10 | Pronto | Conexões aceitas entre dois elementos (negrito na barra) e pares aceitos de um tipo (barra de status) (M5a) |
+| RF-11 | Pronto | PNG, JPG, SVG, PDF e copiar como imagem (M5d) |
+| RF-12 | Pronto | Figuras de apoio regravadas iguais (testes de ida e volta) |
+| RF-13 | Fora da v1 | DDL |
+| RF-14 | Fora da v1 | Impressão |
+| RF-15 | Pronto | Pinça e rolagem com dois dedos, testados pelo autor no Linux/Wayland (M3) |
+| RF-16 | Pronto | Inspetor de objetos (M5c) |
+| RF-17 | Pronto | Pergunta ao fechar; mensagens claras ao não conseguir gravar (M4, M5a) |
+| RF-18 | Pronto | Campo de nome sobre o elemento (M4) |
+| RF-19 | Pronto | Uma janela por documento |
+| RF-20 | Pronto (parte da v1) | `sql` lido e regravado; edição fora da v1 |
+
+Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
+
+**Requisitos não funcionais**
+
+| ID | Estado | Onde / observação |
+|---|---|---|
+| RNF-01 | Pronto | Ida e volta idêntica byte a byte com as amostras do TerraER; arquivos criados no HaradaER regravados pelo TerraER sem mudar o modelo (`criados-no-haradaer/`) |
+| RNF-02, 03, 04, 05 | Pronto | Leitura e gravação (M1) |
+| RNF-06 | **Fora da v1 (decisão do autor)** | A interface está só em português; a opção de inglês fica para depois |
+| RNF-07 | Pronto | Python 3.14, PySide6 6.12, Linux/Wayland |
+| RNF-08 | Pronto | Núcleo sem Qt, conferido por teste |
+| RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor e propriedades) com disposição lembrada. Ficam para depois a paleta como painel (hoje é uma barra de ferramentas fixa) e o painel de mensagens da verificação (hoje a mensagem aparece ao parar o mouse sobre a conexão vermelha) |
+| RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
+| RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
+| RNF-12 | Pronto | 414 testes, sem tela |
+| RNF-13 | Pronto | Nada copiado do `.jar` |
+| RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
+
+**Critérios de aceitação (seção 7)**
+
+| Critério | Estado |
+|---|---|
+| 1. Golden files | Pronto: todas as amostras regravadas idênticas |
+| 2. Ida e volta pelo TerraER | Pronto: `RegravaTerra.java` lê e regrava os arquivos do HaradaER sem exceção e com o mesmo modelo |
+| 3. Abertura na interface do TerraER | Feito pelo autor nos testes manuais de cada marco |
+| 4. Fuzz de estrutura | Pronto: `criados-no-haradaer/todas-validas.xml`, com as 343 combinações aceitas, passa pelo TerraER e nenhuma conexão fica vermelha na validação dele |
+

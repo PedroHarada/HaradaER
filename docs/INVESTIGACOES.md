@@ -299,3 +299,12 @@ As pontas sempre se religam mirando o vértice mais próximo. Reconectar mantém
 
 Conferido: `criados-no-haradaer/vertices.xml` (feito pelos comandos, `gera_no_haradaer.py --vertices`) é relido e regravado pelo TerraER com os mesmos pontos e as mesmas ligações (`vertices-regravado-pelo-terraer.xml`), e as duas imagens ficam iguais.
 
+## 17. Achados da revisão da v1
+
+- **Critério 4.** Um modelo com uma conexão para cada uma das 343 combinações aceitas (`criados-no-haradaer/todas-validas.xml`, gerado pelos comandos do HaradaER) é lido e regravado pelo TerraER com o mesmo modelo, e a validação do próprio TerraER (`ValidaArquivo.java`) não marca nenhuma conexão. A inversão entidade → relacionamento (seção 15) não torna nenhuma conexão inválida.
+- **`lcf` vira `lcaf`.** O TerraER lê `lcf` como apelido de `lcaf` e, ao gravar, sempre escreve `lcaf`. O HaradaER preserva a tag lida, e a barra de ferramentas só cria `lcaf`.
+- **Círculo da generalização.** A diferença de menos de 2 unidades nas pontas (seção 14) vale para qualquer conexão que toque um círculo, não só para as de generalização.
+- **Tipo de atributo inválido (RNF-16).** Não estava implementado: um `attributeType` inválido era regravado como estava. Agora o HaradaER avisa ao abrir e troca pelo tipo padrão (troca que pode ser desfeita).
+- **Permissões ao salvar.** O arquivo salvo ficava só com permissão do dono, porque o temporário da gravação segura nasce assim. Agora mantém as permissões do arquivo substituído.
+- **Agrupar (RF-03).** O TerraER usa o `GroupAction` do JHotDraw: tira as figuras do desenho, cria um `g` com elas na ordem de empilhamento e o põe no topo; desagrupar devolve as figuras ao topo. Com elementos que têm conexões (`harness/Grupo.java`, gabarito `amostra-grupo.xml`), as conexões ficam fora do grupo e continuam ligadas aos elementos de dentro: como a conexão vem antes do grupo, o elemento é gravado dentro do `Owner` da conexão e o grupo só faz `ref` a ele. O TerraER relê, valida e, ao mover o grupo, as pontas acompanham. `criados-no-haradaer/grupos.xml` (grupo, grupo dentro de grupo, colar e duplicar, feitos no HaradaER) passa pelo TerraER sem mudança e sem conexão vermelha.
+- **Copiar e colar.** O conteúdo copiado é um pedaço de arquivo no formato do TerraER, num tipo próprio da área de transferência (`application/x-haradaer-figuras`); por isso colar entre janelas funciona, mas não com o TerraER (QA-13).

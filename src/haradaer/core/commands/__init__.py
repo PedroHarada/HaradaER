@@ -1,20 +1,33 @@
 """Comandos de edição e histórico de desfazer/refazer."""
 
+from haradaer.core.commands.clipboard import (
+    PASTE_OFFSET,
+    copy_selection,
+    copy_text,
+    duplicate_command,
+    paste_command,
+)
 from haradaer.core.commands.edit import (
     ALIGNMENTS,
     add_bend_command,
     add_node_command,
     align_command,
+    all_nodes,
     bring_to_front_command,
+    can_group,
     can_move,
     change_connection_type_command,
     connect_command,
     connection_path,
     connections_of,
+    fix_attribute_types_command,
+    group_command,
+    invalid_attribute_types,
     min_node_size,
     move_bend_command,
     move_command,
     name_string,
+    nested_nodes,
     new_node,
     reconnect_command,
     remove_bend_command,
@@ -26,10 +39,23 @@ from haradaer.core.commands.edit import (
     set_generalization_label_command,
     set_nullable_command,
     straighten_command,
+    ungroup_command,
 )
 from haradaer.core.commands.history import Command, Composite, History
 
 __all__ = [
+    "paste_command",
+    "duplicate_command",
+    "copy_text",
+    "copy_selection",
+    "PASTE_OFFSET",
+    "ungroup_command",
+    "nested_nodes",
+    "group_command",
+    "can_group",
+    "all_nodes",
+    "invalid_attribute_types",
+    "fix_attribute_types_command",
     "add_bend_command",
     "connection_path",
     "move_bend_command",

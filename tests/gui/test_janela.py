@@ -106,3 +106,15 @@ def test_fechar_remove_a_janela_do_gerenciador(gerenciador, referencia):
     gerenciador.open_path(referencia / "amostra-todos-os-tipos.xml")
     a.close()
     assert [j.path.name for j in gerenciador.windows] == ["amostra-todos-os-tipos.xml"]
+
+
+def test_tipo_de_atributo_invalido_avisa_e_usa_o_padrao(qtbot, referencia, monkeypatch):
+    avisos = []
+    monkeypatch.setattr(QMessageBox, "warning", lambda pai, titulo, texto: avisos.append(texto))
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Discard)
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert janela.load(referencia / "leitura-casos" / "tipo_FOO_.xml")
+    assert len(avisos) == 1 and "FOO" in avisos[0]
+    assert janela.editor.document.figures[0].attribute_type == "VARCHAR2(128)"
+    assert janela.isWindowModified()  # a troca precisa ser salva

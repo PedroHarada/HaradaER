@@ -4,10 +4,15 @@
 - `paralelas.xml` (com `--paralelas`): três conexões "N" e uma "1" chegando no mesmo
   relacionamento, duas delas entre o mesmo par (desvio e letras N, M, P);
 - `vertices.xml` (com `--vertices`): vértices adicionados, movidos e removidos, uma linha
-  endireitada e uma ponta reconectada a outro elemento.
+  endireitada e uma ponta reconectada a outro elemento;
+- `todas-validas.xml` (com `--todas-validas`): uma conexão para cada par aceito da tabela de
+  validação (343 trios tipo/início/fim), cada uma entre dois elementos novos (critério 4);
+- `grupos.xml` (com `--grupos`): grupo com conexões, grupo dentro de grupo, figuras coladas e
+  duplicadas (RF-03).
 
 Uso, a partir da raiz do projeto:
-`.venv/bin/python <este arquivo> [--paralelas | --vertices] saida.xml`.
+`.venv/bin/python <este arquivo> [--paralelas | --vertices | --todas-validas | --grupos]
+saida.xml`.
 """
 
 import sys
@@ -19,9 +24,13 @@ from haradaer.core.commands import (
     add_bend_command,
     add_node_command,
     connect_command,
+    copy_text,
+    duplicate_command,
+    group_command,
     move_bend_command,
     move_command,
     new_node,
+    paste_command,
     reconnect_command,
     remove_bend_command,
     rename_command,
@@ -31,6 +40,7 @@ from haradaer.core.commands import (
 )
 from haradaer.core.figures.factory import KINDS
 from haradaer.core.model.document import Document
+from haradaer.core.rules import CONNECTION_RULES
 
 MEDIDOR = FixedMeasurer(0.55, 1.36)
 
@@ -110,10 +120,55 @@ def vertices(destino: str) -> None:
     print("ok", len(doc.figures))
 
 
+def todas_validas(destino: str) -> None:
+    doc, historico = Document.new(), History()
+    trios = sorted((tag, a, b) for tag, pares in CONNECTION_RULES.items() for a, b in pares)
+    for i, (tag, inicio, fim) in enumerate(trios):
+        x, y = 60 + (i % 12) * 260, 60 + (i // 12) * 200
+        origem, destino_no = (
+            new_node(inicio, x, y, MEDIDOR),
+            new_node(fim, x + 130, y + 110, MEDIDOR),
+        )
+        historico.execute(add_node_command(doc, origem))
+        historico.execute(add_node_command(doc, destino_no))
+        historico.execute(connect_command(doc, tag, origem, destino_no))
+    io.save(doc, destino)
+    print("ok", len(trios), "conexões")
+
+
+def grupos(destino: str) -> None:
+    doc, historico = Document.new(), History()
+    aluno = new_node("ent", 60, 320, MEDIDOR)
+    cursa = new_node("rel", 60, 60, MEDIDOR)
+    curso = new_node("ent", 420, 320, MEDIDOR)
+    nome = new_node("atr", 60, 480, MEDIDOR)
+    for no in (aluno, cursa, curso, nome):
+        historico.execute(add_node_command(doc, no))
+    historico.execute(connect_command(doc, "llabelUm", aluno, cursa))
+    historico.execute(connect_command(doc, "llabelMuitos", curso, cursa))
+    historico.execute(connect_command(doc, "lcaf", nome, aluno))
+    comando, grupo = group_command(doc, [aluno, cursa])
+    historico.execute(comando)
+    comando, _externo = group_command(doc, [grupo, nome])
+    historico.execute(comando)
+    historico.execute(move_command(doc, [_externo], 20, 10))
+    comando, _ = paste_command(doc, copy_text(doc, [curso]), 300, 0)
+    historico.execute(comando)
+    duplicado = duplicate_command(doc, [_externo])
+    assert duplicado is not None
+    historico.execute(duplicado[0])
+    io.save(doc, destino)
+    print("ok", len(doc.figures))
+
+
 if __name__ == "__main__":
     if sys.argv[1] == "--paralelas":
         paralelas(sys.argv[2])
     elif sys.argv[1] == "--vertices":
         vertices(sys.argv[2])
+    elif sys.argv[1] == "--todas-validas":
+        todas_validas(sys.argv[2])
+    elif sys.argv[1] == "--grupos":
+        grupos(sys.argv[2])
     else:
         main(sys.argv[1])

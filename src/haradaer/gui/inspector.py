@@ -10,6 +10,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
+from haradaer.core.commands import all_nodes
 from haradaer.core.erview import ATTRIBUTE_TAGS, attribute_owners, normalize
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
@@ -72,11 +73,11 @@ class ObjectInspector(QWidget):
         self._figures.clear()
         donos = attribute_owners(documento)
         filhos: dict[int, list[NodeFigure]] = {}
-        for figura in documento.figures:
-            if isinstance(figura, NodeFigure) and id(figura) in donos:
+        nos = all_nodes(documento)
+        for figura in nos:
+            if id(figura) in donos:
                 filhos.setdefault(id(donos[id(figura)]), []).append(figura)
 
-        nos = [f for f in documento.figures if isinstance(f, NodeFigure)]
         for titulo, tags in CATEGORIES:
             grupo = [f for f in nos if f.tag in tags and id(f) not in donos]
             if titulo == "Atributos sem dono":

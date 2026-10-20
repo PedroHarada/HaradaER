@@ -37,7 +37,7 @@ from PySide6.QtWidgets import (
 
 from haradaer.core.appearance import FontSpec, TextOp
 from haradaer.core.appearance.describe import font_of
-from haradaer.core.commands import can_move, connection_path
+from haradaer.core.commands import can_move, connection_path, nested_nodes
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import nearest_segment, node_rect
 from haradaer.core.rules import is_valid_connection
@@ -385,10 +385,8 @@ class DiagramView(QGraphicsView):
         assert self._reconnecting is not None
         conexao, ponta = self._reconnecting
         outro = conexao.end if ponta == "start" else conexao.start
-        item = self._item_at(pos, nodes_only=True)
-        if item is None or not isinstance(item.figure, NodeFigure) or item.figure is outro:
-            return None
-        return item.figure
+        no = self._node_at(pos)
+        return None if no is None or no is outro else no
 
     def _finish_reconnect(self, pos: QPointF | None) -> None:
         if self._reconnecting is None:
@@ -492,6 +490,19 @@ class DiagramView(QGraphicsView):
 
     def _scene_pos(self, event: QMouseEvent) -> QPointF:
         return self.mapToScene(event.position().toPoint())
+
+    def _node_at(self, pos: QPointF) -> NodeFigure | None:
+        """O elemento sob o mouse, inclusive um que esteja dentro de um grupo."""
+        item = self._item_at(pos, nodes_only=True)
+        if item is None:
+            return None
+        if isinstance(item.figure, NodeFigure):
+            return item.figure
+        for no in reversed(nested_nodes(item.figure)):  # o de cima primeiro
+            rect = node_rect(no)
+            if rect is not None and QRectF(*rect).contains(pos):
+                return no
+        return None
 
     def _item_at(self, pos: QPointF, *, nodes_only: bool = False) -> FigureItem | None:
         for item in self._scene.items(pos):
@@ -624,7 +635,8 @@ class DiagramView(QGraphicsView):
                     self._scene.select_only(item.figure)
                     return
             if item is not None:
-                self._edit_text(item.figure)
+                no = self._node_at(pos) if item.figure.tag == "g" else None
+                self._edit_text(no if no is not None else item.figure)
                 return
         super().mouseDoubleClickEvent(event)
 
@@ -688,20 +700,18 @@ class DiagramView(QGraphicsView):
     # --- conectar ----------------------------------------------------------------------------
 
     def _begin_connection(self, pos: QPointF) -> None:
-        item = self._item_at(pos, nodes_only=True)
-        if item is None or not isinstance(item.figure, NodeFigure):
+        no = self._node_at(pos)
+        if no is None:
             return
-        self._connect_from = item.figure
+        self._connect_from = no
         self._preview = QGraphicsLineItem()
         self._preview.setZValue(1e9)
         self._scene.addItem(self._preview)
         self._update_connection(pos)
 
     def _target_at(self, pos: QPointF) -> NodeFigure | None:
-        item = self._item_at(pos, nodes_only=True)
-        if item is None or item.figure is self._connect_from:
-            return None
-        return item.figure if isinstance(item.figure, NodeFigure) else None
+        no = self._node_at(pos)
+        return None if no is self._connect_from else no
 
     def _update_connection(self, pos: QPointF) -> None:
         origem, previa = self._connect_from, self._preview

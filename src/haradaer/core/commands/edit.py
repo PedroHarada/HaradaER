@@ -13,6 +13,7 @@ from haradaer.core.commands.history import Command, Composite
 from haradaer.core.figures.factory import (
     ATTRIBUTE_TYPES,
     DEFAULT_GENERALIZATION_LABEL,
+    KINDS,
     LABELED_GENERALIZATIONS,
     MANY_TAGS,
     TEXT_MARGIN,
@@ -29,7 +30,7 @@ from haradaer.core.figures.tags import (
     TEXT_PART_TAGS,
     TYPED_ATTRIBUTE_TAGS,
 )
-from haradaer.core.figures.types import ConnectionFigure, NodeFigure
+from haradaer.core.figures.types import ConnectionFigure, NodeFigure, SupportFigure
 from haradaer.core.geometry import (
     SHAPE_PART_TAGS,
     Rect,
@@ -297,11 +298,30 @@ def connect_command(documento: Document, tag: str, origem: Element, destino: Ele
     return Composite([InsertFigure(documento, conexao), *comandos], "Conectar")
 
 
+def nested_nodes(figura: Element) -> list[NodeFigure]:
+    """A figura, se for um elemento, ou os elementos dentro dela, se for um grupo (`g`)."""
+    if isinstance(figura, NodeFigure):
+        return [figura]
+    if figura.tag != "g":
+        return []
+    grupo = figura.child("children")
+    return [no for filha in (grupo.children if grupo else []) for no in nested_nodes(filha)]
+
+
+def all_nodes(documento: Document) -> list[NodeFigure]:
+    """Todos os elementos do desenho, inclusive os que estão dentro de grupos."""
+    return [no for figura in documento.figures for no in nested_nodes(figura)]
+
+
 def remove_command(documento: Document, figuras: list[Element]) -> Command:
-    """Exclui figuras e, junto, as conexões ligadas a elas (como o TerraER)."""
+    """Exclui figuras e, junto, as conexões ligadas a elas (como o TerraER).
+
+    Excluir um grupo leva as conexões ligadas aos elementos de dentro dele.
+    """
     escolhidas = {id(f) for f in figuras}
+    ligados = {id(no) for f in figuras for no in nested_nodes(f)}
     todas = list(figuras)
-    todas += [c for c in connections_of(documento, escolhidas) if id(c) not in escolhidas]
+    todas += [c for c in connections_of(documento, ligados) if id(c) not in escolhidas]
     ordem = {id(f): i for i, f in enumerate(documento.figures)}
     todas = [f for f in todas if id(f) in ordem]
     todas.sort(key=lambda f: ordem[id(f)], reverse=True)
@@ -320,6 +340,9 @@ def _shift(
     grupo = parte.child("children")
     for filha in grupo.children if grupo else []:
         comandos.extend(_shift(documento, figura, filha, dx, dy))
+    linha = parte.child("points") if figura is not parte else None
+    for ponto in linha.children if linha is not None else []:  # linha livre dentro de um grupo
+        comandos.extend(_shift(documento, figura, ponto, dx, dy))
     return comandos
 
 
@@ -340,16 +363,17 @@ def _move_each(
     comandos: list[Command] = []
     movidos: set[int] = set()
     previstos: dict[int, Rect] = {}
+    deltas: dict[int, tuple[float, float]] = {}
     for figura, dx, dy in deslocamentos:
         if not can_move(figura):
             continue
-        movidos.add(id(figura))
         comandos.extend(_shift(documento, figura, figura, dx, dy))
-        if isinstance(figura, NodeFigure):
-            rect = node_rect(figura)
+        for no in nested_nodes(figura):  # o próprio elemento, ou os de dentro do grupo
+            movidos.add(id(no))
+            deltas[id(no)] = (dx, dy)
+            rect = node_rect(no)
             if rect is not None:
-                previstos[id(figura)] = (rect[0] + dx, rect[1] + dy, rect[2], rect[3])
-    deltas = {id(f): (dx, dy) for f, dx, dy in deslocamentos if id(f) in movidos}
+                previstos[id(no)] = (rect[0] + dx, rect[1] + dy, rect[2], rect[3])
     comandos.extend(_reroute(documento, movidos, previstos, deltas))
     return Composite(comandos, rotulo)
 
@@ -720,3 +744,66 @@ def reconnect_command(
     inicio, fim = (no, conexao.end) if ponta == "start" else (conexao.start, no)
     comandos.append(_path_command(documento, conexao, _bends(conexao), "", inicio, fim))
     return Composite(comandos, "Reconectar")
+
+
+# ---------------------------------------------------------------- tipo de atributo inválido
+
+
+def invalid_attribute_types(documento: Document) -> list[NodeFigure]:
+    """Atributos com `attributeType` fora dos cinco que o TerraER sabe reler (RNF-16).
+
+    O TerraER abre um arquivo assim, mas falha ao salvar; por isso o HaradaER nunca o regrava.
+    """
+    return [
+        f
+        for f in documento.figures
+        if isinstance(f, NodeFigure)
+        and f.attribute_type is not None
+        and f.attribute_type not in ATTRIBUTE_TYPES
+    ]
+
+
+def fix_attribute_types_command(documento: Document) -> Command:
+    """Troca cada tipo inválido pelo tipo padrão do elemento (o mesmo de um atributo novo)."""
+    comandos: list[Command] = []
+    for no in invalid_attribute_types(documento):
+        tipado = KINDS[no.tag].typed
+        padrao = tipado[1] if tipado is not None else "VARCHAR2(128)"
+        comandos.append(SetAttr(documento, no, no, "attributeType", padrao))
+    return Composite(comandos, "Corrigir tipos de atributo")
+
+
+# ---------------------------------------------------------------- agrupar e desagrupar
+
+
+def can_group(figuras: list[Element]) -> bool:
+    """Agrupa-se duas ou mais figuras que não sejam conexões (as conexões ficam fora do grupo,
+    ligadas aos elementos de dentro, como no TerraER)."""
+    return len([f for f in figuras if not isinstance(f, ConnectionFigure)]) >= 2
+
+
+def group_command(documento: Document, figuras: list[Element]) -> tuple[Command, Element]:
+    """Junta as figuras num grupo `g` no topo do desenho, na ordem de empilhamento delas
+    (como o `GroupAction` do JHotDraw)."""
+    if not can_group(figuras):
+        raise ValueError("é preciso escolher ao menos duas figuras que não sejam conexões")
+    ordem = {id(f): i for i, f in enumerate(documento.figures)}
+    membros = sorted(
+        (f for f in figuras if not isinstance(f, ConnectionFigure) and id(f) in ordem),
+        key=lambda f: ordem[id(f)],
+    )
+    grupo = SupportFigure("g", children=[Element("children", children=membros)], has_id=True)
+    comandos: list[Command] = [RemoveFigure(documento, f) for f in reversed(membros)]
+    comandos.append(InsertFigure(documento, grupo))
+    return Composite(comandos, "Agrupar"), grupo
+
+
+def ungroup_command(documento: Document, grupo: Element) -> tuple[Command, list[Element]]:
+    """Devolve as figuras do grupo ao topo do desenho e apaga o grupo (como o JHotDraw)."""
+    if grupo.tag != "g" or not any(f is grupo for f in documento.figures):
+        raise ValueError("a figura não é um grupo do desenho")
+    filhos = grupo.child("children")
+    membros = list(filhos.children) if filhos is not None else []
+    comandos: list[Command] = [RemoveFigure(documento, grupo)]
+    comandos += [InsertFigure(documento, f) for f in membros]
+    return Composite(comandos, "Desagrupar"), membros

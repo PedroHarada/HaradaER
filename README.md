@@ -1,10 +1,73 @@
 # HaradaER
 
 Ferramenta de modelagem Entidade-Relacionamento em Python, compatível com o arquivo `.xml` do
-TerraER 3.14: um modelo salvo no HaradaER abre no TerraER com o mesmo
-diagrama, e o inverso também vale.
+TerraER 3.14: um modelo salvo no HaradaER abre no TerraER com o mesmo diagrama, e o inverso
+também vale.
 
-Estado: em construção. Abre, mostra, edita e salva arquivos `.xml` do TerraER (criar, mover, redimensionar, conectar, renomear, excluir, alinhar, desfazer/refazer), com zoom e gestos de trackpad. Marca em vermelho as conexões com problema e recomenda as conexões aceitas entre dois elementos selecionados. Tem grade com encaixe, ordem de empilhamento, inspetor de objetos com busca por nome e painel de propriedades (tipo SQL, anulabilidade, tipo de conexão). Exporta o desenho em PNG, JPG, SVG e PDF e lembra os arquivos recentes. O DDL fica para depois da v1.
+## Instalar e abrir
+
+Alvo da v1: Linux (Wayland), Python 3.14 e PySide6 6.12.
+
+```
+python -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/python -m haradaer              # modelo novo
+.venv/bin/python -m haradaer modelo.xml   # abrir um modelo do TerraER ou do HaradaER
+```
+
+Cada modelo abre na sua própria janela. Os exemplos de `docs/referencia-terraer/` são gabaritos
+dos testes: para experimentar, abra uma **cópia** (`cp docs/referencia-terraer/amostra-basica.xml /tmp/`).
+
+## Como usar
+
+**Desenhar**
+
+| O quê | Como |
+|---|---|
+| Criar um elemento | Escolha o tipo na barra da esquerda e clique no desenho; digite o nome e Enter |
+| Ligar dois elementos | Escolha o tipo de conexão e arraste de um elemento ao outro (verde: o par é aceito; vermelho: não é, mas a conexão é criada e fica marcada) |
+| Repetir a ferramenta | Segure Shift ao clicar ou soltar |
+| Voltar a selecionar | Esc |
+| Renomear | Duplo clique no elemento, ou o campo Nome em Propriedades |
+| Mover e redimensionar | Arraste o elemento; arraste as alças do elemento selecionado |
+| Excluir | Delete (leva junto as conexões ligadas) |
+| Copiar, recortar, colar | Ctrl+C, Ctrl+X, Ctrl+V (também de uma janela para outra); as conexões vão junto quando os dois elementos ligados são copiados |
+| Duplicar | Ctrl+D |
+| Agrupar e desagrupar | Ctrl+G e Ctrl+Shift+G (as conexões continuam ligadas aos elementos de dentro) |
+| Desfazer e refazer | Ctrl+Z e Ctrl+Shift+Z |
+
+**Linhas das conexões** (com a conexão selecionada)
+
+| O quê | Como |
+|---|---|
+| Criar vértice | Arraste o pontinho do meio de um trecho, ou duplo clique na linha |
+| Mover vértice | Arraste o quadrado branco |
+| Remover vértice | Duplo clique no quadrado branco |
+| Endireitar a linha | Botão direito › Endireitar linha |
+| Ligar a ponta a outro elemento | Arraste o quadrado azul da ponta |
+
+Várias conexões entre os mesmos dois elementos saem para os lados, sem se sobrepor, e as
+conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
+
+**Painéis e menus**
+
+- **Inspetor de objetos**: a árvore do modelo, com os atributos dentro do dono. Ctrl+F procura
+  um elemento pelo nome (sem diferenciar maiúsculas e acentos).
+- **Propriedades**: nome, tipo SQL e "pode ser nulo" dos atributos, tipo de uma conexão e
+  rótulo das generalizações.
+- **Exibir**: zoom (também pinça e rolagem com dois dedos no trackpad, ou Ctrl + roda), grade
+  com encaixe, verificação do modelo (conexões com problema em vermelho) e os painéis.
+- **Organizar**: trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar.
+- **Editar**: selecionar tudo ou do mesmo tipo, localizar, copiar o desenho como imagem.
+- **Arquivo**: novo, abrir, abrir recente, salvar, salvar como e exportar o desenho em PNG, JPG,
+  SVG ou PDF.
+
+Com dois elementos selecionados, a barra mostra em negrito as conexões aceitas entre eles.
+
+## Estado
+
+A v1 está pronta, exceto o que `docs/REQUISITOS.md` (seção 10) lista como pendente ou fora da
+v1, como a geração de DDL e a impressão.
 
 ## Documentação
 
@@ -14,19 +77,11 @@ Estado: em construção. Abre, mostra, edita e salva arquivos `.xml` do TerraER 
 
 ## Desenvolvimento
 
-Alvo da v1: Linux (Wayland), Python 3.14 e PySide6 6.12.
-
 ```
-python -m venv .venv
-.venv/bin/pip install -e ".[dev]"
 .venv/bin/pytest
 .venv/bin/ruff check .
 ```
 
-Para abrir um modelo (ou, sem argumento, começar um novo):
-
-```
-.venv/bin/python -m haradaer docs/referencia-terraer/amostra-basica.xml
-```
-
-O `TerraER3.14.jar` é só material de consulta e não faz parte do repositório (está no `.gitignore`).
+O `TerraER3.14.jar` é só material de consulta e não faz parte do repositório (está no
+`.gitignore`). Os programas de `docs/referencia-terraer/harness/` rodam as classes dele para
+gerar os gabaritos e conferir a compatibilidade; precisam de um JDK, mas só para isso.

@@ -18,6 +18,7 @@ GOLDEN = [
     "amostra-conexoes-incompletas.xml",
     "amostra-estilos.xml",
     "amostra-paralelas.xml",
+    "amostra-grupo.xml",
     "amostra-paralelas-dupla.xml",
 ]
 

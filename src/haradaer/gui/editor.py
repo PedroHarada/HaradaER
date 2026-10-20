@@ -12,12 +12,17 @@ from haradaer.core.commands import (
     add_node_command,
     align_command,
     bring_to_front_command,
+    can_group,
     change_connection_type_command,
     connect_command,
+    copy_text,
+    duplicate_command,
+    group_command,
     min_node_size,
     move_bend_command,
     move_command,
     new_node,
+    paste_command,
     reconnect_command,
     remove_bend_command,
     remove_command,
@@ -28,7 +33,9 @@ from haradaer.core.commands import (
     set_generalization_label_command,
     set_nullable_command,
     straighten_command,
+    ungroup_command,
 )
+from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import node_rect
 from haradaer.core.model.document import Document
@@ -128,3 +135,35 @@ class Editor:
         atual = conexao.start if ponta == "start" else conexao.end
         if no is not atual:
             self.history.execute(reconnect_command(self.document, conexao, ponta, no))
+
+    def copy_text(self, figuras: list[Element]) -> str | None:
+        return copy_text(self.document, figuras)
+
+    def paste(self, texto: str, deslocamento: float) -> list[Element] | None:
+        """Cola o texto da área de transferência; `None` se não for um pedaço de modelo."""
+        try:
+            comando, novas = paste_command(self.document, texto, deslocamento, deslocamento)
+        except ArquivoInvalidoError:
+            return None
+        self.history.execute(comando)
+        return novas
+
+    def duplicate(self, figuras: list[Element]) -> list[Element]:
+        resultado = duplicate_command(self.document, figuras)
+        if resultado is None:
+            return []
+        comando, novas = resultado
+        self.history.execute(comando)
+        return novas
+
+    def group(self, figuras: list[Element]) -> Element | None:
+        if not can_group(figuras):
+            return None
+        comando, grupo = group_command(self.document, figuras)
+        self.history.execute(comando)
+        return grupo
+
+    def ungroup(self, grupo: Element) -> list[Element]:
+        comando, membros = ungroup_command(self.document, grupo)
+        self.history.execute(comando)
+        return membros

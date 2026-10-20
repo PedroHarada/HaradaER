@@ -13,6 +13,7 @@ from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QGraphicsScene
 
 from haradaer.core.appearance import describe_figure
+from haradaer.core.commands import nested_nodes
 from haradaer.core.model.document import ADDED, CHANGED, REMOVED, REORDERED, Document
 from haradaer.core.model.element import Element
 from haradaer.core.rules import Issue
@@ -69,6 +70,16 @@ class DiagramScene(QGraphicsScene):
         for item in self._itens.values():
             area = area.united(item.content_rect())
         return area
+
+    def item_containing(self, figura: Element) -> FigureItem | None:
+        """O item da figura, ou o do grupo em que ela está."""
+        item = self.item_for(figura)
+        if item is not None:
+            return item
+        for candidato in self._itens.values():
+            if any(no is figura for no in nested_nodes(candidato.figure)):
+                return candidato
+        return None
 
     def figure_items(self) -> list[FigureItem]:
         return sorted(self._itens.values(), key=lambda i: i.zValue())

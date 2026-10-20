@@ -337,3 +337,32 @@ def test_documento_avisa_o_que_mudou():
     assert eventos[0] == ("added", "ent")
     assert ("changed", "ent") in eventos
     assert eventos[-1] == ("removed", "ent")
+
+
+# ------------------------------------------------------------- tipo de atributo inválido (RNF-16)
+
+
+def test_tipo_invalido_lido_do_arquivo_vira_o_padrao(referencia):
+    from haradaer.core.commands import fix_attribute_types_command, invalid_attribute_types
+
+    original = (referencia / "leitura-casos" / "tipo_FOO_.xml").read_bytes()
+    doc = io.loads(original)
+    assert [n.attribute_type for n in invalid_attribute_types(doc)] == ["FOO"]
+    h = History()
+    h.execute(fix_attribute_types_command(doc))
+    assert doc.figures[0].attribute_type == "VARCHAR2(128)"  # o padrão de um atributo novo
+    assert invalid_attribute_types(doc) == []
+    assert 'attributeType="FOO"' not in io.dumps(doc)
+    h.undo()
+    assert io.dumps(doc) == io.dumps(io.loads(original))
+
+
+def test_arquivos_validos_nao_tem_tipo_invalido(referencia):
+    from haradaer.core.commands import invalid_attribute_types
+
+    for nome in (
+        "amostra-todos-os-tipos.xml",
+        "amostra-basica.xml",
+        "leitura-casos/tipo_NUMBER_.xml",
+    ):
+        assert invalid_attribute_types(io.loads((referencia / nome).read_bytes())) == []

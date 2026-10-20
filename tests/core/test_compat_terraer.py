@@ -11,6 +11,7 @@ from haradaer.core import io
 from haradaer.core.appearance.style import Style
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import node_rect
+from haradaer.core.rules import validate
 
 
 @pytest.fixture
@@ -102,3 +103,53 @@ def test_vertices_editados_e_ponta_reconectada_sobrevivem_ao_terraer(referencia)
     for nossa, dela in zip(nossas, delas, strict=True):
         assert nossa[:4] == dela[:4]
         assert nossa[4] == pytest.approx(dela[4], abs=1e-6)
+
+
+def test_criterio_4_todas_as_conexoes_validas_passam_pelo_terraer(referencia):
+    """Critério 4 de REQUISITOS.md: uma conexão para cada par aceito (343), criadas pelos
+    comandos do HaradaER (`gera_no_haradaer.py --todas-validas`). O TerraER regravou o arquivo
+    com o mesmo modelo e a validação dele (`ValidaArquivo.java`) não marcou nenhuma de vermelho."""
+    pasta = referencia / "criados-no-haradaer"
+    nosso = io.loads((pasta / "todas-validas.xml").read_bytes())
+    dele = io.loads((pasta / "todas-validas-pelo-terraer.xml").read_bytes())
+    assert validate(nosso) == []
+    nossos_nos, nossas = nos_e_ligacoes(nosso)
+    nos_dele, delas = nos_e_ligacoes(dele)
+    assert len(nossas) == len(delas) == 343
+    assert [n[:4] for n in nossos_nos] == [n[:4] for n in nos_dele]
+    for nossa, dela in zip(nossas, delas, strict=True):
+        # `lcf` é apelido de `lcaf`: o TerraER lê os dois e grava sempre `lcaf`
+        tag = "lcaf" if nossa[0] == "lcf" else nossa[0]
+        assert (tag, *nossa[1:4]) == dela[:4]
+        # ponta num círculo de generalização: a caixa do TerraER inclui o texto (seção 14)
+        pontas = {nosso.figures[nossa[1]].tag, nosso.figures[nossa[2]].tag}
+        folga = 2.0 if pontas & {"uniao", "disjuncao", "sobreposicao"} else 1e-6
+        assert nossa[4] == pytest.approx(dela[4], abs=folga)
+
+
+def test_grupos_e_copias_sobrevivem_ao_terraer(referencia):
+    """Grupo, grupo dentro de grupo, figuras coladas e duplicadas, feitos no HaradaER
+    (`gera_no_haradaer.py --grupos`) e regravados pelo TerraER."""
+    from haradaer.core.commands import all_nodes
+
+    pasta = referencia / "criados-no-haradaer"
+    nosso = io.loads((pasta / "grupos.xml").read_bytes())
+    dele = io.loads((pasta / "grupos-regravado-pelo-terraer.xml").read_bytes())
+    assert [f.tag for f in nosso.figures] == [f.tag for f in dele.figures]
+    assert [(n.tag, n.name, node_rect(n)) for n in all_nodes(nosso)] == [
+        (n.tag, n.name, pytest.approx(node_rect(n), abs=1e-6)) for n in all_nodes(dele)
+    ]
+
+    def ligacoes(doc):  # as pontas estão dentro de grupos: identifica pelo nome
+        return [
+            (f.tag, f.start.name, f.end.name, [float(p.attrs[e]) for p in f.points for e in "xy"])
+            for f in doc.figures
+            if isinstance(f, ConnectionFigure)
+        ]
+
+    nossas, delas = ligacoes(nosso), ligacoes(dele)
+    assert len(nossas) == len(delas) == 5
+    for nossa, dela in zip(nossas, delas, strict=True):
+        assert nossa[:3] == dela[:3]
+        assert nossa[3] == pytest.approx(dela[3], abs=1e-6)
+    assert validate(nosso) == []

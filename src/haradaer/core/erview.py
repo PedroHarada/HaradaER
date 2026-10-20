@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import unicodedata
 
+from haradaer.core.commands.edit import all_nodes
 from haradaer.core.figures.tags import TYPED_ATTRIBUTE_TAGS
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
@@ -48,8 +49,4 @@ def normalize(texto: str) -> str:
 def find_nodes(documento: Document, texto: str) -> list[NodeFigure]:
     """Elementos cujo nome contém o texto, na ordem do desenho (RF-08)."""
     procurado = normalize(texto.strip())
-    return [
-        f
-        for f in documento.figures
-        if isinstance(f, NodeFigure) and procurado in normalize(f.name or "")
-    ]
+    return [f for f in all_nodes(documento) if procurado in normalize(f.name or "")]
