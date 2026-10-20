@@ -85,7 +85,7 @@ Também existem no formato, como figuras de apoio: texto (`t`, `tn` negrito, `ti
 | Participação **opcional** em disjunção/sobreposição | `llabelGeneralizacao` | Rótulo editável, gravado no atributo `labelGeneralizacaoText`. |
 | Participação **obrigatória** em disjunção/sobreposição | `llabelDoubleGeneralizacao` | Linha dupla, também com `labelGeneralizacaoText`. |
 
-Os rótulos `1` e `N` são **implícitos na tag**; o arquivo não grava texto para eles.
+O rótulo `1` é implícito na tag. Nas conexões "N", o TerraER numera as de um mesmo relacionamento como N, M, P, Q, R, S e grava a letra no estilo da conexão (`<a><text><string>M</string></text></a>`); sem esse bloco, vale `N` (`INVESTIGACOES.md`, seção 15).
 
 ### 3.3 Tipos de atributo
 

@@ -1,7 +1,10 @@
-"""Gera `criados-no-haradaer/todos-os-tipos.xml`: os 13 elementos e as 9 conexões, criados
-pelos comandos de edição do HaradaER.
+"""Gera os arquivos de `criados-no-haradaer/` pelos comandos de edição do HaradaER.
 
-Uso, a partir da raiz do projeto: `.venv/bin/python <este arquivo> saida.xml`.
+- `todos-os-tipos.xml`: os 13 elementos e as 9 conexões;
+- `paralelas.xml` (com `--paralelas`): três conexões "N" e uma "1" chegando no mesmo
+  relacionamento, duas delas entre o mesmo par (desvio e letras N, M, P).
+
+Uso, a partir da raiz do projeto: `.venv/bin/python <este arquivo> [--paralelas] saida.xml`.
 """
 
 import sys
@@ -56,5 +59,24 @@ def main(destino: str) -> None:
     print("ok", len(doc.figures))
 
 
+def paralelas(destino: str) -> None:
+    doc, historico = Document.new(), History()
+    prompt = new_node("ent", 100, 320, MEDIDOR)
+    melhoria = new_node("rel", 90, 60, MEDIDOR)
+    fraca = new_node("entfraca", 400, 320, MEDIDOR)
+    for no in (prompt, melhoria, fraca):
+        historico.execute(add_node_command(doc, no))
+    historico.execute(rename_command(doc, prompt, "Prompt", MEDIDOR))
+    historico.execute(rename_command(doc, melhoria, "Melhoria", MEDIDOR))
+    for tag in ("llabelMuitos", "llabelDoubleMuitos", "llabelMuitos"):
+        historico.execute(connect_command(doc, tag, prompt, melhoria))
+    historico.execute(connect_command(doc, "llabelUm", fraca, melhoria))
+    io.save(doc, destino)
+    print("ok", len(doc.figures))
+
+
 if __name__ == "__main__":
-    main(sys.argv[1])
+    if sys.argv[1] == "--paralelas":
+        paralelas(sys.argv[2])
+    else:
+        main(sys.argv[1])

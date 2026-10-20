@@ -138,9 +138,10 @@ def test_conectar_cria_linha_ligada_as_bordas():
     doc, h, aluno, rel = modelo_simples()
     h.execute(connect_command(doc, "llabelUm", aluno, rel))
     ligacao = doc.figures[-1]
-    assert (ligacao.start, ligacao.end) == (aluno, rel)
+    # como o TerraER: entidade -> relacionamento é gravado do relacionamento para a entidade
+    assert (ligacao.start, ligacao.end) == (rel, aluno)
     pontos = [(float(p.attrs["x"]), float(p.attrs["y"])) for p in ligacao.points]
-    assert pontos == pytest.approx(list(connection_points(node_rect(aluno), node_rect(rel))))
+    assert pontos == pytest.approx(list(connection_points(node_rect(rel), node_rect(aluno))))
     assert validate(doc) == []
 
 
@@ -218,7 +219,7 @@ def test_renomear_para_nome_longo_cresce_e_para_nome_curto_nao_encolhe():
     assert node_rect(aluno)[2] == maior
     assert aluno.name == "A"
     ligacao = doc.figures[-1]
-    esperado = connection_points(node_rect(aluno), node_rect(rel))
+    esperado = connection_points(node_rect(rel), node_rect(aluno))
     obtido = [(float(p.attrs["x"]), float(p.attrs["y"])) for p in ligacao.points]
     assert obtido == pytest.approx(list(esperado))
 

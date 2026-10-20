@@ -60,3 +60,36 @@ def chop(rect: Rect, alvo: Point) -> Point:
 def connection_points(origem: Rect, destino: Rect) -> tuple[Point, Point]:
     """Pontos inicial e final da linha entre dois elementos."""
     return (chop(origem, center(destino)), chop(destino, center(origem)))
+
+
+def route_ends(origem: Rect, destino: Rect, dobras: list[Point]) -> tuple[Point, Point]:
+    """Pontas de uma linha com dobras: cada ponta mira a dobra mais próxima dela.
+
+    Sem dobras, é a linha de centro a centro. Com dobras, é o que o `ChopRectangleConnector` do
+    JHotDraw faz: a ponta inicial mira o 2º ponto, e a final, o penúltimo.
+    """
+    if not dobras:
+        return connection_points(origem, destino)
+    return (chop(origem, dobras[0]), chop(destino, dobras[-1]))
+
+
+PARALLEL_OFFSET = 70.0  # o mesmo desvio que o TerraER usa (ConnectionTool.unaryRelationshipHandle)
+
+
+def parallel_bends(origem: Rect, destino: Rect, ordem: int) -> list[Point]:
+    """Dobras da `ordem`-ésima conexão extra entre o mesmo par (0 = a primeira, reta).
+
+    A linha sai para o lado em forma de colchete, com dobras a 1/3 e 2/3 do caminho. As extras
+    alternam de lado e se afastam (70, -70, 140, -140...), para nunca ficarem uma sobre a outra.
+    """
+    if ordem <= 0:
+        return []
+    (x1, y1), (x2, y2) = center(origem), center(destino)
+    dx, dy = x2 - x1, y2 - y1
+    comprimento = (dx * dx + dy * dy) ** 0.5
+    if comprimento == 0:
+        return []
+    lado = 1 if ordem % 2 else -1
+    desvio = PARALLEL_OFFSET * ((ordem + 1) // 2) * lado
+    nx, ny = -dy / comprimento * desvio, dx / comprimento * desvio
+    return [(x1 + dx / 3 + nx, y1 + dy / 3 + ny), (x1 + 2 * dx / 3 + nx, y1 + 2 * dy / 3 + ny)]

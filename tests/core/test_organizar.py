@@ -47,7 +47,7 @@ def test_redimensionar_muda_a_forma_centraliza_o_texto_e_religa():
     texto = ent.parts[-1]
     assert float(texto.attrs["x"]) == pytest.approx(40 + (200 - largura) / 2)
     assert float(texto.attrs["y"]) == pytest.approx(30 + (90 - altura) / 2)
-    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(ent), node_rect(rel))))
+    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(rel), node_rect(ent))))
 
 
 def test_redimensionar_nao_fica_menor_que_o_texto():
@@ -99,12 +99,12 @@ def test_alinhar_a_esquerda_e_ao_meio_religa_entre_os_alinhados():
 
     historico.execute(align_command(doc, [a, b], "left"))
     assert node_rect(a)[0] == node_rect(b)[0] == 50
-    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(a), node_rect(b))))
+    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(b), node_rect(a))))
 
     historico.execute(align_command(doc, [a, b], "middle"))
     ra, rb = node_rect(a), node_rect(b)
     assert ra[1] + ra[3] / 2 == pytest.approx(rb[1] + rb[3] / 2)
-    assert pontos(conexao) == pytest.approx(list(connection_points(ra, rb)))
+    assert pontos(conexao) == pytest.approx(list(connection_points(rb, ra)))
 
 
 @pytest.mark.parametrize(
@@ -156,5 +156,6 @@ def test_conexao_enviada_para_tras_grava_o_dono_por_dentro_e_relê_igual():
     texto = io.dumps(doc)
     relido = io.loads(texto)
     assert [f.tag for f in relido.figures] == ["llabelUm", "ent", "rel"]
-    assert relido.figures[0].start is relido.figures[1]
+    assert relido.figures[0].start is relido.figures[2]  # gravada rel -> ent, como no TerraER
+    assert relido.figures[0].end is relido.figures[1]
     assert io.dumps(relido) == texto

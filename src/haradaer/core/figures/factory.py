@@ -12,7 +12,7 @@ from haradaer.core.appearance.metrics import TextMeasurer
 from haradaer.core.appearance.ops import FontSpec
 from haradaer.core.figures.tags import CONNECTION_TAGS, NODE_TAGS
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
-from haradaer.core.geometry import Rect, connection_points
+from haradaer.core.geometry import Rect, route_ends
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number
 
@@ -238,21 +238,80 @@ def _point(x: float, y: float) -> Element:
     return Element("p", attrs=attrs)
 
 
+def bend_point(x: float, y: float) -> Element:
+    """Ponto de dobra: o TerraER o grava sem os pontos de controle (`c1x`...)."""
+    return Element("p", attrs={"colinear": "true", "x": format_number(x), "y": format_number(y)})
+
+
+# Conexões "N": o rótulo é numerado por relacionamento (N, M, P...) e gravado no estilo da
+# conexão (`<a><text><string>M</string></text></a>`), como faz o `ConnectionTool` do TerraER.
+MANY_TAGS = ("llabelMuitos", "llabelDoubleMuitos")
+MANY_LETTERS = ("N", "M", "P", "Q", "R", "S")
+
+
+def many_letter(posicao: int) -> str:
+    """Letra da `posicao`-ésima conexão "N" de um relacionamento; depois da 6ª volta a ser N."""
+    return MANY_LETTERS[posicao] if posicao < len(MANY_LETTERS) else "N"
+
+
+def connection_style_blocks(tag: str, rotulo: str | None) -> list[Element]:
+    """Os blocos `<a>` que o TerraER grava numa conexão desse tipo, com esse rótulo."""
+    texto = [_text_entry(rotulo)] if rotulo is not None and tag in MANY_TAGS else []
+    duplos = DOUBLE_STYLE_BLOCKS.get(tag, 0)
+    if duplos == 0:
+        return [_style(*texto)] if texto else []
+    fator = _entry("innerStrokeWidthFactor", _value("double", "3"))
+    # Na conexão dupla, o texto vai no mesmo bloco do fator (conferido no TerraER).
+    return [_style(fator, *texto)] + [double_style_block() for _ in range(duplos - 1)]
+
+
+def _is_managed_entry(entrada: Element) -> bool:
+    valor = entrada.children[0] if entrada.children else None
+    if entrada.tag == "text":
+        return True
+    return entrada.tag == "innerStrokeWidthFactor" and valor is not None and valor.text == "3"
+
+
+def restyle_connection(conexao: Element, tag: str, rotulo: str | None) -> list[Element]:
+    """Filhos da conexão com os blocos de estilo refeitos para o tipo e o rótulo dados.
+
+    Mantém o que não é do tipo nem do rótulo (outros estilos que o arquivo tenha).
+    """
+    filhos: list[Element] = []
+    for filho in conexao.children:
+        if filho.tag != "a":
+            filhos.append(filho)
+            continue
+        resto = [e for e in filho.children if not _is_managed_entry(e)]
+        if len(resto) == len(filho.children):
+            filhos.append(filho)
+        elif resto:
+            filhos.append(Element("a", children=resto))
+    return filhos + connection_style_blocks(tag, rotulo)
+
+
 def create_connection(
-    tag: str, origem: Element, destino: Element, rect_origem: Rect, rect_destino: Rect
+    tag: str,
+    origem: Element,
+    destino: Element,
+    rect_origem: Rect,
+    rect_destino: Rect,
+    dobras: list[tuple[float, float]] | None = None,
+    rotulo: str | None = None,
 ) -> ConnectionFigure:
     """Conexão entre dois elementos, com a linha já ligada às bordas."""
     if tag not in CONNECTION_TAGS:
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
-    (x1, y1), (x2, y2) = connection_points(rect_origem, rect_destino)
+    dobras = dobras or []
+    (x1, y1), (x2, y2) = route_ends(rect_origem, rect_destino, dobras)
     atributos: dict[str, str] = {}
     if tag in LABELED_GENERALIZATIONS:
         atributos["labelGeneralizacaoText"] = DEFAULT_GENERALIZATION_LABEL
+    pontos = [_point(x1, y1), *(bend_point(x, y) for x, y in dobras), _point(x2, y2)]
     filhos = [
-        Element("points", children=[_point(x1, y1), _point(x2, y2)]),
+        Element("points", children=pontos),
         Element("startConnector", children=[_connector(origem)]),
         Element("endConnector", children=[_connector(destino)]),
     ]
-    # O TerraER grava esse bloco nas conexões duplas (dois, na generalização dupla).
-    filhos.extend(double_style_block() for _ in range(DOUBLE_STYLE_BLOCKS.get(tag, 0)))
+    filhos.extend(connection_style_blocks(tag, rotulo))
     return ConnectionFigure(tag, attrs=atributos, children=filhos, has_id=True)

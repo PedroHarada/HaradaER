@@ -48,7 +48,7 @@ def test_mudar_tipo_mantem_as_pontas_e_desfaz(referencia):
     antes = io.dumps(doc)
     h.execute(change_connection_type_command(doc, conexao, "llabelMuitos"))
     assert conexao.tag == "llabelMuitos"
-    assert (conexao.start, conexao.end) == (nos["aluno"], nos["cursa"])
+    assert (conexao.start, conexao.end) == (nos["cursa"], nos["aluno"])
     assert io.loads(io.dumps(doc)).figures[-1].tag == "llabelMuitos"
     h.undo()
     assert io.dumps(doc) == antes

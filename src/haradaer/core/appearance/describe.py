@@ -49,6 +49,7 @@ CARDINALITY_LABELS = {
     "llabelMuitos": "N",
     "llabelDoubleMuitos": "N",
 }
+NUMBERED_LABELS = frozenset({"llabelMuitos", "llabelDoubleMuitos"})
 GENERALIZATION_LABELS = frozenset({"llabelGeneralizacao", "llabelDoubleGeneralizacao"})
 
 LABEL_ANGLE = -math.pi / 4
@@ -195,6 +196,8 @@ def _connection(elemento: Element, medidor: TextMeasurer) -> list[DrawOp]:
     ops: list[DrawOp] = [PolylineOp(tuple(pontos), traco)]
 
     texto = CARDINALITY_LABELS.get(tag)
+    if tag in NUMBERED_LABELS:  # N, M, P...: o TerraER grava a letra no estilo da conexão
+        texto = style.string("text", texto) or texto
     fonte = CARDINALITY_FONT
     relativo = 0.0
     if tag in GENERALIZATION_LABELS:

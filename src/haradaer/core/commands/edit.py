@@ -13,13 +13,13 @@ from haradaer.core.commands.history import Command, Composite
 from haradaer.core.figures.factory import (
     ATTRIBUTE_TYPES,
     DEFAULT_GENERALIZATION_LABEL,
-    DOUBLE_STYLE_BLOCKS,
     LABELED_GENERALIZATIONS,
+    MANY_TAGS,
     TEXT_MARGIN,
     create_connection,
     create_node,
-    double_style_block,
-    is_double_style_block,
+    many_letter,
+    restyle_connection,
     text_position,
 )
 from haradaer.core.figures.tags import (
@@ -32,9 +32,10 @@ from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import (
     SHAPE_PART_TAGS,
     Rect,
-    connection_points,
     node_rect,
+    parallel_bends,
     part_rect,
+    route_ends,
     shape_part,
 )
 from haradaer.core.model.document import ADDED, CHANGED, REMOVED, REORDERED, Document
@@ -156,23 +157,52 @@ def _rect_of(no: Element | None, previstos: dict[int, Rect]) -> Rect | None:
     return previstos.get(id(no)) or node_rect(no)
 
 
-def _reroute(documento: Document, nos: set[int], previstos: dict[int, Rect]) -> list[Command]:
-    """Comandos que religam às bordas as conexões ligadas a elementos que mudaram de lugar."""
+def _xy(ponto: Element) -> tuple[float, float]:
+    return (parse_number(ponto.attrs.get("x", "0")), parse_number(ponto.attrs.get("y", "0")))
+
+
+def _moved_point(modelo: Element, x: float, y: float) -> Element:
+    ponto = Element("p", attrs=dict(modelo.attrs))
+    ponto.attrs["x"], ponto.attrs["y"] = format_number(x), format_number(y)
+    return ponto
+
+
+def _reroute(
+    documento: Document,
+    nos: set[int],
+    previstos: dict[int, Rect],
+    deslocamentos: dict[int, tuple[float, float]] | None = None,
+) -> list[Command]:
+    """Comandos que religam às bordas as conexões ligadas a elementos que mudaram de lugar.
+
+    As dobras ficam onde estão, como no TerraER; só se as duas pontas andarem juntas (mesmo
+    deslocamento) a linha inteira acompanha.
+    """
+    deslocamentos = deslocamentos or {}
     comandos: list[Command] = []
     for conexao in connections_of(documento, nos):
         origem = _rect_of(conexao.start, previstos)
         destino = _rect_of(conexao.end, previstos)
-        if origem is None or destino is None:
-            continue
-        (x1, y1), (x2, y2) = connection_points(origem, destino)
         pontos = conexao.child("points")
-        if pontos is None or len(pontos.children) != 2:
+        if origem is None or destino is None or pontos is None or len(pontos.children) < 2:
             continue
-        novos = []
-        for modelo, (x, y) in zip(pontos.children, ((x1, y1), (x2, y2)), strict=True):
-            ponto = Element("p", attrs=dict(modelo.attrs))
-            ponto.attrs["x"], ponto.attrs["y"] = format_number(x), format_number(y)
-            novos.append(ponto)
+        internos = pontos.children[1:-1]
+        dx = dy = 0.0
+        de_inicio = deslocamentos.get(id(conexao.start))
+        if de_inicio is not None and de_inicio == deslocamentos.get(id(conexao.end)):
+            dx, dy = de_inicio
+        dobras = [(x + dx, y + dy) for x, y in map(_xy, internos)]
+        (x1, y1), (x2, y2) = route_ends(origem, destino, dobras)
+        meio = (
+            [_moved_point(p, x, y) for p, (x, y) in zip(internos, dobras, strict=True)]
+            if dx or dy
+            else list(internos)
+        )
+        novos = [
+            _moved_point(pontos.children[0], x1, y1),
+            *meio,
+            _moved_point(pontos.children[-1], x2, y2),
+        ]
         comandos.append(SetChildren(documento, conexao, pontos, novos))
     return comandos
 
@@ -192,21 +222,78 @@ def new_node(tag: str, x: float, y: float, medidor: TextMeasurer) -> NodeFigure:
     return create_node(tag, x, y, medidor)
 
 
+# O TerraER grava a participação do relacionamento para a entidade (ConnectionTool.
+# numberInCorrectSideHandle): por isso o rótulo 1/N fica do lado do relacionamento.
+ENTITY_SIDE = ("ent", "entfraca", "entrel")
+RELATIONSHIP_SIDE = ("rel", "relfraco", "entrel")
+
+
+def _between(documento: Document, a: Element, b: Element) -> list[ConnectionFigure]:
+    """Conexões que já ligam esses dois elementos, em qualquer sentido."""
+    par = {id(a), id(b)}
+    return [
+        f
+        for f in documento.figures
+        if isinstance(f, ConnectionFigure)
+        and f.start is not None
+        and f.end is not None
+        and {id(f.start), id(f.end)} == par
+    ]
+
+
+def _many_of(documento: Document, centro: Element) -> list[ConnectionFigure]:
+    """Conexões "N" ligadas ao elemento, na ordem do desenho."""
+    return [c for c in connections_of(documento, {id(centro)}) if c.tag in MANY_TAGS]
+
+
+def _letter_of(conexao: ConnectionFigure) -> str | None:
+    for bloco in conexao.children_named("a"):
+        entrada = bloco.child("text")
+        valor = entrada.child("string") if entrada is not None else None
+        if valor is not None:
+            return valor.text or ""
+    return None
+
+
+def _renumber(
+    documento: Document, grupo: list[ConnectionFigure], pular: ConnectionFigure | None = None
+) -> list[Command]:
+    """Dá a cada conexão do grupo a letra da sua posição (N, M, P...), menos a `pular`."""
+    comandos: list[Command] = []
+    for posicao, conexao in enumerate(grupo):
+        letra = many_letter(posicao)
+        if conexao is not pular and _letter_of(conexao) != letra:
+            filhos = restyle_connection(conexao, conexao.tag, letra)
+            comandos.append(SetChildren(documento, conexao, conexao, filhos))
+    return comandos
+
+
 def connect_command(documento: Document, tag: str, origem: Element, destino: Element) -> Command:
-    """Liga dois elementos. Qualquer par é aceito: a validade é só avisada (RF-09)."""
+    """Liga dois elementos. Qualquer par é aceito: a validade é só avisada (RF-09).
+
+    Como o TerraER: entidade -> relacionamento é gravado ao contrário; uma conexão "N" ganha a
+    próxima letra do relacionamento (N, M, P...); e, se o par já tem conexão, a nova sai para o
+    lado com duas dobras, para não ficar por cima (o desvio é do HaradaER, sem cruzar).
+    """
     if tag not in CONNECTION_TAGS:
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
     if origem is destino:
         raise ValueError("uma conexão precisa de dois elementos diferentes")
     if tag == "lcaf" and origem.tag not in ATTRIBUTE_TAGS and destino.tag in ATTRIBUTE_TAGS:
         origem, destino = destino, origem  # o HaradaER grava atributo -> dono (QA-03)
+    elif origem.tag in ENTITY_SIDE and destino.tag in RELATIONSHIP_SIDE:
+        origem, destino = destino, origem
     rect_origem, rect_destino = node_rect(origem), node_rect(destino)
     if rect_origem is None or rect_destino is None:
         raise ValueError("elemento sem forma")
-    conexao = create_connection(tag, origem, destino, rect_origem, rect_destino)
-    comando = InsertFigure(documento, conexao)
-    comando.label = "Conectar"
-    return comando
+    dobras = parallel_bends(rect_origem, rect_destino, len(_between(documento, origem, destino)))
+    comandos: list[Command] = []
+    letra = None
+    if tag in MANY_TAGS:
+        letra = many_letter(len(_many_of(documento, origem)))
+        comandos.extend(_renumber(documento, _many_of(documento, origem)))
+    conexao = create_connection(tag, origem, destino, rect_origem, rect_destino, dobras, letra)
+    return Composite([InsertFigure(documento, conexao), *comandos], "Conectar")
 
 
 def remove_command(documento: Document, figuras: list[Element]) -> Command:
@@ -261,7 +348,8 @@ def _move_each(
             rect = node_rect(figura)
             if rect is not None:
                 previstos[id(figura)] = (rect[0] + dx, rect[1] + dy, rect[2], rect[3])
-    comandos.extend(_reroute(documento, movidos, previstos))
+    deltas = {id(f): (dx, dy) for f, dx, dy in deslocamentos if id(f) in movidos}
+    comandos.extend(_reroute(documento, movidos, previstos, deltas))
     return Composite(comandos, rotulo)
 
 
@@ -492,10 +580,17 @@ def change_connection_type_command(
     elif tag not in LABELED_GENERALIZATIONS and tem_rotulo:
         comandos.append(SetAttr(documento, conexao, conexao, "labelGeneralizacaoText", None))
 
-    filhos = [f for f in conexao.children if not is_double_style_block(f)]
-    filhos += [double_style_block() for _ in range(DOUBLE_STYLE_BLOCKS.get(tag, 0))]
+    # As conexões "N" do elemento de início, como ficarão depois da troca.
+    centro = conexao.start
+    grupo = [] if centro is None else [c for c in _many_of(documento, centro) if c is not conexao]
+    letra = None
+    if tag in MANY_TAGS and centro is not None:
+        grupo.append(conexao)
+        letra = many_letter(len(grupo) - 1)
+    filhos = restyle_connection(conexao, tag, letra)
     if [id(f) for f in filhos] != [id(f) for f in conexao.children]:
         comandos.append(SetChildren(documento, conexao, conexao, filhos))
+    comandos.extend(_renumber(documento, grupo, pular=conexao))
 
     inicio, fim = conexao.start, conexao.end
     if (

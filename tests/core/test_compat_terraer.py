@@ -8,6 +8,7 @@ gravou depois de ler esse arquivo (`harness/RegravaTerra.java`).
 import pytest
 
 from haradaer.core import io
+from haradaer.core.appearance.style import Style
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import node_rect
 
@@ -63,3 +64,25 @@ def test_o_terraer_le_e_regrava_o_mesmo_modelo(criado, regravado):
             2.0 if nossa[0].endswith("Generalizacao") or nossa[0] == "generalizacaoLine" else 1e-6
         )
         assert nossa[4] == pytest.approx(dela[4], abs=folga)
+
+
+def test_conexoes_repetidas_e_letras_sobrevivem_ao_terraer(referencia):
+    """Três conexões "N" e uma "1" entre os mesmos elementos, criadas no HaradaER e regravadas
+    pelo TerraER: as letras (N, M, P) e os desvios voltam iguais."""
+    pasta = referencia / "criados-no-haradaer"
+    nosso = io.loads((pasta / "paralelas.xml").read_bytes())
+    dele = io.loads((pasta / "paralelas-regravado-pelo-terraer.xml").read_bytes())
+    _, nossas = nos_e_ligacoes(nosso)
+    _, delas = nos_e_ligacoes(dele)
+    assert [Style.of(c).string("text") for c in nosso.figures if c.tag.startswith("llabel")] == [
+        "N",
+        "M",
+        "P",
+        None,
+    ]
+    assert len(nossas) == len(delas) == 4
+    for nossa, dela in zip(nossas, delas, strict=True):
+        assert nossa[:4] == dela[:4]
+        assert nossa[4] == pytest.approx(dela[4], abs=1e-6)
+    textos = [Style.of(c).string("text") for c in dele.figures if c.tag.startswith("llabel")]
+    assert textos == ["N", "M", "P", None]

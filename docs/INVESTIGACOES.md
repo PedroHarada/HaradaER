@@ -56,7 +56,8 @@ Conclusões:
 
 ## 3. QA-02 — Rótulos de cardinalidade editados
 
-- O texto `1` (`llabelUm`) e `N` (`llabelMuitos`) é um filho de texto **não editável** (`isEditable() == false`) e **não é gravado** no arquivo. Tentar mudá-lo por código também não aparece no `.xml` (teste: `0..N` não foi gravado).
+- O texto `1` (`llabelUm`) e `N` (`llabelMuitos`) é um filho de texto **não editável** (`isEditable() == false`). Mudar o texto do filho por código não aparece no `.xml` (teste: `0..N` não foi gravado).
+- **Corrigido na seção 15:** nas conexões "N", a ferramenta de conexão do TerraER troca a letra por N, M, P... pelo método `changeText`, e essa letra **é gravada** no estilo da conexão (`<a><text><string>M</string></text></a>`).
 - O rótulo das conexões de generalização **é editável** e gravado em `labelGeneralizacaoText` (teste: `exclusiva` apareceu no arquivo). O padrão é "característica" em português e "characteristic" em inglês.
 
 Conclusão: a cardinalidade do TerraER só tem os valores `1` e `N`, definidos pela **tag** da conexão. Não existe cardinalidade como `0..N` ou `1..1`.
@@ -258,3 +259,24 @@ Programas: `harness/RegravaTerra.java` (o TerraER lê um arquivo e o grava de no
 
 Limitação conhecida: o tamanho do texto vem da fonte do Qt, não da `Dialog` do Java; a largura ao criar ou renomear um elemento pode diferir um pouco da que o TerraER calcularia. Como a geometria gravada no arquivo é sempre respeitada ao abrir, isso não muda o modelo.
 
+## 15. Conexões repetidas entre o mesmo par e a letra N, M, P (achado no teste geral da v1)
+
+Problema relatado: duas conexões "N" entre a mesma entidade e o mesmo relacionamento ficavam uma sobre a outra no HaradaER, as duas com "N"; no TerraER aparecem "N" e "M", com a segunda linha desviada.
+
+Programa: `harness/Paralelas.java` roda os passos da ferramenta de conexão do TerraER (`ConnectionTool.mouseReleased`) três vezes entre o mesmo par. Gabaritos: `amostra-paralelas.xml` e `amostra-paralelas-dupla.xml`.
+
+| Passo do TerraER | O que faz |
+|---|---|
+| `unaryRelationshipHandle` | Se já existe conexão entre os mesmos dois elementos (em qualquer sentido), a nova ganha duas dobras: pontos a 1/3 e 2/3 da linha, levados para a perpendicular, a 70 de distância **das pontas**. Como os pontos saem das pontas e não do meio, a linha forma um X cruzado; e a 3ª conexão fica exatamente sobre a 2ª |
+| `numberInCorrectSideHandle` | Se a conexão vai de entidade (`ent`, `entfraca`, `entrel`) para relacionamento (`rel`, `relfraco`, `entrel`), inverte o sentido. Por isso o rótulo 1/N fica do lado do relacionamento. Vale para qualquer tipo de conexão |
+| `updateNumbering` | Só nas conexões "N" (`llabelMuitos`, `llabelDoubleMuitos`). Pega as conexões "N" na área do elemento de início (o relacionamento) e dá a elas, em ordem, N, M, P, Q, R, S; da 7ª em diante, N. A letra é gravada no estilo da conexão; na conexão dupla, no mesmo bloco do `innerStrokeWidthFactor` |
+| Dobras no arquivo | `<p colinear="true" x=".." y=".."/>`, sem `c1x`/`c2x` (as pontas continuam com eles) |
+| Ao mover | As dobras ficam onde estão; cada ponta mira a dobra mais próxima dela (`ChopRectangleConnector`) |
+| Ao excluir | Não renumera; só a próxima conexão criada renumera todas |
+
+O que o HaradaER faz (decisão do autor: "desvio limpo"):
+
+- Lê e mostra a letra gravada (antes mostrava sempre "N").
+- Inverte entidade → relacionamento, numera N, M, P... e grava a letra igual ao TerraER (conferido: o TerraER relê as letras e regrava os mesmos pontos, `criados-no-haradaer/paralelas.xml`).
+- **Desvio diferente do TerraER, de propósito:** dobras a 1/3 e 2/3 do caminho de centro a centro, deslocadas 70 na perpendicular, alternando de lado e se afastando (70, −70, 140, −140...). A linha fica em forma de colchete, sem cruzar, e as conexões extras nunca se sobrepõem. O arquivo continua compatível: o TerraER só guarda os pontos.
+- Ao mover, as dobras ficam; se as duas pontas andam juntas, a linha inteira acompanha.

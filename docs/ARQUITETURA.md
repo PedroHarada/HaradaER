@@ -428,6 +428,7 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
   - **Grade:** um interruptor só (Exibir › Grade), de 10 unidades, que começa desligado e não vai para o arquivo. Com ela ligada, criar encaixa o centro do elemento, mover encaixa o canto do elemento sob o mouse e redimensionar encaixa a borda arrastada.
   - **Alinhar** usa a caixa da seleção, como o `AlignAction` do JHotDraw. As conexões são religadas uma vez só, com a posição final de todos os elementos.
   - **Empilhamento:** trazer para a frente e enviar para trás mantêm a ordem entre as figuras escolhidas. Uma conexão enviada para trás dos seus elementos é gravada com o dono por dentro do `Owner`, como no TerraER.
+- Depois do M5d (teste geral da v1): conexões repetidas entre o mesmo par saem com duas dobras, sem cruzar e alternando de lado (`parallel_bends` em `core/geometry.py`); entidade → relacionamento é gravado ao contrário e as conexões "N" são numeradas N, M, P... como no TerraER; linhas com dobras são religadas mirando a dobra (`route_ends`). Detalhes em `INVESTIGACOES.md`, seção 15.
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
 

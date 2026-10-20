@@ -126,7 +126,7 @@ def test_arrastar_leva_a_conexao_junto(janela):
     arrastar(janela, (100, 100), (100, 250))
     depois = [float(p.attrs["y"]) for p in conexao.points]
     assert depois != antes
-    assert (conexao.start, conexao.end) == (a, r)
+    assert (conexao.start, conexao.end) == (r, a)  # gravada rel -> ent, como no TerraER
 
 
 def test_conectar_arrastando_de_um_elemento_a_outro(janela):
@@ -136,7 +136,7 @@ def test_conectar_arrastando_de_um_elemento_a_outro(janela):
     arrastar(janela, (100, 100), (400, 100))
     conexao = janela.editor.document.figures[-1]
     assert conexao.tag == "llabelMuitos"
-    assert (conexao.start, conexao.end) == (a, r)
+    assert (conexao.start, conexao.end) == (r, a)  # gravada rel -> ent, como no TerraER
     assert janela.view.tool == SELECT
     assert janela.view._preview is None
 
