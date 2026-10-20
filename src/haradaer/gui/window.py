@@ -41,10 +41,18 @@ from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.settings import RecentFiles, save_window_layout, window_layout
+from haradaer.gui.tool_icons import (
+    SHORT_NAMES,
+    connection_icon,
+    element_icon,
+    select_icon,
+)
+from haradaer.gui.tool_strip import ToolStrip
 from haradaer.gui.verification import name_of, pairs_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 
 TITLE = "HaradaER"
+DOCK_MIN_WIDTH = 230
 CLIPBOARD_MIME = "application/x-haradaer-figuras"  # pedaço de arquivo no formato do TerraER
 UNTITLED = "Sem título"
 
@@ -235,35 +243,55 @@ class DocumentWindow(QMainWindow):
         self.properties_dock.setObjectName("propriedades")
         self.properties_dock.setWidget(self.properties)
         for dock in (self.inspector_dock, self.properties_dock):
+            dock.setMinimumWidth(DOCK_MIN_WIDTH)  # sem isso os nomes ficavam cortados
             self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
 
     def _build_toolbar(self) -> None:
+        """Uma faixa no alto com todas as ferramentas, que rola na horizontal (`ToolStrip`).
+
+        Fica dentro de uma barra fixa, com nome novo: uma disposição de janela salva antes não
+        consegue mudá-la de lugar nem quebrá-la em duas linhas.
+        """
         barra = QToolBar("Ferramentas", self)
-        barra.setObjectName("ferramentas")
-        barra.setOrientation(Qt.Orientation.Vertical)
+        barra.setObjectName("faixa-ferramentas")
         barra.setMovable(False)
-        self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, barra)
+        barra.setFloatable(False)
+        barra.toggleViewAction().setEnabled(False)
+        self.tool_strip = ToolStrip()
+        barra.addWidget(self.tool_strip)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, barra)
+        self.tool_bar = barra
         grupo = QActionGroup(self)
 
         def adicionar(tool: Tool, texto: str) -> None:
-            acao = QAction(texto, self)
+            if tool.kind == "select":
+                icone, curto = select_icon(), "Selecionar"
+            elif tool.kind == "create":
+                icone, curto = element_icon(tool.tag), SHORT_NAMES[tool.tag]
+            else:
+                icone, curto = connection_icon(tool.tag), SHORT_NAMES[tool.tag]
+            acao = QAction(icone, curto, self)
+            acao.setToolTip(texto)
+            acao.setStatusTip(texto)
             acao.setCheckable(True)
             acao.triggered.connect(lambda _=False, t=tool: self._tool_clicked(t))
             grupo.addAction(acao)
-            barra.addAction(acao)
+            self.tool_strip.add_action(acao)
             self._tool_actions[tool] = acao
 
         adicionar(SELECT, "Selecionar")
-        barra.addSeparator()
+        self.tool_strip.add_separator()
         for tag, nome in ELEMENTS:
             adicionar(Tool("create", tag), nome)
-        barra.addSeparator()
+        self.tool_strip.add_separator()
         for tag, nome in CONNECTIONS:
             adicionar(Tool("connect", tag), nome)
+        self.tool_strip.finish()
         self._tool_actions[SELECT].setChecked(True)
 
     def _tool_changed(self, tool: Tool) -> None:
         self._tool_actions[tool].setChecked(True)
+        self.tool_strip.ensure_visible(self._tool_actions[tool])
         if tool.kind == "connect" and tool.tag != LINE_FREE:
             self.statusBar().showMessage(f"Liga: {pairs_text(recommend_elements(tool.tag))}")
         else:

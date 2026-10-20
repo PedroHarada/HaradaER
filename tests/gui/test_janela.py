@@ -118,3 +118,27 @@ def test_tipo_de_atributo_invalido_avisa_e_usa_o_padrao(qtbot, referencia, monke
     assert len(avisos) == 1 and "FOO" in avisos[0]
     assert janela.editor.document.figures[0].attribute_type == "VARCHAR2(128)"
     assert janela.isWindowModified()  # a troca precisa ser salva
+
+
+def test_barras_de_ferramentas_no_alto_com_icone_nome_curto_e_dica(qtbot):
+    from PySide6.QtCore import Qt
+
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert janela.toolBarArea(janela.tool_bar) == Qt.ToolBarArea.TopToolBarArea
+    assert len(janela._tool_actions) == 1 + 13 + 9
+    for acao in janela._tool_actions.values():
+        assert not acao.icon().isNull()
+        assert acao.text()  # nome curto embaixo do ícone
+        assert len(acao.toolTip()) >= len(acao.text())  # nome completo na dica
+    entidade = next(a for t, a in janela._tool_actions.items() if t.tag == "ent")
+    assert entidade.text() == "Entidade"
+    lado_n = next(a for t, a in janela._tool_actions.items() if t.tag == "llabelMuitos")
+    assert (lado_n.text(), lado_n.toolTip()) == ("Lado N", 'Participação, lado "N"')
+
+
+def test_paineis_tem_largura_minima_para_nao_cortar_os_nomes(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert janela.inspector_dock.minimumWidth() >= 230
+    assert janela.properties_dock.minimumWidth() >= 230

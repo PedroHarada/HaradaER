@@ -24,8 +24,8 @@ dos testes: para experimentar, abra uma **cópia** (`cp docs/referencia-terraer/
 
 | O quê | Como |
 |---|---|
-| Criar um elemento | Escolha o tipo na barra da esquerda e clique no desenho; digite o nome e Enter |
-| Ligar dois elementos | Escolha o tipo de conexão e arraste de um elemento ao outro (verde: o par é aceito; vermelho: não é, mas a conexão é criada e fica marcada) |
+| Criar um elemento | Escolha o tipo na faixa de cima e clique no desenho; digite o nome e Enter |
+| Ligar dois elementos | Escolha o tipo de conexão (à direita na faixa) e arraste de um elemento ao outro (verde: o par é aceito; vermelho: não é, mas a conexão é criada e fica marcada) |
 | Repetir a ferramenta | Segure Shift ao clicar ou soltar |
 | Voltar a selecionar | Esc |
 | Renomear | Duplo clique no elemento, ou o campo Nome em Propriedades |
@@ -62,7 +62,7 @@ conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
 - **Arquivo**: novo, abrir, abrir recente, salvar, salvar como e exportar o desenho em PNG, JPG,
   SVG ou PDF.
 
-Com dois elementos selecionados, a barra mostra em negrito as conexões aceitas entre eles.
+Se a faixa não couber na janela, role-a com dois dedos, com a roda do mouse ou pelas setas das pontas. Cada botão tem o desenho do elemento ou da conexão e um nome curto; parando o mouse em cima aparece o nome completo. Com dois elementos selecionados, a barra mostra em negrito as conexões aceitas entre eles.
 
 ## Estado
 
