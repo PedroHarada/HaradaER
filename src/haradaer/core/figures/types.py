@@ -9,6 +9,7 @@ from __future__ import annotations
 from haradaer.core.figures.tags import (
     CONNECTION_TAGS,
     NODE_TAGS,
+    NULL_TAG,
     SUPPORT_TAGS,
     TEXT_PART_TAGS,
     TYPED_ATTRIBUTE_TAGS,
@@ -78,8 +79,9 @@ class ConnectionFigure(Figure):
     def _owner(self, nome: str) -> Element | None:
         envoltorio = self.child(nome)
         conector = envoltorio.children[0] if envoltorio and envoltorio.children else None
-        dono = conector.child("Owner") if conector else None
-        return dono.children[0] if dono and dono.children else None
+        dono = conector.child("Owner") if conector and conector.tag != NULL_TAG else None
+        alvo = dono.children[0] if dono and dono.children else None
+        return None if alvo is None or alvo.tag == NULL_TAG else alvo
 
     @property
     def start(self) -> Element | None:

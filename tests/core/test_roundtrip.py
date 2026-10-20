@@ -13,6 +13,7 @@ GOLDEN = [
     "amostra-numeros.xml",
     "amostra-unicode.xml",
     "amostra-vazios.xml",
+    "amostra-conexoes-incompletas.xml",
 ]
 
 

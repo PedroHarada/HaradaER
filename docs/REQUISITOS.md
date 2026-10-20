@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.7 · 2026-10-19 · Rascunho
+Versão 0.8 · 2026-10-19 · Rascunho
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -153,7 +153,8 @@ Entidade, relacionamento e demais nós são **grupos**: contêm `<children>` com
 </llabelUm>
 ```
 
-- A conexão referencia os dois nós por `Owner` + `ref`; os nós precisam estar **antes** da conexão no arquivo.
+- A conexão referencia os dois nós por `Owner` + `ref`.
+- Ponta ainda não ligada: `<startConnector><null/></startConnector>` (ou `endConnector`). O elemento `<null/>` é válido onde se espera um objeto.
 - O conector é `rConnector` nas amostras (retangular). Existem também `ellipseConnector`, `diamondConnector` e `bezierConnector`; devem ser lidos.
 
 ### 4.5 Tolerâncias observadas
@@ -205,8 +206,8 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-06 | Desfazer e refazer (o TerraER tem `UndoAction`/`RedoAction`). |
 | RF-07 | Zoom, grade, alinhamento, trazer para frente e enviar para trás, selecionar todos do mesmo tipo. |
 | RF-08 | Localizar elementos no modelo. |
-| RF-09 | Verificação do modelo: destacar em vermelho as conexões inválidas (seção 5), com opção de ligar e desligar. |
-| RF-10 | Recomendação de conexão entre dois elementos selecionados (e dos elementos possíveis para uma conexão). |
+| RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão (exceto a livre, `llabel`) que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). |
+| RF-10 | Recomendação de conexão entre dois elementos selecionados (tipos de conexão válidos para o par) e dos elementos possíveis para um tipo de conexão. Usa a mesma tabela da verificação, então nunca recomenda algo que apareceria em vermelho; difere do TerraER em dois pontos (`INVESTIGACOES.md` seção 12). A conexão livre não é recomendada. |
 | RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
 | RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
 | RF-13 | **(Fora da v1)** Gerar o DDL SQL do modelo. Regras e defeitos do TerraER levantados em `INVESTIGACOES.md` seção 6. Quando voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido com as mesmas convenções. |

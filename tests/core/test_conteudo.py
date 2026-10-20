@@ -88,3 +88,12 @@ def test_unicode_junta_o_par_de_surrogates(referencia):
     doc = _abrir(referencia, "amostra-unicode.xml")
     nome = doc.figures[0].name
     assert nome == "ção 中 😀 a\tb & <c> \"d\" 'e'"
+
+
+def test_conexoes_incompletas_tem_pontas_nulas(referencia):
+    doc = _abrir(referencia, "amostra-conexoes-incompletas.xml")
+    conexoes = [f for f in doc.figures if isinstance(f, ConnectionFigure)]
+    assert len(conexoes) == 9
+    entidade = doc.figures[0]
+    pontas = [(c.start, c.end) for c in conexoes[:3]]
+    assert pontas == [(None, None), (entidade, None), (entidade, entidade)]

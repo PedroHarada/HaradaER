@@ -1,6 +1,6 @@
 # HaradaER — Arquitetura e Design
 
-Versão 0.6 · 2026-10-19 · Rascunho
+Versão 0.7 · 2026-10-19 · Rascunho
 
 Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
@@ -172,9 +172,9 @@ Dois níveis, espelhando o TerraER:
 ### 4.3 Validação e recomendação (`rules`)
 
 - A matriz da seção 5 de `REQUISITOS.md` vira uma tabela de dados: `(tag da conexão, tag origem, tag destino) → válido`.
-- `validate(document) → list[Issue]`, com `Issue(code, figure, detalhes)`. O núcleo devolve **códigos**, não frases; a interface traduz (seção 5.7).
-- `recommend(a, b)` devolve as conexões válidas entre dois elementos, usando a mesma tabela. `recommend_for(connection_kind)` devolve os elementos possíveis (RF-10).
-- **Teste de regressão contra o TerraER.** `tests/fixtures/validacao-terraer.json` será gerado por `harness/Matrix.java` (JDK só para regenerar). Hoje o `Matrix` apenas imprime o resultado na tela; no M0 ele passa a gravar JSON. Um teste compara a tabela do HaradaER com esse arquivo, par a par.
+- `validate(document) → list[Issue]`, com `Issue(code, figure, details)`. Códigos: `connection.invalid_pair` (par que o tipo não aceita) e `connection.incomplete` (ponta solta). O núcleo devolve **códigos**, não frases; a interface traduz (seção 5.7).
+- `recommend_connections(origem, destino)` devolve os tipos de conexão válidos para o par, sem a conexão livre; `recommend_elements(conexao)` devolve os pares (origem, destino) em que o tipo vale. Os dois usam a mesma tabela da validação (`INVESTIGACOES.md` seção 12).
+- **Teste de regressão contra o TerraER.** A tabela (`rules/tables.py`) é conferida par a par contra `matriz-validacao.txt`, e cada conexão dos arquivos de referência é conferida contra o que o próprio TerraER pinta de vermelho (`validacao-por-arquivo.txt`, gerado por `harness/ValidaArquivo.java`; JDK só para regenerar).
 
 ### 4.4 DDL (`ddl`) — fora da v1
 
@@ -328,7 +328,7 @@ Mapeada para os critérios de aceitação da seção 7 de `REQUISITOS.md`.
 | 2. Ida e volta pelo TerraER | Gravar modelos do HaradaER e passá-los por `Gen2 read` | Script que chama `java`; só roda se houver JDK |
 | 3. Abertura na GUI do TerraER | Lista de verificação manual | Documentada |
 | 4. Estrutura | Gerar modelos com todos os tipos e conexões válidas (propriedade/aleatório) e repetir 1 e 2 | `tests/core` |
-| Validação | Tabela do HaradaER contra `validacao-terraer.json` | `tests/core` |
+| Validação | Tabela contra `matriz-validacao.txt`; cada conexão dos arquivos contra `validacao-por-arquivo.txt` | `tests/core` |
 | Núcleo sem Qt | Importar todo `core` e verificar que `PySide6` não foi carregado | `tests/core` |
 | Interface | Abrir janela offscreen, simular gestos e arrastos | `tests/gui`, `pytest-qt` |
 | Números e escape | Valores extremos e caracteres especiais | `tests/core` com `amostra-escapes-e-numeros.xml` |
@@ -383,7 +383,7 @@ Cada marco termina com algo que roda e passa em testes.
 |---|---|---|
 | M0 | Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
 | M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
-| M2 | Modelo, `rules` (validação e recomendação) | Tabela confere com `validacao-terraer.json` |
+| M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
 | M3 | Interface só de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | RF-15 funciona no Linux; golden files aparecem corretos |
 | M4 | Edição: criar, mover, conectar, editar texto, desfazer, salvar | Critérios 2 e 4 passam; critério 3 manual |
 | M5 | Painéis, inspetor, verificação visual, exportação, janelas múltiplas, arquivos recentes | RF-07 a RF-11, RF-16 a RF-19 |

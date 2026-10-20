@@ -50,8 +50,12 @@ TYPED_ATTRIBUTE_TAGS = frozenset({"atr", "atrchave", "atrchaveparcial", "atrmult
 # Partes de texto que guardam o nome de um elemento.
 TEXT_PART_TAGS = ("t", "tn", "ti")
 
+# Valor nulo: o TerraER grava `<null/>` onde falta um objeto (por exemplo, a ponta solta de uma
+# conexão ainda não ligada).
+NULL_TAG = "null"
+
 FIGURE_TAGS = NODE_TAGS | CONNECTION_TAGS | SUPPORT_TAGS
-KNOWN_OBJECT_TAGS = FIGURE_TAGS | CONNECTOR_TAGS
+KNOWN_OBJECT_TAGS = FIGURE_TAGS | CONNECTOR_TAGS | {NULL_TAG}
 
 # Elementos estruturais cujos filhos são objetos conhecidos do TerraER.
 CONTAINERS_OF_OBJECTS = frozenset(

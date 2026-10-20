@@ -207,3 +207,17 @@ Programas: `harness/Gen10.java`, `Gen11.java`, `Gen12.java`. Amostras em `refere
 | Ordem de empilhamento | Conexão antes do nó: o nó é escrito inline dentro do `Owner` e depois aparece como `<ent ref="2"/>` no desenho. Remover um nó do desenho do JHotDraw apaga as conexões ligadas a ele |
 | Números | `Double.toString` do Java sem o `.0` final. `-0.0` → `-0`; `1.0E7` e `1.0E10` mantêm o `.0`; o menor positivo é `4.9E-324` (o Java mostra ao menos dois dígitos) |
 | Figuras de apoio | `t`, `tn`, `ti`, `ta`, `r`, `e`, `diamond`, `circ` seguem o mesmo molde das partes. `l` e `b` guardam `<points><p colinear="true" x y/>` (sem `c1x`...). `g` tem `<children>`. `image` tem `<imageData>` com Base64 quebrado em linhas de 76 caracteres |
+
+## 12. Achados durante o M2 (validação e recomendação)
+
+Programas: `harness/ValidaArquivo.java`, `Regras.java`, `Recomenda.java`. Fixtures: `validacao-por-arquivo.txt`, `regras-recomendacao-terraer.txt`, `amostra-conexoes-incompletas.xml`.
+
+- **A "Verificação do Modelo" é um interruptor global.** `ValidateModelAction` liga e desliga `LineConnectionFigure.validateEnabled` e manda cada conexão se redesenhar; a cor vermelha vem de `ModelValidation.validateLineConnection`.
+- **Conexão com ponta solta** (ainda não ligada a um elemento): o TerraER a grava com `<null/>` no lugar do conector (`<endConnector><null/></endConnector>`) e a pinta de vermelho, **exceto a conexão livre (`llabel`)**, que nunca fica vermelha, nem sem pontas.
+- **Dois elementos iguais ligados** por um tipo que não aceita o par (por exemplo `llabelUm` de uma entidade a ela mesma) também ficam vermelhos.
+- **Há duas tabelas de regras e elas discordam.** A de validação (`ModelValidation`, usada para pintar de vermelho) e a de recomendação (`ModelValidationRules`, 21 regras). Concordam em tudo, exceto:
+  - `Um` e `Muitos`: a recomendação inclui `entidade fraca ↔ relacionamento fraco`, que a validação pinta de vermelho (só a participação dupla aceita esse par);
+  - `generalizacaoLine`: a recomendação diz `entidade → círculo`; a validação só aceita `círculo → entidade` (e `entidade → entidade`).
+  Ou seja, o TerraER chega a recomendar ligações que ele mesmo marca como inválidas.
+- **Decisão técnica do M2:** a recomendação do HaradaER usa a tabela da validação, para nunca sugerir algo que apareceria em vermelho. A conexão livre não entra nas recomendações. Isso é uma divergência intencional, coberta por teste (`test_diferencas_conhecidas_entre_a_recomendacao_do_terraer_e_a_nossa`).
+- **A recomendação do TerraER parte de uma conexão já desenhada** (`getOthersConnections(conexão)` e `getOthersFigures(conexão)`) e inclui o próprio tipo da conexão na lista. A do HaradaER parte de dois tipos de elemento, que é o que o RF-10 pede.
