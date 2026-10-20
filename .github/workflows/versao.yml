@@ -1,0 +1,96 @@
+# Gera os executáveis e publica a versão quando uma etiqueta v* é enviada:
+#
+#   git tag v1.0.0
+#   git push origin v1.0.0
+#
+# Em cada sistema: lint, testes e PyInstaller. Se algo falhar, a versão não é publicada.
+# Etiquetas com hífen (v1.0.0-teste) saem como "pré-lançamento".
+name: Versão
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  executaveis:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04  # glibc antiga: o executável roda no Ubuntu 22.04+, Arch, Fedora...
+            sistema: linux
+          - os: windows-latest
+            sistema: windows
+          - os: macos-14  # chip Apple (M1 em diante)
+            sistema: macos
+    runs-on: ${{ matrix.os }}
+    env:
+      QT_QPA_PLATFORM: offscreen
+      NOME: HaradaER-${{ github.ref_name }}-${{ matrix.sistema }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Bibliotecas do sistema que o Qt usa (Linux)
+        if: matrix.sistema == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libxkbcommon-x11-0 \
+            libfontconfig1 libdbus-1-3 libwayland-client0 libwayland-cursor0 libwayland-egl1 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
+      - name: Instalar o HaradaER e o PyInstaller
+        run: pip install ".[dev]" pyinstaller==6.22.3
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Testes
+        run: pytest -q -rs
+      - name: Gerar o executável
+        run: pyinstaller --noconfirm packaging/HaradaER.spec
+      - name: Empacotar (Linux)
+        if: matrix.sistema == 'linux'
+        run: |
+          mkdir pacote && cp dist/HaradaER pacote/HaradaER && chmod +x pacote/HaradaER
+          cp packaging/AVISOS-DE-LICENCA.txt pacote/
+          tar -czf "$NOME.tar.gz" -C pacote .
+      - name: Empacotar (Windows)
+        if: matrix.sistema == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory pacote | Out-Null
+          Copy-Item dist/HaradaER.exe pacote/HaradaER.exe
+          Copy-Item packaging/AVISOS-DE-LICENCA.txt pacote/
+          Compress-Archive -Path pacote/* -DestinationPath "$env:NOME.zip"
+      - name: Empacotar (macOS)
+        if: matrix.sistema == 'macos'
+        run: |
+          mkdir pacote && cp -R dist/HaradaER.app pacote/ && cp packaging/AVISOS-DE-LICENCA.txt pacote/
+          ditto -c -k --keepParent pacote "$NOME.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NOME }}
+          path: |
+            ${{ env.NOME }}.tar.gz
+            ${{ env.NOME }}.zip
+          if-no-files-found: error
+
+  publicar:
+    needs: executaveis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: arquivos
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: HaradaER ${{ github.ref_name }}
+          body_path: packaging/NOTAS-DA-VERSAO.md
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: arquivos/*

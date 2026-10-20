@@ -1,6 +1,7 @@
 """Critério 1 de REQUISITOS.md (seção 7): ler e regravar os arquivos do TerraER sem mudar nada."""
 
 import os
+import sys
 
 import pytest
 
@@ -59,6 +60,7 @@ def test_salvar_nao_corrompe_o_original_se_falhar(referencia, tmp_path, monkeypa
     assert [p.name for p in tmp_path.iterdir()] == ["modelo.xml"]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="o Windows não tem permissões Unix")
 def test_salvar_mantem_as_permissoes_do_arquivo(referencia, tmp_path):
     """A gravação segura usa um arquivo temporário, que nasce só com permissão do dono."""
     documento = io.loads((referencia / "amostra-basica.xml").read_bytes())

@@ -1,0 +1,20 @@
+HaradaER - avisos de licença de terceiros
+=========================================
+
+Este executável inclui software de terceiros, distribuído sob as licenças abaixo.
+
+Qt for Python (PySide6) e Qt 6
+  Licença: GNU Lesser General Public License, versão 3 (LGPLv3).
+  Código-fonte: https://code.qt.io/cgit/pyside/pyside-setup.git e https://code.qt.io
+  Texto da licença: https://www.gnu.org/licenses/lgpl-3.0.html
+
+Python
+  Licença: Python Software Foundation License.
+  https://docs.python.org/3/license.html
+
+PyInstaller (o carregador usado para gerar este executável)
+  Licença: GPL 2.0 com exceção que permite distribuir programas gerados por ele.
+  https://pyinstaller.org/en/stable/license.html
+
+O HaradaER é um programa independente, compatível com os arquivos do TerraER 3.14.
+Ele não contém código, ícones ou imagens do TerraER.

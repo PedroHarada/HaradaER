@@ -1,0 +1,3 @@
+# Os .xml são comparados byte a byte nos testes: o Git não pode trocar as quebras de linha
+# (o Git do Windows trocaria LF por CRLF ao baixar o repositório).
+*.xml -text
