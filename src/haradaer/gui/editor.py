@@ -11,6 +11,7 @@ from haradaer.core.commands import (
     add_node_command,
     align_command,
     bring_to_front_command,
+    change_connection_type_command,
     connect_command,
     min_node_size,
     move_command,
@@ -19,7 +20,9 @@ from haradaer.core.commands import (
     rename_command,
     resize_command,
     send_to_back_command,
+    set_attribute_type_command,
     set_generalization_label_command,
+    set_nullable_command,
 )
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import node_rect
@@ -89,3 +92,16 @@ class Editor:
     def set_generalization_label(self, conexao: ConnectionFigure, texto: str) -> None:
         if texto != conexao.generalization_label:
             self.history.execute(set_generalization_label_command(self.document, conexao, texto))
+
+    def set_attribute_type(self, no: NodeFigure, tipo: str) -> None:
+        if tipo != no.attribute_type:
+            self.history.execute(set_attribute_type_command(self.document, no, tipo))
+
+    def set_nullable(self, no: NodeFigure, anulavel: bool) -> None:
+        if anulavel != no.nullable:
+            self.history.execute(set_nullable_command(self.document, no, anulavel))
+
+    def change_connection_type(self, conexao: ConnectionFigure, tag: str) -> None:
+        comando = change_connection_type_command(self.document, conexao, tag)
+        if comando.commands:
+            self.history.execute(comando)

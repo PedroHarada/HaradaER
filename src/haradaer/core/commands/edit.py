@@ -12,9 +12,14 @@ from haradaer.core.appearance.metrics import TextMeasurer
 from haradaer.core.commands.history import Command, Composite
 from haradaer.core.figures.factory import (
     ATTRIBUTE_TYPES,
+    DEFAULT_GENERALIZATION_LABEL,
+    DOUBLE_STYLE_BLOCKS,
+    LABELED_GENERALIZATIONS,
     TEXT_MARGIN,
     create_connection,
     create_node,
+    double_style_block,
+    is_double_style_block,
     text_position,
 )
 from haradaer.core.figures.tags import (
@@ -441,6 +446,80 @@ def set_nullable_command(documento: Document, no: NodeFigure, anulavel: bool) ->
     comando = SetAttr(documento, no, no, "nullable", "true" if anulavel else "false")
     comando.label = "Mudar anulabilidade"
     return comando
+
+
+class SetTag(Command):
+    """Troca a tag de um elemento (o tipo de uma conexão)."""
+
+    def __init__(self, documento: Document, figura: Element, tag: str):
+        self._doc, self._figura = documento, figura
+        self._nova, self._antiga = tag, figura.tag
+
+    def _definir(self, tag: str) -> None:
+        self._figura.tag = tag
+        self._doc.emit(CHANGED, self._figura)
+
+    def apply(self) -> None:
+        self._antiga = self._figura.tag
+        self._definir(self._nova)
+
+    def revert(self) -> None:
+        self._definir(self._antiga)
+
+
+def change_connection_type_command(
+    documento: Document, conexao: ConnectionFigure, tag: str
+) -> Command:
+    """Muda o tipo de uma conexão, mantendo as pontas e a linha.
+
+    Acerta o que depende do tipo, como o TerraER grava: o rótulo da generalização, os blocos de
+    estilo das conexões duplas e, em `lcaf`, a direção atributo -> dono.
+    """
+    if tag not in CONNECTION_TAGS:
+        raise ValueError(f"tipo de conexão desconhecido: {tag}")
+    comandos: list[Command] = []
+    if tag == conexao.tag:
+        return Composite(comandos, "Mudar tipo de conexão")
+    comandos.append(SetTag(documento, conexao, tag))
+
+    tem_rotulo = conexao.generalization_label is not None
+    if tag in LABELED_GENERALIZATIONS and not tem_rotulo:
+        comandos.append(
+            SetAttr(
+                documento, conexao, conexao, "labelGeneralizacaoText", DEFAULT_GENERALIZATION_LABEL
+            )
+        )
+    elif tag not in LABELED_GENERALIZATIONS and tem_rotulo:
+        comandos.append(SetAttr(documento, conexao, conexao, "labelGeneralizacaoText", None))
+
+    filhos = [f for f in conexao.children if not is_double_style_block(f)]
+    filhos += [double_style_block() for _ in range(DOUBLE_STYLE_BLOCKS.get(tag, 0))]
+    if [id(f) for f in filhos] != [id(f) for f in conexao.children]:
+        comandos.append(SetChildren(documento, conexao, conexao, filhos))
+
+    inicio, fim = conexao.start, conexao.end
+    if (
+        tag == "lcaf"
+        and inicio is not None
+        and fim is not None
+        and inicio.tag not in ATTRIBUTE_TAGS
+        and fim.tag in ATTRIBUTE_TAGS
+    ):
+        comandos.extend(_swap_ends(documento, conexao))
+    return Composite(comandos, "Mudar tipo de conexão")
+
+
+def _swap_ends(documento: Document, conexao: ConnectionFigure) -> list[Command]:
+    """Inverte a conexão: troca as pontas e a ordem dos pontos da linha."""
+    comecar, terminar = conexao.child("startConnector"), conexao.child("endConnector")
+    pontos = conexao.child("points")
+    comandos: list[Command] = []
+    if comecar is not None and terminar is not None:
+        comandos.append(SetChildren(documento, conexao, comecar, list(terminar.children)))
+        comandos.append(SetChildren(documento, conexao, terminar, list(comecar.children)))
+    if pontos is not None:
+        comandos.append(SetChildren(documento, conexao, pontos, list(reversed(pontos.children))))
+    return comandos
 
 
 def set_generalization_label_command(

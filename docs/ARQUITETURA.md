@@ -398,10 +398,10 @@ Cada marco termina com algo que roda e passa em testes.
 | M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
 | M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
 | M3 | **Concluído.** Interface de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | Pinça e rolagem com dois dedos funcionam no Linux/Wayland; as amostras de referência desenham como no TerraER; 167 testes |
-| M4 | **Concluído** (aguarda teste manual). Edição: criar, mover, conectar, editar nome, excluir, desfazer/refazer, salvar | 225 testes (166 do núcleo, 58 da interface); o TerraER abre e regrava o arquivo criado sem mudar o modelo (`INVESTIGACOES.md` seção 14) |
+| M4 | **Concluído.** Edição: criar, mover, conectar, editar nome, excluir, desfazer/refazer, salvar | 225 testes (166 do núcleo, 58 da interface); o TerraER abre e regrava o arquivo criado sem mudar o modelo (`INVESTIGACOES.md` seção 14) |
 | M5a | **Concluído.** Verificação em vermelho com liga/desliga, recomendação de conexão na barra de ferramentas, botões do Qt em português e mensagem clara quando não grava | RF-09, RF-10, RF-17; 239 testes |
 | M5b | **Concluído.** Alças de redimensionar, trazer para a frente e enviar para trás, grade com encaixe, alinhar (6 modos), selecionar tudo e do mesmo tipo | RF-03 (redimensionar), RF-07; 261 testes |
-| M5c | Inspetor de objetos, inspetor de atributo, mudar o tipo de uma conexão, localizar | RF-05, RF-08, RF-16 |
+| M5c | **Concluído.** Inspetor de objetos (painel com árvore), painel de propriedades (nome, tipo SQL, anulabilidade, tipo de conexão, rótulo), localizar por nome | RF-05, RF-08, RF-16; 286 testes |
 | M5d | Exportação e arquivos recentes | RF-01 (recentes), RF-11 |
 | M6 | DDL (pós-v1) | Retomar com `INVESTIGACOES.md` seção 6 e decidir entre reproduzir o TerraER e gerar SQL válido |
 
@@ -409,7 +409,12 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
 
 ## 12. Pendências deste documento
 
-- Ficam para o M5c: mudar o tipo de uma conexão e o inspetor de atributo (tipo SQL e anulabilidade, que já existem como comandos no núcleo).
+- No M5c:
+  - **Inspetor de objetos** (`gui/inspector.py`): árvore com Entidades, Relacionamentos, Generalizações, Atributos sem dono e Conexões. Cada atributo aparece pendurado no dono, calculado das ligações `lcaf` por `core/erview.py` (atributo composto fica dentro do atributo). A seleção anda nos dois sentidos entre a árvore e o desenho.
+  - **Localizar** (Editar › Localizar, Ctrl+F): o campo no alto do inspetor filtra a árvore pelo nome, sem diferenciar maiúsculas nem acentos; Enter seleciona o primeiro elemento achado e o centraliza. A busca considera só elementos, não conexões.
+  - **Propriedades** (`gui/properties.py`): nome; tipo SQL e anulabilidade dos atributos com tipo, mostrando o nome do TerraER junto do valor gravado (`INTEGER (NUMBER)`); tipo de conexão; rótulo da generalização. O atributo derivado avisa que não tem tipo. Cada mudança é um comando e pode ser desfeita.
+  - **Mudar o tipo de uma conexão** (`change_connection_type_command`) acerta o que depende do tipo, para o arquivo sair igual ao de uma conexão criada já com o novo tipo: rótulo da generalização, blocos de estilo das conexões duplas e a direção atributo → dono em `lcaf`.
+  - Os painéis podem ser escondidos pelo menu Exibir. Lembrar a disposição entre sessões (RNF-09) fica para o M5d, junto com os arquivos recentes.
 - O RF-19 (uma janela por documento) já está pronto: `WindowManager` em `gui/app.py`.
 - No M5a, a verificação começa **ligada** em cada janela (no TerraER começa desligada) e não é gravada no arquivo. A recomendação aparece na barra: com dois elementos selecionados, os tipos aceitos ficam em negrito e clicar num deles liga os dois.
 - No M5b:

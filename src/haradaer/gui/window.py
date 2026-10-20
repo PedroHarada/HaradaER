@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
+    QDockWidget,
     QFileDialog,
     QLabel,
     QMainWindow,
@@ -29,7 +30,9 @@ from haradaer.core.rules import (
 )
 from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
 from haradaer.gui.editor import Editor
+from haradaer.gui.inspector import ObjectInspector
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
+from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.verification import name_of, pairs_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
@@ -85,7 +88,8 @@ class DocumentWindow(QMainWindow):
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
         self.view.tool_changed.connect(self._tool_changed)
-        self.diagram_scene.selectionChanged.connect(self._update_recommendation)
+        self.diagram_scene.selectionChanged.connect(self._selection_changed)
+        self._build_docks()
         self._build_menus()
         self._build_toolbar()
         self._attach(Document.new(), None)
@@ -134,6 +138,9 @@ class DocumentWindow(QMainWindow):
             "Selecionar do &mesmo tipo", "Ctrl+Shift+A", self._select_same_kind
         )
         editar.addActions([self.action_select_all, self.action_select_same])
+        editar.addSeparator()
+        self.action_find = self._action("&Localizar...", QKeySequence.StandardKey.Find, self._find)
+        editar.addAction(self.action_find)
 
         organizar = self.menuBar().addMenu("&Organizar")
         self.action_front = self._action("&Trazer para a frente", "Ctrl+]", self._bring_to_front)
@@ -176,6 +183,25 @@ class DocumentWindow(QMainWindow):
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
         exibir.addActions([self.action_validate, self.action_grid])
+        exibir.addSeparator()
+        exibir.addActions(
+            [self.inspector_dock.toggleViewAction(), self.properties_dock.toggleViewAction()]
+        )
+
+    def _build_docks(self) -> None:
+        """Painéis acopláveis à direita do desenho (RNF-09)."""
+        self.inspector = ObjectInspector()
+        self.inspector.selection_requested.connect(self._select_from_inspector)
+        self.inspector.locate_requested.connect(self.locate)
+        self.inspector_dock = QDockWidget("Inspetor de objetos", self)
+        self.inspector_dock.setObjectName("inspetor")
+        self.inspector_dock.setWidget(self.inspector)
+        self.properties = PropertiesPanel()
+        self.properties_dock = QDockWidget("Propriedades", self)
+        self.properties_dock.setObjectName("propriedades")
+        self.properties_dock.setWidget(self.properties)
+        for dock in (self.inspector_dock, self.properties_dock):
+            self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
 
     def _build_toolbar(self) -> None:
         barra = QToolBar("Ferramentas", self)
@@ -218,8 +244,6 @@ class DocumentWindow(QMainWindow):
 
     def _update_recommendation(self) -> None:
         """Com dois elementos selecionados, põe em negrito as conexões aceitas entre eles."""
-        if not shiboken6.isValid(self.diagram_scene):
-            return  # a cena avisa a seleção também enquanto é destruída
         par = self._selected_pair()
         validos = set() if par is None else self._valid_for(*par)
         for tool, acao in self._tool_actions.items():
@@ -274,6 +298,7 @@ class DocumentWindow(QMainWindow):
         self._editor.history.subscribe(self._history_changed)
         self.diagram_scene.set_document(documento)
         self.view.set_editor(self._editor)
+        self.properties.set_editor(self._editor)
         self.view.set_tool(SELECT)
         self._history_changed()
 
@@ -333,6 +358,37 @@ class DocumentWindow(QMainWindow):
     def _redo(self) -> None:
         self._editor.history.redo()
 
+    def _selection_changed(self) -> None:
+        if not shiboken6.isValid(self.diagram_scene) or not shiboken6.isValid(self.inspector):
+            return  # a cena avisa a seleção também enquanto é destruída
+        selecionadas = self.diagram_scene.selected_figures()
+        self._update_recommendation()
+        self.inspector.select_figures(selecionadas)
+        self.properties.show_figures(selecionadas)
+
+    def _select_from_inspector(self, figuras: list) -> None:
+        chaves = {id(f) for f in figuras}
+        self.diagram_scene.select_where(lambda f: id(f) in chaves)
+        if len(figuras) == 1:
+            self._show_in_view(figuras[0])
+
+    def _show_in_view(self, figura) -> None:
+        item = self.diagram_scene.item_for(figura)
+        if item is not None:
+            self.view.ensureVisible(item, 40, 40)
+
+    def locate(self, figura) -> None:
+        """Seleciona a figura e a traz para o centro do desenho (RF-08)."""
+        self.diagram_scene.select_only(figura)
+        item = self.diagram_scene.item_for(figura)
+        if item is not None:
+            self.view.centerOn(item)
+
+    def _find(self) -> None:
+        self.inspector_dock.show()
+        self.inspector_dock.raise_()
+        self.inspector.focus_search()
+
     def _delete(self) -> None:
         self._editor.delete(self.diagram_scene.selected_figures())
 
@@ -360,6 +416,8 @@ class DocumentWindow(QMainWindow):
         self.action_redo.setText(f"&Refazer {historico.redo_label}".rstrip())
         self._update_title()
         self._refresh_issues()
+        self.inspector.refresh(self._editor.document)
+        self._selection_changed()
 
     def _refresh_issues(self) -> None:
         """Refaz a verificação do modelo inteiro; os diagramas de ER são pequenos."""

@@ -25,6 +25,7 @@ DEFAULT_GENERALIZATION_LABEL = "característica"
 ATTRIBUTE_TYPES = ("CHAR(128)", "VARCHAR2(128)", "NUMBER", "NUMBER(9,2)", "DATE")
 
 GENERALIZATION_TAGS = ("uniao", "disjuncao", "sobreposicao")
+LABELED_GENERALIZATIONS = ("llabelGeneralizacao", "llabelDoubleGeneralizacao")
 
 DOUBLE_STYLE_BLOCKS = {
     "llabelDoubleUm": 1,
@@ -209,6 +210,24 @@ def create_node(
     )
 
 
+def double_style_block() -> Element:
+    """O bloco de estilo que o TerraER grava nas conexões duplas."""
+    return _style(_entry("innerStrokeWidthFactor", _value("double", "3")))
+
+
+def is_double_style_block(elemento: Element) -> bool:
+    if elemento.tag != "a" or len(elemento.children) != 1:
+        return False
+    entrada = elemento.children[0]
+    valor = entrada.children[0] if entrada.children else None
+    return (
+        entrada.tag == "innerStrokeWidthFactor"
+        and valor is not None
+        and valor.tag == "double"
+        and valor.text == "3"
+    )
+
+
 def _connector(no: Element) -> Element:
     return Element("rConnector", children=[Element("Owner", children=[no])], has_id=True)
 
@@ -227,7 +246,7 @@ def create_connection(
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
     (x1, y1), (x2, y2) = connection_points(rect_origem, rect_destino)
     atributos: dict[str, str] = {}
-    if tag in ("llabelGeneralizacao", "llabelDoubleGeneralizacao"):
+    if tag in LABELED_GENERALIZATIONS:
         atributos["labelGeneralizacaoText"] = DEFAULT_GENERALIZATION_LABEL
     filhos = [
         Element("points", children=[_point(x1, y1), _point(x2, y2)]),
@@ -235,6 +254,5 @@ def create_connection(
         Element("endConnector", children=[_connector(destino)]),
     ]
     # O TerraER grava esse bloco nas conexões duplas (dois, na generalização dupla).
-    for _ in range(DOUBLE_STYLE_BLOCKS.get(tag, 0)):
-        filhos.append(_style(_entry("innerStrokeWidthFactor", _value("double", "3"))))
+    filhos.extend(double_style_block() for _ in range(DOUBLE_STYLE_BLOCKS.get(tag, 0)))
     return ConnectionFigure(tag, attrs=atributos, children=filhos, has_id=True)
