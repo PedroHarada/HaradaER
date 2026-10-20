@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import errno
 from pathlib import Path
 
+import shiboken6
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
@@ -17,14 +19,42 @@ from PySide6.QtWidgets import (
 
 from haradaer.core import io
 from haradaer.core.errors import ArquivoInvalidoError
+from haradaer.core.figures.types import NodeFigure
 from haradaer.core.model.document import Document
+from haradaer.core.rules import (
+    is_valid_connection,
+    recommend_connections,
+    recommend_elements,
+    validate,
+)
+from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
 from haradaer.gui.editor import Editor
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.scene import DiagramScene
+from haradaer.gui.verification import name_of, pairs_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 
 TITLE = "HaradaER"
 UNTITLED = "Sem título"
+
+_SAVE_ERRORS = {
+    errno.ENOSPC: "Não há espaço livre no disco.",
+    errno.EROFS: "O disco é somente leitura.",
+}
+
+
+def save_error_text(erro: OSError) -> str:
+    """Explica em português por que a gravação falhou (RF-17); o detalhe técnico vai embaixo."""
+    if isinstance(erro, PermissionError):
+        motivo = "Sem permissão para gravar neste local."
+    elif isinstance(erro, IsADirectoryError):
+        motivo = "Já existe uma pasta com esse nome."
+    elif isinstance(erro, FileNotFoundError):
+        motivo = "A pasta de destino não existe."
+    else:
+        motivo = _SAVE_ERRORS.get(erro.errno, "Ocorreu um erro ao gravar o arquivo.")
+    detalhe = erro.strerror or str(erro)
+    return f"{motivo}\n\nDetalhe: {detalhe}"
 
 
 class DocumentWindow(QMainWindow):
@@ -46,6 +76,7 @@ class DocumentWindow(QMainWindow):
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
         self.view.tool_changed.connect(self._tool_changed)
+        self.diagram_scene.selectionChanged.connect(self._update_recommendation)
         self._build_menus()
         self._build_toolbar()
         self._attach(Document.new(), None)
@@ -104,6 +135,12 @@ class DocumentWindow(QMainWindow):
                 self.action_zoom_fit,
             ]
         )
+        exibir.addSeparator()
+        self.action_validate = QAction("&Verificar modelo", self)
+        self.action_validate.setCheckable(True)
+        self.action_validate.setChecked(True)
+        self.action_validate.toggled.connect(self._refresh_issues)
+        exibir.addAction(self.action_validate)
 
     def _build_toolbar(self) -> None:
         barra = QToolBar("Ferramentas", self)
@@ -115,7 +152,7 @@ class DocumentWindow(QMainWindow):
         def adicionar(tool: Tool, texto: str) -> None:
             acao = QAction(texto, self)
             acao.setCheckable(True)
-            acao.triggered.connect(lambda _=False, t=tool: self.view.set_tool(t))
+            acao.triggered.connect(lambda _=False, t=tool: self._tool_clicked(t))
             grupo.addAction(acao)
             barra.addAction(acao)
             self._tool_actions[tool] = acao
@@ -131,7 +168,55 @@ class DocumentWindow(QMainWindow):
 
     def _tool_changed(self, tool: Tool) -> None:
         self._tool_actions[tool].setChecked(True)
-        self.statusBar().clearMessage()
+        if tool.kind == "connect" and tool.tag != LINE_FREE:
+            self.statusBar().showMessage(f"Liga: {pairs_text(recommend_elements(tool.tag))}")
+        else:
+            self.statusBar().clearMessage()
+
+    # --- recomendação (RF-10) ----------------------------------------------------------------
+
+    def _selected_pair(self) -> tuple[NodeFigure, NodeFigure] | None:
+        figuras = self.diagram_scene.selected_figures()
+        if len(figuras) == 2 and all(isinstance(f, NodeFigure) for f in figuras):
+            return figuras[0], figuras[1]
+        return None
+
+    def _update_recommendation(self) -> None:
+        """Com dois elementos selecionados, põe em negrito as conexões aceitas entre eles."""
+        if not shiboken6.isValid(self.diagram_scene):
+            return  # a cena avisa a seleção também enquanto é destruída
+        par = self._selected_pair()
+        validos = set() if par is None else self._valid_for(*par)
+        for tool, acao in self._tool_actions.items():
+            if tool.kind == "connect":
+                fonte = acao.font()
+                fonte.setBold(tool.tag in validos)
+                acao.setFont(fonte)
+        if par is None:
+            return
+        a, b = (name_of(f.tag) for f in par)
+        if validos:
+            nomes = ", ".join(name_of(t) for t in RECOMMENDATION_ORDER if t in validos)
+            self.statusBar().showMessage(f"Conexões aceitas entre {a} e {b}: {nomes}")
+        else:
+            self.statusBar().showMessage(f"Nenhuma conexão aceita entre {a} e {b}")
+
+    @staticmethod
+    def _valid_for(a: NodeFigure, b: NodeFigure) -> set[str]:
+        # Nos dois sentidos: `generalizacaoLine` só vale com o círculo na origem.
+        return {*recommend_connections(a.tag, b.tag), *recommend_connections(b.tag, a.tag)}
+
+    def _tool_clicked(self, tool: Tool) -> None:
+        """Um tipo de conexão aceito, com dois elementos selecionados, liga os dois na hora."""
+        par = self._selected_pair()
+        if tool.kind == "connect" and par is not None and tool.tag in self._valid_for(*par):
+            a, b = par
+            origem, destino = (a, b) if is_valid_connection(tool.tag, a.tag, b.tag) else (b, a)
+            conexao = self._editor.connect(tool.tag, origem, destino)
+            self.diagram_scene.select_only(conexao)
+            self._tool_actions[self.view.tool].setChecked(True)
+            return
+        self.view.set_tool(tool)
 
     @staticmethod
     def _quit() -> None:
@@ -195,7 +280,9 @@ class DocumentWindow(QMainWindow):
             io.save(self._editor.document, caminho)
         except OSError as erro:
             QMessageBox.critical(
-                self, "Não foi possível salvar o arquivo", f"{caminho.name}\n\n{erro}"
+                self,
+                "Não foi possível salvar o arquivo",
+                f"{caminho.name}\n\n{save_error_text(erro)}",
             )
             return False
         self.path = caminho.resolve()
@@ -221,6 +308,12 @@ class DocumentWindow(QMainWindow):
         self.action_undo.setText(f"&Desfazer {historico.undo_label}".rstrip())
         self.action_redo.setText(f"&Refazer {historico.redo_label}".rstrip())
         self._update_title()
+        self._refresh_issues()
+
+    def _refresh_issues(self) -> None:
+        """Refaz a verificação do modelo inteiro; os diagramas de ER são pequenos."""
+        ligada = self.action_validate.isChecked()
+        self.diagram_scene.show_issues(validate(self._editor.document) if ligada else [])
 
     def _update_title(self) -> None:
         nome = self.path.name if self.path else UNTITLED

@@ -6,7 +6,7 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 from haradaer.gui.window import DocumentWindow
@@ -60,10 +60,20 @@ class WindowManager(QObject):
             self.open_path(Path(arquivo))
 
 
+def install_translator(app: QApplication) -> bool:
+    """Traduz os textos do próprio Qt (botões Salvar/Descartar/Cancelar, diálogos de arquivo)."""
+    tradutor = QTranslator(app)
+    pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    if not tradutor.load("qtbase_pt_BR", pasta):
+        return False
+    return app.installTranslator(tradutor)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     argumentos = list(sys.argv if argv is None else argv)
     app = QApplication(argumentos)
     app.setApplicationName("HaradaER")
+    install_translator(app)
     gerenciador = WindowManager()
     caminhos = [Path(a) for a in argumentos[1:]]
     if not caminhos:

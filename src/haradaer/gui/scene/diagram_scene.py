@@ -13,8 +13,10 @@ from PySide6.QtWidgets import QGraphicsScene
 from haradaer.core.appearance import describe_figure
 from haradaer.core.model.document import ADDED, CHANGED, REMOVED, Document
 from haradaer.core.model.element import Element
+from haradaer.core.rules import Issue
 from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene.items import FigureItem
+from haradaer.gui.verification import issue_text
 
 MARGIN = 40.0
 MIN_AREA = QRectF(0, 0, 1600, 1200)  # espaço para desenhar num modelo novo
@@ -70,6 +72,12 @@ class DiagramScene(QGraphicsScene):
         item = self.item_for(figura)
         if item is not None:
             item.setSelected(True)
+
+    def show_issues(self, problemas: list[Issue]) -> None:
+        """Pinta de vermelho as conexões com problema e limpa as demais (RF-09)."""
+        textos = {id(p.figure): issue_text(p) for p in problemas}
+        for chave, item in self._itens.items():
+            item.set_problem(textos.get(chave))
 
     def _add_item(self, figura: Element) -> FigureItem | None:
         ops = describe_figure(figura, self._medidor)

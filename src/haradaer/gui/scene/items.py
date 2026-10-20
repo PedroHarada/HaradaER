@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
@@ -25,6 +27,7 @@ from haradaer.core.appearance import (
     Stroke,
     TextOp,
 )
+from haradaer.core.appearance.style import RGBA
 from haradaer.core.figures.types import ConnectionFigure
 from haradaer.core.model.element import Element
 from haradaer.gui.qt_utils import QtMeasurer, qcolor, qfont
@@ -144,6 +147,7 @@ def op_bounds(op: DrawOp) -> QRectF:
 
 HIT_WIDTH = 10.0  # largura da área de clique de uma linha
 SELECTION_COLOR = QColor(40, 120, 255)
+PROBLEM_COLOR: RGBA = (220, 0, 0, 255)  # a mesma da prévia de conexão inválida
 
 
 class FigureItem(QGraphicsItem):
@@ -159,6 +163,7 @@ class FigureItem(QGraphicsItem):
         self.is_connection = isinstance(figure, ConnectionFigure)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.ops = ops
+        self.problem: str | None = None
         self._limites = QRectF()
         self._area = QPainterPath()
         self._calcular()
@@ -201,10 +206,20 @@ class FigureItem(QGraphicsItem):
     def boundingRect(self) -> QRectF:
         return self._limites.adjusted(-HIT_WIDTH, -HIT_WIDTH, HIT_WIDTH, HIT_WIDTH)
 
+    def set_problem(self, texto: str | None) -> None:
+        """Marca a conexão com problema (RF-09). Fica no item: as `ops` mudam a cada edição."""
+        if texto == self.problem:
+            return
+        self.problem = texto
+        self.setToolTip(texto or "")
+        self.update()
+
     def paint(self, painter: QPainter, option, widget=None) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         for op in self.ops:
+            if self.problem and isinstance(op, (PolylineOp, ArcOp)):
+                op = replace(op, stroke=replace(op.stroke, color=PROBLEM_COLOR))
             paint_op(painter, op)
         if self.isSelected():
             self._paint_selection(painter)
