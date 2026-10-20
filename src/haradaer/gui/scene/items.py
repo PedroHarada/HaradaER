@@ -203,6 +203,10 @@ class FigureItem(QGraphicsItem):
     def shape(self) -> QPainterPath:
         return self._area
 
+    def content_rect(self) -> QRectF:
+        """O que o item desenha, sem a folga para o clique."""
+        return QRectF(self._limites)
+
     def boundingRect(self) -> QRectF:
         return self._limites.adjusted(-HIT_WIDTH, -HIT_WIDTH, HIT_WIDTH, HIT_WIDTH)
 
@@ -217,11 +221,12 @@ class FigureItem(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget=None) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+        exportando = getattr(self.scene(), "exporting", False)
         for op in self.ops:
-            if self.problem and isinstance(op, (PolylineOp, ArcOp)):
+            if self.problem and not exportando and isinstance(op, (PolylineOp, ArcOp)):
                 op = replace(op, stroke=replace(op.stroke, color=PROBLEM_COLOR))
             paint_op(painter, op)
-        if self.isSelected():
+        if self.isSelected() and not exportando:
             self._paint_selection(painter)
 
     def _paint_selection(self, painter: QPainter) -> None:

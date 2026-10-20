@@ -402,7 +402,7 @@ Cada marco termina com algo que roda e passa em testes.
 | M5a | **Concluído.** Verificação em vermelho com liga/desliga, recomendação de conexão na barra de ferramentas, botões do Qt em português e mensagem clara quando não grava | RF-09, RF-10, RF-17; 239 testes |
 | M5b | **Concluído.** Alças de redimensionar, trazer para a frente e enviar para trás, grade com encaixe, alinhar (6 modos), selecionar tudo e do mesmo tipo | RF-03 (redimensionar), RF-07; 261 testes |
 | M5c | **Concluído.** Inspetor de objetos (painel com árvore), painel de propriedades (nome, tipo SQL, anulabilidade, tipo de conexão, rótulo), localizar por nome | RF-05, RF-08, RF-16; 286 testes |
-| M5d | Exportação e arquivos recentes | RF-01 (recentes), RF-11 |
+| M5d | **Concluído.** Exportar PNG, JPG, SVG e PDF; copiar como imagem; arquivos recentes; disposição da janela lembrada entre sessões | RF-01 (recentes), RF-11, RNF-09; 325 testes |
 | M6 | DDL (pós-v1) | Retomar com `INVESTIGACOES.md` seção 6 e decidir entre reproduzir o TerraER e gerar SQL válido |
 
 M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do TerraER é o teste mais forte de compatibilidade, e já exercita a parte mais arriscada (geometria e estilo).
@@ -414,7 +414,13 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
   - **Localizar** (Editar › Localizar, Ctrl+F): o campo no alto do inspetor filtra a árvore pelo nome, sem diferenciar maiúsculas nem acentos; Enter seleciona o primeiro elemento achado e o centraliza. A busca considera só elementos, não conexões.
   - **Propriedades** (`gui/properties.py`): nome; tipo SQL e anulabilidade dos atributos com tipo, mostrando o nome do TerraER junto do valor gravado (`INTEGER (NUMBER)`); tipo de conexão; rótulo da generalização. O atributo derivado avisa que não tem tipo. Cada mudança é um comando e pode ser desfeita.
   - **Mudar o tipo de uma conexão** (`change_connection_type_command`) acerta o que depende do tipo, para o arquivo sair igual ao de uma conexão criada já com o novo tipo: rótulo da generalização, blocos de estilo das conexões duplas e a direção atributo → dono em `lcaf`.
-  - Os painéis podem ser escondidos pelo menu Exibir. Lembrar a disposição entre sessões (RNF-09) fica para o M5d, junto com os arquivos recentes.
+  - Os painéis podem ser escondidos pelo menu Exibir.
+- No M5d:
+  - **Exportar** (Arquivo › Exportar desenho, Ctrl+E; `gui/export.py`): PNG e JPG com o dobro de pixels, SVG e PDF em tamanho real (1 unidade = 1 ponto). Exporta só o modelo, sem seleção, sem as marcas vermelhas da verificação e sem a grade, com fundo branco e margem de 20. Se o nome não tiver extensão, usa a do filtro escolhido. Desenho vazio não exporta.
+  - **Copiar como imagem** (Editar, Ctrl+Shift+C): a mesma imagem do PNG vai para a área de transferência.
+  - **Recentes** (Arquivo › Abrir recente; `gui/settings.py`): até 10, do mais novo ao mais antigo, compartilhados entre as janelas; entram ao abrir e ao salvar. Um recente que não existe mais some da lista e avisa.
+  - **Disposição**: tamanho da janela e posição/visibilidade dos painéis ficam nas configurações do usuário (`~/.config/HaradaER/`) e voltam na próxima janela. Os testes usam uma pasta temporária (`tests/gui/conftest.py`).
+  - **Gabaritos protegidos**: `tests/test_referencias_intactas.py` confere o SHA-256 dos arquivos gravados pelo TerraER. No teste manual do M5c a `amostra-basica.xml` foi salva por cima e entrou no commit; foi restaurada no M5d.
 - O RF-19 (uma janela por documento) já está pronto: `WindowManager` em `gui/app.py`.
 - No M5a, a verificação começa **ligada** em cada janela (no TerraER começa desligada) e não é gravada no arquivo. A recomendação aparece na barra: com dois elementos selecionados, os tipos aceitos ficam em negrito e clicar num deles liga os dois.
 - No M5b:

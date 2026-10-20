@@ -9,6 +9,7 @@ from pathlib import Path
 from PySide6.QtCore import QLibraryInfo, QObject, QTranslator
 from PySide6.QtWidgets import QApplication, QFileDialog
 
+from haradaer.gui.settings import RecentFiles
 from haradaer.gui.window import DocumentWindow
 
 
@@ -18,9 +19,11 @@ class WindowManager(QObject):
     def __init__(self) -> None:
         super().__init__()
         self.windows: list[DocumentWindow] = []
+        self.recent = RecentFiles()  # a única coisa compartilhada entre as janelas
 
     def new_window(self) -> DocumentWindow:
-        janela = DocumentWindow()
+        janela = DocumentWindow(self.recent)
+        janela.open_path_requested.connect(self.open_path)
         janela.closed.connect(self._window_closed)
         janela.open_requested.connect(lambda j=janela: self.ask_and_open(j))
         janela.new_requested.connect(self.new_window)

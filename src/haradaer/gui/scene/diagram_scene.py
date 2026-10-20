@@ -34,6 +34,7 @@ class DiagramScene(QGraphicsScene):
         self._itens: dict[int, FigureItem] = {}
         self.document: Document | None = None
         self._extent_held = False
+        self.exporting = False  # ao exportar, os itens não mostram seleção nem verificação
 
     def set_document(self, documento: Document | None) -> None:
         if self.document is not None:
@@ -61,6 +62,13 @@ class DiagramScene(QGraphicsScene):
 
     def item_for(self, figura: Element) -> FigureItem | None:
         return self._itens.get(id(figura))
+
+    def content_rect(self) -> QRectF:
+        """Área ocupada pelo desenho (sem as folgas de clique dos itens)."""
+        area = QRectF()
+        for item in self._itens.values():
+            area = area.united(item.content_rect())
+        return area
 
     def figure_items(self) -> list[FigureItem]:
         return sorted(self._itens.values(), key=lambda i: i.zValue())

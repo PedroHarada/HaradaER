@@ -4,7 +4,7 @@ Ferramenta de modelagem Entidade-Relacionamento em Python, compatível com o arq
 TerraER 3.14: um modelo salvo no HaradaER abre no TerraER com o mesmo
 diagrama, e o inverso também vale.
 
-Estado: em construção. Abre, mostra, edita e salva arquivos `.xml` do TerraER (criar, mover, redimensionar, conectar, renomear, excluir, alinhar, desfazer/refazer), com zoom e gestos de trackpad. Marca em vermelho as conexões com problema e recomenda as conexões aceitas entre dois elementos selecionados. Tem grade com encaixe, ordem de empilhamento, inspetor de objetos com busca por nome e painel de propriedades (tipo SQL, anulabilidade, tipo de conexão). Ainda faltam exportação de imagem e arquivos recentes.
+Estado: em construção. Abre, mostra, edita e salva arquivos `.xml` do TerraER (criar, mover, redimensionar, conectar, renomear, excluir, alinhar, desfazer/refazer), com zoom e gestos de trackpad. Marca em vermelho as conexões com problema e recomenda as conexões aceitas entre dois elementos selecionados. Tem grade com encaixe, ordem de empilhamento, inspetor de objetos com busca por nome e painel de propriedades (tipo SQL, anulabilidade, tipo de conexão). Exporta o desenho em PNG, JPG, SVG e PDF e lembra os arquivos recentes. O DDL fica para depois da v1.
 
 ## Documentação
 

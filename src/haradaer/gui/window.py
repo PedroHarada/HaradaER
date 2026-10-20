@@ -30,10 +30,12 @@ from haradaer.core.rules import (
 )
 from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
 from haradaer.gui.editor import Editor
+from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
+from haradaer.gui.settings import RecentFiles, save_window_layout, window_layout
 from haradaer.gui.verification import name_of, pairs_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 
@@ -73,10 +75,12 @@ class DocumentWindow(QMainWindow):
     closed = Signal(object)
     open_requested = Signal()
     new_requested = Signal()
+    open_path_requested = Signal(object)
 
-    def __init__(self) -> None:
+    def __init__(self, recent: RecentFiles | None = None) -> None:
         super().__init__()
         self.path: Path | None = None
+        self.recent = recent if recent is not None else RecentFiles()
         self.diagram_scene = DiagramScene()
         self.view = DiagramView(self.diagram_scene)
         self.setCentralWidget(self.view)
@@ -92,6 +96,7 @@ class DocumentWindow(QMainWindow):
         self._build_docks()
         self._build_menus()
         self._build_toolbar()
+        self._restore_layout()
         self._attach(Document.new(), None)
 
     # --- menus e ferramentas -----------------------------------------------------------------
@@ -118,8 +123,13 @@ class DocumentWindow(QMainWindow):
         self.action_close = self._action("&Fechar", QKeySequence.StandardKey.Close, self.close)
         self.action_quit = self._action("&Sair", QKeySequence.StandardKey.Quit, self._quit)
         arquivo.addActions([self.action_new, self.action_open])
+        self.recent_menu = arquivo.addMenu("Abrir &recente")
+        self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
         arquivo.addSeparator()
         arquivo.addActions([self.action_save, self.action_save_as])
+        arquivo.addSeparator()
+        self.action_export = self._action("&Exportar desenho...", "Ctrl+E", self.export)
+        arquivo.addAction(self.action_export)
         arquivo.addSeparator()
         arquivo.addActions([self.action_close, self.action_quit])
 
@@ -141,6 +151,11 @@ class DocumentWindow(QMainWindow):
         editar.addSeparator()
         self.action_find = self._action("&Localizar...", QKeySequence.StandardKey.Find, self._find)
         editar.addAction(self.action_find)
+        editar.addSeparator()
+        self.action_copy_image = self._action(
+            "Copiar como &imagem", "Ctrl+Shift+C", self.copy_image
+        )
+        editar.addAction(self.action_copy_image)
 
         organizar = self.menuBar().addMenu("&Organizar")
         self.action_front = self._action("&Trazer para a frente", "Ctrl+]", self._bring_to_front)
@@ -205,6 +220,7 @@ class DocumentWindow(QMainWindow):
 
     def _build_toolbar(self) -> None:
         barra = QToolBar("Ferramentas", self)
+        barra.setObjectName("ferramentas")
         barra.setOrientation(Qt.Orientation.Vertical)
         barra.setMovable(False)
         self.addToolBar(Qt.ToolBarArea.LeftToolBarArea, barra)
@@ -312,6 +328,7 @@ class DocumentWindow(QMainWindow):
             )
             return False
         self._attach(documento, caminho)
+        self.recent.add(caminho)
         self.view.zoom_actual()
         self.view.horizontalScrollBar().setValue(self.view.horizontalScrollBar().minimum())
         self.view.verticalScrollBar().setValue(self.view.verticalScrollBar().minimum())
@@ -346,6 +363,7 @@ class DocumentWindow(QMainWindow):
             )
             return False
         self.path = caminho.resolve()
+        self.recent.add(self.path)
         self._editor.history.mark_clean()
         self.statusBar().showMessage(f"Salvo em {caminho}", 4000)
         return True
@@ -357,6 +375,80 @@ class DocumentWindow(QMainWindow):
 
     def _redo(self) -> None:
         self._editor.history.redo()
+
+    # --- recentes, exportação e disposição ---------------------------------------------------
+
+    def _fill_recent_menu(self) -> None:
+        self.recent_menu.clear()
+        caminhos = self.recent.paths()
+        for numero, caminho in enumerate(caminhos, start=1):
+            rotulo = f"&{numero} {caminho.name}" if numero < 10 else caminho.name
+            acao = self.recent_menu.addAction(f"{rotulo}  ({caminho.parent})")
+            acao.triggered.connect(lambda _=False, c=caminho: self.open_recent(c))
+        if not caminhos:
+            vazio = self.recent_menu.addAction("Nenhum arquivo recente")
+            vazio.setEnabled(False)
+            return
+        self.recent_menu.addSeparator()
+        self.recent_menu.addAction("&Limpar lista", self.recent.clear)
+
+    def open_recent(self, caminho: Path) -> None:
+        if not caminho.is_file():
+            self.recent.remove(caminho)
+            QMessageBox.critical(
+                self, "Não foi possível abrir o arquivo", f"{caminho}\n\nO arquivo não existe mais."
+            )
+            return
+        self.open_path_requested.emit(caminho)
+
+    def export(self) -> bool:
+        """Pergunta onde e grava o desenho como imagem, SVG ou PDF (RF-11)."""
+        filtros = ";;".join(
+            f"{nome} (*.{ext}{' *.jpeg' if ext == 'jpg' else ''})" for ext, nome in EXPORT_FORMATS
+        )
+        base = self.path.with_suffix(".png") if self.path else Path(f"{UNTITLED}.png")
+        nome, filtro = QFileDialog.getSaveFileName(self, "Exportar desenho", str(base), filtros)
+        if not nome:
+            return False
+        caminho = Path(nome)
+        extensoes = {f".{ext}" for ext, _ in EXPORT_FORMATS} | {".jpeg"}
+        if caminho.suffix.lower() not in extensoes:
+            escolhida = next(
+                (ext for ext, rotulo in EXPORT_FORMATS if filtro.startswith(rotulo)), "png"
+            )
+            caminho = caminho.with_name(f"{caminho.name}.{escolhida}")
+        try:
+            export_diagram(self.diagram_scene, caminho, self.path.stem if self.path else UNTITLED)
+        except EmptyDiagramError:
+            QMessageBox.information(self, "Exportar desenho", "O desenho está vazio.")
+            return False
+        except OSError as erro:
+            QMessageBox.critical(
+                self,
+                "Não foi possível exportar o desenho",
+                f"{caminho.name}\n\n{save_error_text(erro)}",
+            )
+            return False
+        self.statusBar().showMessage(f"Exportado para {caminho}", 4000)
+        return True
+
+    def copy_image(self) -> bool:
+        try:
+            imagem = render_image(self.diagram_scene)
+        except EmptyDiagramError:
+            self.statusBar().showMessage("O desenho está vazio.", 4000)
+            return False
+        QApplication.clipboard().setImage(imagem)
+        self.statusBar().showMessage("Desenho copiado como imagem.", 4000)
+        return True
+
+    def _restore_layout(self) -> None:
+        """Volta o tamanho da janela e a posição dos painéis da última sessão (RNF-09)."""
+        geometria, estado = window_layout()
+        if geometria is not None:
+            self.restoreGeometry(geometria)
+        if estado is not None:
+            self.restoreState(estado)
 
     def _selection_changed(self) -> None:
         if not shiboken6.isValid(self.diagram_scene) or not shiboken6.isValid(self.inspector):
@@ -436,6 +528,7 @@ class DocumentWindow(QMainWindow):
         if self._editor.history.is_dirty and not self._confirm_discard():
             event.ignore()
             return
+        save_window_layout(self.saveGeometry(), self.saveState())
         self.closed.emit(self)
         super().closeEvent(event)
 
