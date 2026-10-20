@@ -11,8 +11,10 @@ de um elemento a outro). A vista só traduz o mouse em pedidos ao `Editor`.
 
 from __future__ import annotations
 
+import math
 from typing import NamedTuple
 
+import shiboken6
 from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
     QColor,
@@ -46,6 +48,56 @@ GENERALIZATION_LABEL_FONT = FontSpec(size=12.0, italic=True)
 VALID_COLOR = QColor(0, 150, 60)
 INVALID_COLOR = QColor(220, 0, 0)
 
+GRID_SIZE = 10.0  # unidades do desenho
+GRID_MIN_PX = 6.0  # abaixo disso a grade é desenhada com passo maior (só a vista)
+GRID_COLOR = QColor(225, 228, 235)
+HANDLE_PX = 7.0  # lado das alças de redimensionar, em pixels da tela
+HANDLE_COLOR = QColor(40, 120, 255)
+
+# Alças: nome -> (lado horizontal, lado vertical) que ela mexe; -1 esquerda/cima, 1 direita/baixo.
+HANDLES: dict[str, tuple[int, int]] = {
+    "nw": (-1, -1),
+    "n": (0, -1),
+    "ne": (1, -1),
+    "e": (1, 0),
+    "se": (1, 1),
+    "s": (0, 1),
+    "sw": (-1, 1),
+    "w": (-1, 0),
+}
+_HANDLE_CURSORS = {
+    "nw": Qt.CursorShape.SizeFDiagCursor,
+    "se": Qt.CursorShape.SizeFDiagCursor,
+    "ne": Qt.CursorShape.SizeBDiagCursor,
+    "sw": Qt.CursorShape.SizeBDiagCursor,
+    "n": Qt.CursorShape.SizeVerCursor,
+    "s": Qt.CursorShape.SizeVerCursor,
+    "e": Qt.CursorShape.SizeHorCursor,
+    "w": Qt.CursorShape.SizeHorCursor,
+}
+
+
+def resized_rect(
+    original: tuple[float, float, float, float],
+    alca: str,
+    x: float,
+    y: float,
+    minimo: tuple[float, float],
+) -> tuple[float, float, float, float]:
+    """Caixa nova ao arrastar a alça até (x, y). O lado oposto fica parado; respeita o mínimo."""
+    esquerda, topo, w, h = original
+    direita, base = esquerda + w, topo + h
+    lado_x, lado_y = HANDLES[alca]
+    if lado_x < 0:
+        esquerda = min(x, direita - minimo[0])
+    elif lado_x > 0:
+        direita = max(x, esquerda + minimo[0])
+    if lado_y < 0:
+        topo = min(y, base - minimo[1])
+    elif lado_y > 0:
+        base = max(y, topo + minimo[1])
+    return (esquerda, topo, direita - esquerda, base - topo)
+
 
 class Tool(NamedTuple):
     kind: str  # "select", "create" ou "connect"
@@ -73,6 +125,13 @@ class DiagramView(QGraphicsView):
         self._pan_last: QPointF | None = None
         self._connect_from: NodeFigure | None = None
         self._preview: QGraphicsLineItem | None = None
+        self.grid: float | None = None
+        self._drag_start: QPointF | None = None  # cena: onde o arrasto começou (para a grade)
+        self._drag_anchor: tuple[NodeFigure, float, float] | None = None
+        self._drag_moved = (0.0, 0.0)
+        self._resizing: tuple[NodeFigure, str, tuple[float, float, float, float]] | None = None
+        scene.selectionChanged.connect(self._repaint_handles)
+        scene.changed.connect(self._repaint_handles)
         self.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorViewCenter)
@@ -133,6 +192,109 @@ class DiagramView(QGraphicsView):
             return
         super().wheelEvent(event)
 
+    # --- grade -------------------------------------------------------------------------------
+
+    def set_grid(self, ligada: bool) -> None:
+        """Mostra a grade e faz criar, mover e redimensionar encaixarem nela."""
+        self.grid = GRID_SIZE if ligada else None
+        self.resetCachedContent()
+        self.viewport().update()
+
+    def snap(self, valor: float) -> float:
+        return valor if self.grid is None else round(valor / self.grid) * self.grid
+
+    def drawBackground(self, painter: QPainter, rect: QRectF) -> None:
+        super().drawBackground(painter, rect)
+        if self.grid is None:
+            return
+        passo = self.grid
+        while passo * self.zoom < GRID_MIN_PX:
+            passo *= 5
+        pen = QPen(GRID_COLOR, 1)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        x = math.floor(rect.left() / passo) * passo
+        while x <= rect.right():
+            painter.drawLine(QPointF(x, rect.top()), QPointF(x, rect.bottom()))
+            x += passo
+        y = math.floor(rect.top() / passo) * passo
+        while y <= rect.bottom():
+            painter.drawLine(QPointF(rect.left(), y), QPointF(rect.right(), y))
+            y += passo
+
+    # --- alças de redimensionar --------------------------------------------------------------
+
+    def _repaint_handles(self, *_args) -> None:
+        if shiboken6.isValid(self):
+            self.viewport().update()
+
+    def resizable(self) -> NodeFigure | None:
+        """O elemento que mostra alças: só quando ele é o único selecionado."""
+        if self.tool.kind != "select" or not shiboken6.isValid(self._scene):
+            return None
+        figuras = self._scene.selected_figures()
+        if len(figuras) == 1 and isinstance(figuras[0], NodeFigure):
+            if node_rect(figuras[0]) is not None:
+                return figuras[0]
+        return None
+
+    def handle_rects(self) -> dict[str, QRectF]:
+        """Alças do elemento selecionado, em coordenadas da cena (tamanho fixo na tela)."""
+        no = self.resizable()
+        if no is None:
+            return {}
+        x, y, w, h = node_rect(no)  # type: ignore[misc]
+        lado = HANDLE_PX / self.zoom
+        alcas = {}
+        for nome, (lado_x, lado_y) in HANDLES.items():
+            cx = x + w * (lado_x + 1) / 2
+            cy = y + h * (lado_y + 1) / 2
+            alcas[nome] = QRectF(cx - lado / 2, cy - lado / 2, lado, lado)
+        return alcas
+
+    def _handle_at(self, pos: QPointF) -> str | None:
+        folga = 2 / self.zoom
+        for nome, quadro in self.handle_rects().items():
+            if quadro.adjusted(-folga, -folga, folga, folga).contains(pos):
+                return nome
+        return None
+
+    def drawForeground(self, painter: QPainter, rect: QRectF) -> None:
+        super().drawForeground(painter, rect)
+        alcas = self.handle_rects()
+        if not alcas:
+            return
+        pen = QPen(HANDLE_COLOR, 1)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.setBrush(QColor("white"))
+        for quadro in alcas.values():
+            painter.drawRect(quadro)
+
+    def _begin_resize(self, alca: str) -> None:
+        no = self.resizable()
+        assert no is not None and self.editor is not None
+        rect = node_rect(no)
+        assert rect is not None
+        self._resizing = (no, alca, rect)
+        self._scene.hold_extent(True)
+        self.editor.history.begin_macro("Redimensionar")
+
+    def _resize_to(self, pos: QPointF) -> None:
+        assert self._resizing is not None and self.editor is not None
+        no, alca, original = self._resizing
+        rect = resized_rect(
+            original, alca, self.snap(pos.x()), self.snap(pos.y()), self.editor.min_size(no)
+        )
+        if rect != node_rect(no):
+            self.editor.resize(no, rect)
+
+    def _end_resize(self) -> None:
+        if self._resizing is not None and self.editor is not None:
+            self._resizing = None
+            self.editor.history.end_macro()
+            self._scene.hold_extent(False)
+
     # --- ferramentas -------------------------------------------------------------------------
 
     def set_editor(self, editor: Editor) -> None:
@@ -149,6 +311,7 @@ class DiagramView(QGraphicsView):
 
     def _cancel_interaction(self) -> None:
         self._end_connection()
+        self._end_resize()
         if self._inline is not None:
             self._inline.cancel()
 
@@ -168,6 +331,10 @@ class DiagramView(QGraphicsView):
             return
         if event.button() == Qt.MouseButton.LeftButton and self.editor is not None:
             pos = self._scene_pos(event)
+            alca = self._handle_at(pos)
+            if alca is not None:
+                self._begin_resize(alca)
+                return
             if self.tool.kind == "create":
                 self._create(
                     pos, keep_tool=bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
@@ -183,6 +350,12 @@ class DiagramView(QGraphicsView):
             if item is not None and item.isSelected():
                 self._drag_from, self._drag_origin_px = pos, event.position()
                 self._dragging = False
+                self._drag_start, self._drag_moved = pos, (0.0, 0.0)
+                self._drag_anchor = None
+                ancora = item.figure if isinstance(item.figure, NodeFigure) else None
+                rect = node_rect(ancora) if ancora is not None else None
+                if ancora is not None and rect is not None:
+                    self._drag_anchor = (ancora, rect[0], rect[1])
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if self._pan_last is not None:
@@ -196,9 +369,17 @@ class DiagramView(QGraphicsView):
         if self._connect_from is not None:
             self._update_connection(self._scene_pos(event))
             return
+        if self._resizing is not None:
+            self._resize_to(self._scene_pos(event))
+            return
         if self._drag_from is not None and self.editor is not None:
             self._drag_to(event)
             return
+        if self.tool.kind == "select" and event.buttons() == Qt.MouseButton.NoButton:
+            alca = self._handle_at(self._scene_pos(event))
+            self.viewport().setCursor(
+                _HANDLE_CURSORS[alca] if alca is not None else Qt.CursorShape.ArrowCursor
+            )
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -215,6 +396,9 @@ class DiagramView(QGraphicsView):
                 self._scene_pos(event),
                 keep_tool=bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier),
             )
+            return
+        if self._resizing is not None and event.button() == Qt.MouseButton.LeftButton:
+            self._end_resize()
             return
         if self._drag_from is not None:
             if self._dragging and self.editor is not None:
@@ -247,7 +431,7 @@ class DiagramView(QGraphicsView):
         assert self.editor is not None and self.tool.tag is not None
         self.editor.history.begin_macro("Criar")  # criar e dar nome é um passo só
         self._creating = True
-        no = self.editor.create(self.tool.tag, pos.x(), pos.y())
+        no = self.editor.create(self.tool.tag, self.snap(pos.x()), self.snap(pos.y()))
         self._scene.select_only(no)
         if not keep_tool:
             self.set_tool(SELECT)
@@ -277,9 +461,17 @@ class DiagramView(QGraphicsView):
             self._scene.hold_extent(True)
             self.editor.begin_move()
         pos = self._scene_pos(event)
-        dx, dy = pos.x() - self._drag_from.x(), pos.y() - self._drag_from.y()
+        assert self._drag_start is not None
+        total_x, total_y = pos.x() - self._drag_start.x(), pos.y() - self._drag_start.y()
+        if self.grid is not None and self._drag_anchor is not None:
+            # O canto do elemento sob o mouse cai na grade; os outros vão junto.
+            _, x0, y0 = self._drag_anchor
+            total_x, total_y = self.snap(x0 + total_x) - x0, self.snap(y0 + total_y) - y0
+        dx, dy = total_x - self._drag_moved[0], total_y - self._drag_moved[1]
         self._drag_from = pos
-        self.editor.move([f for f in self._scene.selected_figures() if can_move(f)], dx, dy)
+        if dx or dy:
+            self._drag_moved = (total_x, total_y)
+            self.editor.move([f for f in self._scene.selected_figures() if can_move(f)], dx, dy)
 
     # --- conectar ----------------------------------------------------------------------------
 

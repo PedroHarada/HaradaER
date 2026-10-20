@@ -37,6 +37,15 @@ from haradaer.gui.view import SELECT, DiagramView, Tool
 TITLE = "HaradaER"
 UNTITLED = "Sem título"
 
+ALIGN_NAMES = [
+    ("left", "À &esquerda"),
+    ("center", "Centro &horizontal"),
+    ("right", "À &direita"),
+    ("top", "No &topo"),
+    ("middle", "Centro &vertical"),
+    ("bottom", "Na &base"),
+]
+
 _SAVE_ERRORS = {
     errno.ENOSPC: "Não há espaço livre no disco.",
     errno.EROFS: "O disco é somente leitura.",
@@ -117,6 +126,28 @@ class DocumentWindow(QMainWindow):
         editar.addActions([self.action_undo, self.action_redo])
         editar.addSeparator()
         editar.addAction(self.action_delete)
+        editar.addSeparator()
+        self.action_select_all = self._action(
+            "Selecionar &tudo", QKeySequence.StandardKey.SelectAll, self._select_all
+        )
+        self.action_select_same = self._action(
+            "Selecionar do &mesmo tipo", "Ctrl+Shift+A", self._select_same_kind
+        )
+        editar.addActions([self.action_select_all, self.action_select_same])
+
+        organizar = self.menuBar().addMenu("&Organizar")
+        self.action_front = self._action("&Trazer para a frente", "Ctrl+]", self._bring_to_front)
+        self.action_back = self._action("&Enviar para trás", "Ctrl+[", self._send_to_back)
+        organizar.addActions([self.action_front, self.action_back])
+        organizar.addSeparator()
+        alinhar = organizar.addMenu("&Alinhar")
+        self.align_actions: dict[str, QAction] = {}
+        for modo, texto in ALIGN_NAMES:
+            acao = self._action(texto, None, lambda _=False, m=modo: self._align(m))
+            self.align_actions[modo] = acao
+            alinhar.addAction(acao)
+            if modo == "right":
+                alinhar.addSeparator()
 
         exibir = self.menuBar().addMenu("E&xibir")
         self.action_zoom_in = self._action(
@@ -140,7 +171,11 @@ class DocumentWindow(QMainWindow):
         self.action_validate.setCheckable(True)
         self.action_validate.setChecked(True)
         self.action_validate.toggled.connect(self._refresh_issues)
-        exibir.addAction(self.action_validate)
+        self.action_grid = QAction("&Grade", self)
+        self.action_grid.setShortcut("Ctrl+'")
+        self.action_grid.setCheckable(True)
+        self.action_grid.toggled.connect(self.view.set_grid)
+        exibir.addActions([self.action_validate, self.action_grid])
 
     def _build_toolbar(self) -> None:
         barra = QToolBar("Ferramentas", self)
@@ -300,6 +335,22 @@ class DocumentWindow(QMainWindow):
 
     def _delete(self) -> None:
         self._editor.delete(self.diagram_scene.selected_figures())
+
+    def _select_all(self) -> None:
+        self.diagram_scene.select_where(lambda _: True)
+
+    def _select_same_kind(self) -> None:
+        tipos = {f.tag for f in self.diagram_scene.selected_figures()}
+        self.diagram_scene.select_where(lambda f: f.tag in tipos)
+
+    def _bring_to_front(self) -> None:
+        self._editor.bring_to_front(self.diagram_scene.selected_figures())
+
+    def _send_to_back(self) -> None:
+        self._editor.send_to_back(self.diagram_scene.selected_figures())
+
+    def _align(self, modo: str) -> None:
+        self._editor.align(self.diagram_scene.selected_figures(), modo)
 
     def _history_changed(self) -> None:
         historico = self._editor.history

@@ -399,8 +399,8 @@ Cada marco termina com algo que roda e passa em testes.
 | M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
 | M3 | **Concluído.** Interface de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | Pinça e rolagem com dois dedos funcionam no Linux/Wayland; as amostras de referência desenham como no TerraER; 167 testes |
 | M4 | **Concluído** (aguarda teste manual). Edição: criar, mover, conectar, editar nome, excluir, desfazer/refazer, salvar | 225 testes (166 do núcleo, 58 da interface); o TerraER abre e regrava o arquivo criado sem mudar o modelo (`INVESTIGACOES.md` seção 14) |
-| M5a | **Concluído** (aguarda teste manual). Verificação em vermelho com liga/desliga, recomendação de conexão na barra de ferramentas, botões do Qt em português e mensagem clara quando não grava | RF-09, RF-10, RF-17; 239 testes |
-| M5b | Alças de redimensionar, ordem de empilhamento, grade e alinhamento, selecionar do mesmo tipo | RF-03 (redimensionar), RF-07 |
+| M5a | **Concluído.** Verificação em vermelho com liga/desliga, recomendação de conexão na barra de ferramentas, botões do Qt em português e mensagem clara quando não grava | RF-09, RF-10, RF-17; 239 testes |
+| M5b | **Concluído.** Alças de redimensionar, trazer para a frente e enviar para trás, grade com encaixe, alinhar (6 modos), selecionar tudo e do mesmo tipo | RF-03 (redimensionar), RF-07; 261 testes |
 | M5c | Inspetor de objetos, inspetor de atributo, mudar o tipo de uma conexão, localizar | RF-05, RF-08, RF-16 |
 | M5d | Exportação e arquivos recentes | RF-01 (recentes), RF-11 |
 | M6 | DDL (pós-v1) | Retomar com `INVESTIGACOES.md` seção 6 e decidir entre reproduzir o TerraER e gerar SQL válido |
@@ -409,9 +409,14 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
 
 ## 12. Pendências deste documento
 
-- Fora do M4, ficam para o M5b e o M5c: alças de redimensionar, mudar o tipo de uma conexão, inspetor de atributo (tipo SQL e anulabilidade, que já existem como comandos no núcleo), ordem de empilhamento e laço por tipo.
+- Ficam para o M5c: mudar o tipo de uma conexão e o inspetor de atributo (tipo SQL e anulabilidade, que já existem como comandos no núcleo).
 - O RF-19 (uma janela por documento) já está pronto: `WindowManager` em `gui/app.py`.
 - No M5a, a verificação começa **ligada** em cada janela (no TerraER começa desligada) e não é gravada no arquivo. A recomendação aparece na barra: com dois elementos selecionados, os tipos aceitos ficam em negrito e clicar num deles liga os dois.
+- No M5b:
+  - **Redimensionar** usa a regra do TerraER ao renomear (QA-01): a forma não fica menor que o texto + 20 de largura nem que a altura do texto, e o texto fica centralizado. O círculo da generalização continua redondo, e o losango interno da entidade associativa acompanha com 2 de recuo. O comportamento das alças do TerraER não foi medido; o arquivo gravado continua válido, porque a geometria é a da forma.
+  - **Grade:** um interruptor só (Exibir › Grade), de 10 unidades, que começa desligado e não vai para o arquivo. Com ela ligada, criar encaixa o centro do elemento, mover encaixa o canto do elemento sob o mouse e redimensionar encaixa a borda arrastada.
+  - **Alinhar** usa a caixa da seleção, como o `AlignAction` do JHotDraw. As conexões são religadas uma vez só, com a posição final de todos os elementos.
+  - **Empilhamento:** trazer para a frente e enviar para trás mantêm a ordem entre as figuras escolhidas. Uma conexão enviada para trás dos seus elementos é gravada com o dono por dentro do `Owner`, como no TerraER.
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
 

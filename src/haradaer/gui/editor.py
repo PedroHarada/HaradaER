@@ -9,11 +9,16 @@ from __future__ import annotations
 from haradaer.core.commands import (
     History,
     add_node_command,
+    align_command,
+    bring_to_front_command,
     connect_command,
+    min_node_size,
     move_command,
     new_node,
     remove_command,
     rename_command,
+    resize_command,
+    send_to_back_command,
     set_generalization_label_command,
 )
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
@@ -57,6 +62,25 @@ class Editor:
 
     def end_move(self) -> None:
         self.history.end_macro()
+
+    def min_size(self, no: NodeFigure) -> tuple[float, float]:
+        return min_node_size(no, self.measurer)
+
+    def resize(self, no: NodeFigure, rect: tuple[float, float, float, float]) -> None:
+        self.history.execute(resize_command(self.document, no, rect, self.measurer))
+
+    def align(self, figuras: list[Element], modo: str) -> None:
+        comando = align_command(self.document, figuras, modo)
+        if comando.commands:
+            self.history.execute(comando)
+
+    def bring_to_front(self, figuras: list[Element]) -> None:
+        if figuras:
+            self.history.execute(bring_to_front_command(self.document, figuras))
+
+    def send_to_back(self, figuras: list[Element]) -> None:
+        if figuras:
+            self.history.execute(send_to_back_command(self.document, figuras))
 
     def rename(self, no: NodeFigure, nome: str) -> None:
         if nome != no.name:

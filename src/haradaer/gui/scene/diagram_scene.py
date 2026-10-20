@@ -6,12 +6,14 @@ quem edita é o `Editor`, nunca a cena.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from PySide6.QtCore import QRectF
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QGraphicsScene
 
 from haradaer.core.appearance import describe_figure
-from haradaer.core.model.document import ADDED, CHANGED, REMOVED, Document
+from haradaer.core.model.document import ADDED, CHANGED, REMOVED, REORDERED, Document
 from haradaer.core.model.element import Element
 from haradaer.core.rules import Issue
 from haradaer.gui.qt_utils import QtMeasurer
@@ -67,6 +69,11 @@ class DiagramScene(QGraphicsScene):
         itens = [i for i in self.selectedItems() if isinstance(i, FigureItem)]
         return [i.figure for i in sorted(itens, key=lambda i: i.zValue())]
 
+    def select_where(self, aceita: Callable[[Element], bool]) -> None:
+        """Seleciona exatamente as figuras aceitas (RF-07: selecionar todos do mesmo tipo)."""
+        for item in self._itens.values():
+            item.setSelected(aceita(item.figure))
+
     def select_only(self, figura: Element) -> None:
         self.clearSelection()
         item = self.item_for(figura)
@@ -106,6 +113,9 @@ class DiagramScene(QGraphicsScene):
         return itens.united(MIN_AREA)
 
     def _document_event(self, evento: str, figura: Element | None) -> None:
+        if evento == REORDERED:
+            self._restack()
+            return
         if figura is None:
             return
         if evento == ADDED:

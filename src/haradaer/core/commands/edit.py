@@ -24,8 +24,15 @@ from haradaer.core.figures.tags import (
     TYPED_ATTRIBUTE_TAGS,
 )
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
-from haradaer.core.geometry import Rect, connection_points, node_rect, part_rect, shape_part
-from haradaer.core.model.document import ADDED, CHANGED, REMOVED, Document
+from haradaer.core.geometry import (
+    SHAPE_PART_TAGS,
+    Rect,
+    connection_points,
+    node_rect,
+    part_rect,
+    shape_part,
+)
+from haradaer.core.model.document import ADDED, CHANGED, REMOVED, REORDERED, Document
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number, parse_number
 
@@ -230,10 +237,17 @@ def can_move(figura: Element) -> bool:
 
 def move_command(documento: Document, figuras: list[Element], dx: float, dy: float) -> Command:
     """Move elementos (e figuras de apoio) e religa as conexões que chegam neles."""
+    return _move_each(documento, [(f, dx, dy) for f in figuras], "Mover")
+
+
+def _move_each(
+    documento: Document, deslocamentos: list[tuple[Element, float, float]], rotulo: str
+) -> Command:
+    """Cada figura com o seu deslocamento; as conexões são religadas uma vez, no fim."""
     comandos: list[Command] = []
     movidos: set[int] = set()
     previstos: dict[int, Rect] = {}
-    for figura in figuras:
+    for figura, dx, dy in deslocamentos:
         if not can_move(figura):
             continue
         movidos.add(id(figura))
@@ -243,7 +257,130 @@ def move_command(documento: Document, figuras: list[Element], dx: float, dy: flo
             if rect is not None:
                 previstos[id(figura)] = (rect[0] + dx, rect[1] + dy, rect[2], rect[3])
     comandos.extend(_reroute(documento, movidos, previstos))
-    return Composite(comandos, "Mover")
+    return Composite(comandos, rotulo)
+
+
+ALIGNMENTS = ("left", "center", "right", "top", "middle", "bottom")
+
+
+def align_command(documento: Document, nos: list[Element], modo: str) -> Command:
+    """Alinha os elementos pela caixa da seleção (como o `AlignAction` do JHotDraw)."""
+    if modo not in ALIGNMENTS:
+        raise ValueError(f"alinhamento desconhecido: {modo}")
+    caixas = [(no, r) for no in nos if isinstance(no, NodeFigure) and (r := node_rect(no))]
+    if len(caixas) < 2:
+        return Composite([], "Alinhar")
+    esquerda = min(r[0] for _, r in caixas)
+    direita = max(r[0] + r[2] for _, r in caixas)
+    topo = min(r[1] for _, r in caixas)
+    base = max(r[1] + r[3] for _, r in caixas)
+    deslocamentos: list[tuple[Element, float, float]] = []
+    for no, (x, y, w, h) in caixas:
+        dx = dy = 0.0
+        if modo == "left":
+            dx = esquerda - x
+        elif modo == "center":
+            dx = (esquerda + direita) / 2 - (x + w / 2)
+        elif modo == "right":
+            dx = direita - (x + w)
+        elif modo == "top":
+            dy = topo - y
+        elif modo == "middle":
+            dy = (topo + base) / 2 - (y + h / 2)
+        else:
+            dy = base - (y + h)
+        if dx or dy:
+            deslocamentos.append((no, dx, dy))
+    return _move_each(documento, deslocamentos, "Alinhar")
+
+
+def _shapes(no: NodeFigure) -> list[Element]:
+    return [p for p in no.parts if p.tag in SHAPE_PART_TAGS]
+
+
+def min_node_size(no: NodeFigure, medidor: TextMeasurer) -> tuple[float, float]:
+    """Menor tamanho da forma ao redimensionar: o texto mais a margem, como ao renomear."""
+    texto = _name_part(no)
+    if texto is None:
+        return (TEXT_MARGIN, TEXT_MARGIN)
+    largura, altura = medidor.size(no.name or "", font_of(texto))
+    return (largura + TEXT_MARGIN, altura)
+
+
+def resize_command(
+    documento: Document, no: NodeFigure, rect: Rect, medidor: TextMeasurer
+) -> Command:
+    """Dá à forma a caixa pedida (no mínimo `min_node_size`), centraliza o texto e religa.
+
+    O círculo da generalização continua redondo; o losango interno da entidade associativa
+    acompanha a forma com 2 de recuo, como ao criar.
+    """
+    formas = _shapes(no)
+    if not formas:
+        raise ValueError("elemento sem forma")
+    x, y, w, h = rect
+    minimo_w, minimo_h = min_node_size(no, medidor)
+    w, h = max(w, minimo_w), max(h, minimo_h)
+    if formas[0].tag == "circ":
+        w = h = max(w, h)
+    comandos: list[Command] = []
+
+    def definir(parte: Element, valores: Rect) -> None:
+        for nome, valor in zip(("x", "y", "w", "h"), valores, strict=True):
+            novo = format_number(valor)
+            if parte.attrs.get(nome) != novo:
+                comandos.append(SetAttr(documento, no, parte, nome, novo))
+
+    definir(formas[0], (x, y, w, h))
+    for interna in formas[1:]:
+        definir(interna, (x + 2, y + 2, w - 4, h - 4))
+    texto = _name_part(no)
+    if texto is not None:
+        tamanho = medidor.size(no.name or "", font_of(texto))
+        px, py = text_position((x, y, w, h), tamanho)
+        for nome, valor in (("x", px), ("y", py)):
+            comandos.append(SetAttr(documento, no, texto, nome, format_number(valor)))
+    comandos.extend(_reroute(documento, {id(no)}, {id(no): (x, y, w, h)}))
+    return Composite(comandos, "Redimensionar")
+
+
+class SetOrder(Command):
+    """Troca a ordem de empilhamento das figuras."""
+
+    def __init__(self, documento: Document, ordem: list[Element]):
+        self._doc, self._nova = documento, ordem
+        self._antiga = list(documento.figures)
+
+    def _definir(self, ordem: list[Element]) -> None:
+        self._doc.figures[:] = ordem
+        self._doc.emit(REORDERED)
+
+    def apply(self) -> None:
+        self._antiga = list(self._doc.figures)
+        self._definir(self._nova)
+
+    def revert(self) -> None:
+        self._definir(self._antiga)
+
+
+def bring_to_front_command(documento: Document, figuras: list[Element]) -> Command:
+    """Leva as figuras para cima de todas, mantendo a ordem entre elas."""
+    escolhidas = {id(f) for f in figuras}
+    resto = [f for f in documento.figures if id(f) not in escolhidas]
+    topo = [f for f in documento.figures if id(f) in escolhidas]
+    comando = SetOrder(documento, resto + topo)
+    comando.label = "Trazer para a frente"
+    return comando
+
+
+def send_to_back_command(documento: Document, figuras: list[Element]) -> Command:
+    """Leva as figuras para baixo de todas, mantendo a ordem entre elas."""
+    escolhidas = {id(f) for f in figuras}
+    resto = [f for f in documento.figures if id(f) not in escolhidas]
+    fundo = [f for f in documento.figures if id(f) in escolhidas]
+    comando = SetOrder(documento, fundo + resto)
+    comando.label = "Enviar para trás"
+    return comando
 
 
 def name_string(no: NodeFigure) -> Element | None:
