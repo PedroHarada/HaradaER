@@ -15,8 +15,13 @@ python -m venv .venv
 .venv/bin/python -m haradaer modelo.xml   # abrir um modelo do TerraER ou do HaradaER
 ```
 
-Cada modelo abre na sua própria janela. Os exemplos de `docs/referencia-terraer/` são gabaritos
-dos testes: para experimentar, abra uma **cópia** (`cp docs/referencia-terraer/amostra-basica.xml /tmp/`).
+Cada modelo abre na sua própria janela. Para experimentar, abra uma **cópia** de um dos modelos
+de exemplo, que também servem aos testes:
+
+```
+cp docs/referencia-terraer/criados-no-haradaer/todos-os-tipos.xml /tmp/
+.venv/bin/python -m haradaer /tmp/todos-os-tipos.xml
+```
 
 ## Como usar
 
@@ -82,6 +87,6 @@ v1, como a geração de DDL e a impressão.
 .venv/bin/ruff check .
 ```
 
-O `TerraER3.14.jar` é só material de consulta e não faz parte do repositório (está no
-`.gitignore`). Os programas de `docs/referencia-terraer/harness/` rodam as classes dele para
-gerar os gabaritos e conferir a compatibilidade; precisam de um JDK, mas só para isso.
+O `TerraER3.14.jar`, os gabaritos gravados por ele e os programas que o usam para conferir a
+compatibilidade não fazem parte deste repositório; ficam só na máquina do autor. Sem eles, os
+testes que dependem dos gabaritos são pulados, e o resto da suíte roda normalmente.
