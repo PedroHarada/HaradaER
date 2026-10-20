@@ -241,3 +241,20 @@ Programas: `harness/Exporta.java`, `Estilos.java`, `Rotulos.java`, `Ta.java`, `T
 | Exportação GIF | Perde linhas e usa outro caminho de desenho; **não serve de referência**. O JPG é o fiel |
 
 Não implementado no M3 (anotado como limitação): pontos de controle de curvas Bézier (as amostras do TerraER não os usam), quebra automática de linha na área de texto, crescimento do preenchimento pelo traço e a fonte exata `Dialog` do Java (no Qt vira a fonte sem serifa do sistema, então as larguras de texto diferem um pouco).
+
+## 14. Achados durante o M4 (editar e abrir no TerraER)
+
+Programas: `harness/RegravaTerra.java` (o TerraER lê um arquivo e o grava de novo) e `harness/gera_no_haradaer.py` (cria o modelo pelos comandos de edição do HaradaER). Resultado em `referencia-terraer/criados-no-haradaer/`: o arquivo criado, o que o TerraER regravou e as duas imagens (a do TerraER e a do HaradaER).
+
+| Assunto | O que o TerraER faz |
+|---|---|
+| Abrir o que o HaradaER cria | Abre sem erro os 13 elementos e as 9 conexões. O modelo regravado tem os mesmos elementos, nomes, tipos, anulabilidade, tamanhos e ligações (conferido por `tests/core/test_compat_terraer.py`) |
+| Diferenças na regravação | Só a última casa de números (`112.4` vira `112.39999999999998`, ruído do próprio TerraER) e a ordem das entradas de estilo, que não importa |
+| Pontas das conexões | O TerraER **recalcula** as pontas ao abrir. Os pontos que o HaradaER grava coincidem com os dele até a 12ª casa, exceto no círculo da generalização (abaixo) |
+| Conector | Todas as conexões usam `rConnector` (retângulo), qualquer que seja a forma do elemento. A linha vai de centro a centro e termina onde cruza a borda. Conferido contra `amostra-basica.xml` (`64.15737413759453` e `54.809172757745785`, idênticos) |
+| Caixa do conector | É a caixa do grupo inteiro (forma **e** texto). Só faz diferença no círculo da generalização, cujo texto (fonte 16, altura ≈ 21,8) passa dos 20 da forma: as pontas diferem em menos de 2 unidades. O HaradaER usa só a forma |
+| Conexões duplas | O TerraER grava um bloco `<a>` com `innerStrokeWidthFactor=3` depois de `endConnector` (dois blocos na generalização dupla). O HaradaER grava igual |
+| Atributo `lcaf` | Gravada do atributo para o dono, como na decisão de QA-03 |
+
+Limitação conhecida: o tamanho do texto vem da fonte do Qt, não da `Dialog` do Java; a largura ao criar ou renomear um elemento pode diferir um pouco da que o TerraER calcularia. Como a geometria gravada no arquivo é sempre respeitada ao abrir, isso não muda o modelo.
+

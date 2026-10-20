@@ -23,6 +23,7 @@ class WindowManager(QObject):
         janela = DocumentWindow()
         janela.closed.connect(self._window_closed)
         janela.open_requested.connect(lambda j=janela: self.ask_and_open(j))
+        janela.new_requested.connect(self.new_window)
         self.windows.append(janela)
         janela.show()
         return janela

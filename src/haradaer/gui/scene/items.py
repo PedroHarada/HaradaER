@@ -5,6 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
+    QColor,
     QFontMetricsF,
     QImage,
     QPainter,
@@ -24,6 +25,7 @@ from haradaer.core.appearance import (
     Stroke,
     TextOp,
 )
+from haradaer.core.figures.types import ConnectionFigure
 from haradaer.core.model.element import Element
 from haradaer.gui.qt_utils import QtMeasurer, qcolor, qfont
 
@@ -140,22 +142,84 @@ def op_bounds(op: DrawOp) -> QRectF:
     return QRectF(op.x, op.y, op.w, op.h)
 
 
+HIT_WIDTH = 10.0  # largura da área de clique de uma linha
+SELECTION_COLOR = QColor(40, 120, 255)
+
+
 class FigureItem(QGraphicsItem):
-    """Uma figura do arquivo, desenhada a partir das suas operações de desenho."""
+    """Uma figura do arquivo, desenhada a partir das suas operações de desenho.
+
+    O item só mostra: quem muda o modelo é o `Editor`, e o item é atualizado quando o `Document`
+    avisa (`set_ops`).
+    """
 
     def __init__(self, figure: Element, ops: list[DrawOp]):
         super().__init__()
         self.figure = figure
+        self.is_connection = isinstance(figure, ConnectionFigure)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.ops = ops
         self._limites = QRectF()
-        for op in ops:
+        self._area = QPainterPath()
+        self._calcular()
+
+    def _calcular(self) -> None:
+        self._limites = QRectF()
+        for op in self.ops:
             self._limites = self._limites.united(op_bounds(op))
+        self._area = self._calcular_area()
+
+    def _calcular_area(self) -> QPainterPath:
+        """Onde o clique acerta: a forma do elemento, ou uma faixa em volta da linha."""
+        area = QPainterPath()
+        area.setFillRule(Qt.FillRule.WindingFill)  # forma e texto se somam, sem "buracos"
+        if self.is_connection:
+            for op in self.ops:
+                if isinstance(op, PolylineOp):
+                    faixa = QPainterPathStroker()
+                    faixa.setWidth(HIT_WIDTH)
+                    area.addPath(faixa.createStroke(polyline_path(op.points)))
+            return area
+        for op in self.ops:
+            if isinstance(op, ShapeOp):
+                area.addPath(shape_path(op))
+            elif isinstance(op, TextOp):
+                area.addRect(op_bounds(op))
+        if area.isEmpty():
+            area.addRect(self._limites)
+        return area
+
+    def set_ops(self, ops: list[DrawOp]) -> None:
+        self.prepareGeometryChange()
+        self.ops = ops
+        self._calcular()
+        self.update()
+
+    def shape(self) -> QPainterPath:
+        return self._area
 
     def boundingRect(self) -> QRectF:
-        return self._limites.adjusted(-1, -1, 1, 1)
+        return self._limites.adjusted(-HIT_WIDTH, -HIT_WIDTH, HIT_WIDTH, HIT_WIDTH)
 
     def paint(self, painter: QPainter, option, widget=None) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         for op in self.ops:
             paint_op(painter, op)
+        if self.isSelected():
+            self._paint_selection(painter)
+
+    def _paint_selection(self, painter: QPainter) -> None:
+        if self.is_connection:
+            cor = QColor(SELECTION_COLOR)
+            cor.setAlpha(110)
+            painter.setPen(QPen(cor, 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            for op in self.ops:
+                if isinstance(op, PolylineOp):
+                    painter.drawPath(polyline_path(op.points))
+            return
+        pen = QPen(SELECTION_COLOR, 1, Qt.PenStyle.DashLine)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRect(self._limites.adjusted(-3, -3, 3, 3))

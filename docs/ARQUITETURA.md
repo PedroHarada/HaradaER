@@ -1,6 +1,6 @@
 # HaradaER — Arquitetura e Design
 
-Versão 0.8 · 2026-10-19 · Rascunho
+Versão 0.9 · 2026-10-20 · Rascunho
 
 Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
@@ -240,7 +240,7 @@ Conectores (`rConnector`, `ellipseConnector`, `diamondConnector`, `bezierConnect
 
 ### 5.2 Cena e itens (Qt Graphics View)
 
-> **Estado no M3.** A cena tem **um `FigureItem` por figura**, que se pinta a partir das operações de desenho do núcleo. As classes específicas (`NodeItem`, `ConnectionItem`, alças) chegam no M4, junto com a edição. A cena é só de leitura; a vista permite arrastar com a mão para rolar.
+> **Estado no M4.** A cena tem **um `FigureItem` por figura**, que se pinta a partir das operações de desenho do núcleo e sabe onde o clique acerta (forma do elemento, ou faixa em volta da linha). A cena se atualiza pelos eventos do `Document`. As classes específicas (`NodeItem`, `ConnectionItem`) e as alças de redimensionar ficam para o M5. A rolagem é por trackpad, barras ou botão do meio do mouse; arrastar no vazio faz o laço de seleção.
 
 `QGraphicsScene` e `QGraphicsView` dão zoom, rolagem, seleção, ordem de empilhamento e detecção de clique prontos.
 
@@ -398,7 +398,7 @@ Cada marco termina com algo que roda e passa em testes.
 | M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
 | M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
 | M3 | **Concluído.** Interface de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | Pinça e rolagem com dois dedos funcionam no Linux/Wayland; as amostras de referência desenham como no TerraER; 167 testes |
-| M4 | Edição: criar, mover, conectar, editar texto, desfazer, salvar | Critérios 2 e 4 passam; critério 3 manual |
+| M4 | **Concluído** (aguarda teste manual). Edição: criar, mover, conectar, editar nome, excluir, desfazer/refazer, salvar | 225 testes (166 do núcleo, 58 da interface); o TerraER abre e regrava o arquivo criado sem mudar o modelo (`INVESTIGACOES.md` seção 14) |
 | M5 | Painéis, inspetor, verificação visual, exportação, janelas múltiplas, arquivos recentes | RF-07 a RF-11, RF-16 a RF-19 |
 | M6 | DDL (pós-v1) | Retomar com `INVESTIGACOES.md` seção 6 e decidir entre reproduzir o TerraER e gerar SQL válido |
 
@@ -406,6 +406,24 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
 
 ## 12. Pendências deste documento
 
-- Estilos padrão e tamanhos de criação já levantados (`INVESTIGACOES.md` seção 5); incorporá-los à tabela `ElementKind` no M4.
+- Fora do M4, ficam para o M5: alças de redimensionar, mudar o tipo de uma conexão, inspetor de atributo (tipo SQL e anulabilidade, que já existem como comandos no núcleo), mostrar em vermelho as conexões com problema, ordem de empilhamento e laço por tipo.
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
+
+## 14. Como a edição está montada (M4)
+
+Núcleo (sem Qt):
+
+- `core/geometry.py`: caixa do elemento (a forma principal) e pontos das conexões. A linha vai do centro de um elemento ao do outro e termina na borda da caixa, como o `rConnector` do TerraER.
+- `core/figures/factory.py`: `ElementKind` (nome padrão, forma, tamanho, estilo, tipo SQL padrão) e `create_node`/`create_connection`, que montam a mesma estrutura que o TerraER grava.
+- `core/commands/history.py`: `Command`, `Composite` e `History` (duas pilhas, "modificado desde a última gravação", grupos: `begin_macro`/`end_macro`/`cancel_macro`). Um arrasto de 100 movimentos é um passo de desfazer.
+- `core/commands/edit.py`: comandos elementares (`SetAttr`, `SetChildren`, `SetText`, `InsertFigure`, `RemoveFigure`) e as operações montadas com eles: criar, conectar, excluir (leva as conexões ligadas), mover (religa as conexões), renomear (a forma cresce e nunca encolhe, o texto centraliza), tipo SQL, anulabilidade e rótulo da generalização.
+- `Document` emite `added`, `removed` e `changed`; é assim que a cena se mantém em dia.
+
+Interface:
+
+- `gui/editor.py`: `Editor` junta `Document`, `History` e a medida de texto do Qt. A tela só chama o editor.
+- `gui/view.py`: ferramentas `Selecionar`, `Criar` e `Conectar`; arrastar elementos; campo de nome flutuante (`gui/inline_edit.py`); durante um arrasto a área da cena fica parada para o desenho não pular sob o mouse.
+- `gui/window.py`: menus Arquivo (Novo, Abrir, Salvar, Salvar como, Fechar), Editar (Desfazer, Refazer, Excluir), barra de ferramentas e a pergunta ao fechar com alterações.
+
+Regras que seguem o TerraER: uma conexão pode ser criada entre qualquer par, mesmo inválido (a verificação visual vem no M5); `lcaf` é gravada do atributo para o dono, qualquer que seja a direção do arrasto; os tipos SQL gravados são só os cinco que o TerraER sabe reler.

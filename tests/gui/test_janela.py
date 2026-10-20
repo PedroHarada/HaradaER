@@ -30,14 +30,14 @@ def gerenciador(qtbot):
 def test_janela_vazia(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert janela.is_empty and janela.windowTitle() == "HaradaER"
+    assert janela.is_empty and janela.windowTitle() == "Sem título[*] - HaradaER"
 
 
 def test_abrir_arquivo_mostra_o_diagrama(qtbot, referencia):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
     assert janela.load(referencia / "amostra-basica.xml")
-    assert janela.windowTitle() == "amostra-basica.xml - HaradaER"
+    assert janela.windowTitle() == "amostra-basica.xml[*] - HaradaER"
     assert len(janela.diagram_scene.figure_items()) == 9
     assert janela.view.zoom == pytest.approx(1.0)
     assert not janela.is_empty

@@ -282,3 +282,8 @@ def describe_document(
 ) -> list[tuple[Element, list[DrawOp]]]:
     """Cada figura do desenho com as suas operações, em ordem de empilhamento."""
     return [(figura, describe_figure(figura, medidor)) for figura in documento.figures]
+
+
+def font_of(parte: Element) -> FontSpec:
+    """Fonte com que uma parte de texto é desenhada."""
+    return _font(Style.of(parte), parte.tag)
