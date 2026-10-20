@@ -62,7 +62,6 @@ GRID_MIN_PX = 6.0  # abaixo disso a grade é desenhada com passo maior (só a vi
 HANDLE_PX = 7.0  # lado das alças de redimensionar, em pixels da tela
 MID_HANDLE_PX = 5.0  # alça do meio de um trecho da linha (arrastar cria um vértice)
 LINE_HIT_PX = 6.0  # distância, em pixels, para o duplo clique acertar a linha
-HANDLE_COLOR = QColor(40, 120, 255)
 
 # Alças: nome -> (lado horizontal, lado vertical) que ela mexe; -1 esquerda/cima, 1 direita/baixo.
 HANDLES: dict[str, tuple[int, int]] = {
@@ -274,7 +273,7 @@ class DiagramView(QGraphicsView):
 
     def drawForeground(self, painter: QPainter, rect: QRectF) -> None:
         super().drawForeground(painter, rect)
-        pen = QPen(HANDLE_COLOR, 1)
+        pen = QPen(current_theme().accent, 1)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(QColor("white"))
@@ -282,10 +281,12 @@ class DiagramView(QGraphicsView):
             painter.drawRect(quadro)
         for tipo, _, quadro in self.connection_handles():
             if tipo == "mid":
-                painter.setBrush(HANDLE_COLOR)
+                painter.setBrush(current_theme().accent)
                 painter.drawEllipse(quadro)
             else:
-                painter.setBrush(HANDLE_COLOR if tipo in ("start", "end") else QColor("white"))
+                painter.setBrush(
+                    current_theme().accent if tipo in ("start", "end") else QColor("white")
+                )
                 painter.drawRect(quadro)
 
     # --- alças da linha de uma conexão --------------------------------------------------------

@@ -41,7 +41,7 @@ from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.settings import RecentFiles, save_window_layout, window_layout
-from haradaer.gui.theme import THEMES, apply_theme, current_theme
+from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
     SHORT_NAMES,
@@ -230,10 +230,14 @@ class DocumentWindow(QMainWindow):
         tema = exibir.addMenu("&Tema")
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
-        for nome, opcao in THEMES.items():
+        for opcao in available_themes():
+            nome = opcao.name
             acao = QAction(opcao.label, self, checkable=True)
             acao.setChecked(nome == current_theme().name)
-            acao.triggered.connect(lambda _=False, t=opcao: apply_theme(t))
+            # o tema do sistema é relido na hora: o usuário pode tê-lo trocado
+            acao.triggered.connect(
+                lambda _=False, n=nome: apply_theme(theme_named(n) or current_theme())
+            )
             temas.addAction(acao)
             tema.addAction(acao)
             self.theme_actions[nome] = acao
@@ -304,7 +308,8 @@ class DocumentWindow(QMainWindow):
 
     def _theme_changed(self, tema) -> None:
         """Marca o tema no menu e redesenha os ícones da faixa (as linhas seguem o tema)."""
-        self.theme_actions[tema.name].setChecked(True)
+        if tema.name in self.theme_actions:
+            self.theme_actions[tema.name].setChecked(True)
         self.tool_strip.refresh_style()
         for tool, acao in self._tool_actions.items():
             if tool.kind == "create":

@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QFileDialog
 
 from haradaer.gui.settings import RecentFiles
 from haradaer.gui.theme import apply_theme, saved_theme
+from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.window import DocumentWindow
 
 
@@ -79,6 +80,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     app.setApplicationName("HaradaER")
     install_translator(app)
     apply_theme(saved_theme(), save=False)
+    theme_manager().watch_system()  # segue a troca de tema do sistema (qt6ct)
     gerenciador = WindowManager()
     caminhos = [Path(a) for a in argumentos[1:]]
     if not caminhos:

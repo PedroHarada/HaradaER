@@ -156,7 +156,6 @@ def ink_op(op: DrawOp, tinta: RGBA, *, textos: bool = True) -> DrawOp:
 
 
 HIT_WIDTH = 10.0  # largura da área de clique de uma linha
-SELECTION_COLOR = QColor(40, 120, 255)
 PROBLEM_COLOR: RGBA = (220, 0, 0, 255)  # a mesma da prévia de conexão inválida
 
 
@@ -255,14 +254,14 @@ class FigureItem(QGraphicsItem):
 
     def _paint_selection(self, painter: QPainter) -> None:
         if self.is_connection:
-            cor = QColor(SELECTION_COLOR)
+            cor = QColor(current_theme().accent)
             cor.setAlpha(110)
             painter.setPen(QPen(cor, 6, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             for op in self.ops:
                 if isinstance(op, PolylineOp):
                     painter.drawPath(polyline_path(op.points))
             return
-        pen = QPen(SELECTION_COLOR, 1, Qt.PenStyle.DashLine)
+        pen = QPen(current_theme().accent, 1, Qt.PenStyle.DashLine)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)

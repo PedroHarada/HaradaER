@@ -62,7 +62,8 @@ conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
   rótulo das generalizações.
 - **Exibir**: zoom (também pinça e rolagem com dois dedos no trackpad, ou Ctrl + roda), grade
   com encaixe, verificação do modelo (conexões com problema em vermelho), os painéis e o tema
-  (claro ou escuro; a escolha é lembrada e a exportação sai sempre no claro).
+  (claro, escuro ou o do sistema, lido do qt6ct e atualizado quando você troca de tema; a
+  escolha é lembrada e a exportação sai sempre no claro).
 - **Organizar**: trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar.
 - **Editar**: selecionar tudo ou do mesmo tipo, localizar, copiar o desenho como imagem.
 - **Arquivo**: novo, abrir, abrir recente, salvar, salvar como e exportar o desenho em PNG, JPG,
