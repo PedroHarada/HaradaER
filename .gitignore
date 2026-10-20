@@ -9,3 +9,12 @@ dist/
 # jar do TerraER (só consulta)
 *.jar
 .ruff_cache/
+
+# Gabaritos gravados pelo TerraER e os programas que usam o TerraER3.14.jar: ficam só na máquina
+# do autor (os testes que dependem deles são pulados quando não existem).
+docs/referencia-terraer/harness/*.java
+docs/referencia-terraer/amostra-*.xml
+docs/referencia-terraer/*.txt
+docs/referencia-terraer/imagens/
+docs/referencia-terraer/leitura-casos/
+docs/referencia-terraer/criados-no-haradaer/*pelo-terraer*
