@@ -221,3 +221,23 @@ Programas: `harness/ValidaArquivo.java`, `Regras.java`, `Recomenda.java`. Fixtur
   Ou seja, o TerraER chega a recomendar ligações que ele mesmo marca como inválidas.
 - **Decisão técnica do M2:** a recomendação do HaradaER usa a tabela da validação, para nunca sugerir algo que apareceria em vermelho. A conexão livre não entra nas recomendações. Isso é uma divergência intencional, coberta por teste (`test_diferencas_conhecidas_entre_a_recomendacao_do_terraer_e_a_nossa`).
 - **A recomendação do TerraER parte de uma conexão já desenhada** (`getOthersConnections(conexão)` e `getOthersFigures(conexão)`) e inclui o próprio tipo da conexão na lista. A do HaradaER parte de dois tipos de elemento, que é o que o RF-10 pede.
+
+## 13. Achados durante o M3 (como o TerraER desenha)
+
+Programas: `harness/Exporta.java`, `Estilos.java`, `Rotulos.java`, `Ta.java`, `TracoDuplo.java`, `Gen13.java`. Imagens que o próprio TerraER exportou, para comparar a olho: `referencia-terraer/imagens/`.
+
+| Assunto | O que o TerraER faz |
+|---|---|
+| Preenchimento das formas | **Fixo no código**, ignora o atributo `fillColor` do arquivo: retângulo `(175,255,175)` (verde), losango `(255,255,100)` (amarelo), elipse `(175,175,255)` (lilás). Só o círculo (`circ`) usa o `fillColor` (branco por padrão). Por isso os atributos derivado e multivalorado, que gravam rosa, aparecem lilás |
+| Traço duplo (`DoubleStroke`) | Duas faixas de largura `w` com um vão de `w × (fator − 1)`. Com `w=1` e fator 3: faixas de 1 px, vão de 2 px, largura total 4 |
+| Quais figuras têm traço duplo | As partes de entidade fraca, relacionamento fraco e atributo multivalorado (gravam `strokeType=DOUBLE`) e as conexões `llabelDoubleUm`, `llabelDoubleMuitos` e `llabelDoubleGeneralizacao` (o tipo vem da classe, o arquivo só grava o fator) |
+| Rótulos `1` e `N` | Texto em negrito, tamanho 16. Posição: ponto da linha a 0% do comprimento; âncora a 8 unidades dele, a −45° da direção da linha; o rótulo fica no quadrante oposto ao da âncora (canto inferior esquerdo, se a âncora aponta para cima e à direita). Conferido contra o TerraER com precisão de centésimos |
+| Rótulo da generalização | Itálico, tamanho 12, mesma regra, a 25% do comprimento |
+| Arco da generalização simples | `generalizacaoLine` desenha um arco de 210° e raio 10 no **centro** da linha, a partir de `int(ângulo) − 15` graus, onde o ângulo depende do quadrante da inclinação da linha |
+| Chave parcial | O traço tracejado `[3.0]` do texto é um sublinhado tracejado (notação ER para chave parcial). `TextFigure` não desenha traço próprio; isso foi interpretado, não medido |
+| Área de texto (`ta`) | Moldura com preenchimento branco e margem interna de 5; o texto de várias linhas começa no canto interno |
+| Fonte padrão | `Dialog` 12 (fonte lógica do Java) |
+| Imagem | `imageData` é Base64 com quebras de linha; é desenhada escalada para `w × h` |
+| Exportação GIF | Perde linhas e usa outro caminho de desenho; **não serve de referência**. O JPG é o fiel |
+
+Não implementado no M3 (anotado como limitação): pontos de controle de curvas Bézier (as amostras do TerraER não os usam), quebra automática de linha na área de texto, crescimento do preenchimento pelo traço e a fonte exata `Dialog` do Java (no Qt vira a fonte sem serifa do sistema, então as larguras de texto diferem um pouco).

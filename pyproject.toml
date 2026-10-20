@@ -12,6 +12,9 @@ dependencies = [
     "PySide6>=6.12",
 ]
 
+[project.scripts]
+haradaer = "haradaer.gui.app:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8",

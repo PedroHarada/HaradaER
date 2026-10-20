@@ -1,6 +1,6 @@
 # HaradaER — Arquitetura e Design
 
-Versão 0.7 · 2026-10-19 · Rascunho
+Versão 0.8 · 2026-10-19 · Rascunho
 
 Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
@@ -49,6 +49,7 @@ HaradaER/
 ├── pyproject.toml
 ├── src/haradaer/
 │   ├── core/
+│   │   ├── appearance/   # style, ops, describe, metrics: o que desenhar, sem Qt
 │   │   ├── errors.py     # ArquivoInvalidoError
 │   │   ├── io.py         # load/save/loads/dumps (salvar com arquivo temporário)
 │   │   ├── model/        # Element (árvore com identidade), Document
@@ -169,6 +170,16 @@ Dois níveis, espelhando o TerraER:
 
 **Números no formato Java.** Python imprime `1e-05` e `1.0E-5` é o esperado. Uma função `java_double_str` implementa a regra do `Double.toString` (notação científica abaixo de 10⁻³ e a partir de 10⁷, mantissa com ao menos um dígito decimal). Ela é coberta por testes contra valores reais do TerraER (`amostra-escapes-e-numeros.xml`).
 
+### 4.2.1 Aparência (`appearance`)
+
+Entre o arquivo e a tela há uma camada sem Qt que diz **o que desenhar**:
+
+- `Style.of(elemento)` lê os atributos de estilo (`<a>`): cores, espessura, tracejado, fonte, texto.
+- `describe_figure(figura, medidor)` devolve operações de desenho (`ShapeOp`, `TextOp`, `PolylineOp`, `ArcOp`, `ImageOp`) na ordem de pintura, aplicando as regras do TerraER (cores fixas por forma, traço duplo, posição dos rótulos, arco da generalização).
+- A medida de texto vem de um `TextMeasurer`: a interface usa o `QFontMetricsF`; os testes usam medidas fixas ou as que o TerraER mediu.
+
+A interface só converte as operações em pintura; todo o conhecimento do TerraER fica testável sem tela.
+
 ### 4.3 Validação e recomendação (`rules`)
 
 - A matriz da seção 5 de `REQUISITOS.md` vira uma tabela de dados: `(tag da conexão, tag origem, tag destino) → válido`.
@@ -228,6 +239,8 @@ Conectores (`rConnector`, `ellipseConnector`, `diamondConnector`, `bezierConnect
 - Abrir um arquivo já aberto traz a janela existente para a frente.
 
 ### 5.2 Cena e itens (Qt Graphics View)
+
+> **Estado no M3.** A cena tem **um `FigureItem` por figura**, que se pinta a partir das operações de desenho do núcleo. As classes específicas (`NodeItem`, `ConnectionItem`, alças) chegam no M4, junto com a edição. A cena é só de leitura; a vista permite arrastar com a mão para rolar.
 
 `QGraphicsScene` e `QGraphicsView` dão zoom, rolagem, seleção, ordem de empilhamento e detecção de clique prontos.
 
@@ -384,7 +397,7 @@ Cada marco termina com algo que roda e passa em testes.
 | M0 | Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
 | M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
 | M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
-| M3 | Interface só de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | RF-15 funciona no Linux; golden files aparecem corretos |
+| M3 | **Concluído.** Interface de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | Pinça e rolagem com dois dedos funcionam no Linux/Wayland; as amostras de referência desenham como no TerraER; 167 testes |
 | M4 | Edição: criar, mover, conectar, editar texto, desfazer, salvar | Critérios 2 e 4 passam; critério 3 manual |
 | M5 | Painéis, inspetor, verificação visual, exportação, janelas múltiplas, arquivos recentes | RF-07 a RF-11, RF-16 a RF-19 |
 | M6 | DDL (pós-v1) | Retomar com `INVESTIGACOES.md` seção 6 e decidir entre reproduzir o TerraER e gerar SQL válido |

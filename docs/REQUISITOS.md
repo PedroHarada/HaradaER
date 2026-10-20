@@ -1,6 +1,6 @@
 # HaradaER — Documento de Requisitos
 
-Versão 0.8 · 2026-10-19 · Rascunho
+Versão 0.9 · 2026-10-19 · Rascunho
 
 Convenção: salvo indicação em contrário, todo requisito é **obrigatório** para a v1.
 
@@ -163,6 +163,15 @@ Entidade, relacionamento e demais nós são **grupos**: contêm `<children>` com
 - Leitura no TerraER (`INVESTIGACOES.md` seção 2): tag desconhecida **impede abrir o arquivo**; atributo ou chave de estilo desconhecidos são ignorados; declaração XML, indentação, DOCTYPE e UTF-8 direto são aceitos; `id` repetido ou `ref` inexistente fazem falhar.
 - Textos padrão de novos elementos mudam com o idioma (inglês em headless: `rel. 0`, `W. ENT. 0`, `key att. 0`; o jar tem `Labels_pt`). O texto gravado é o do usuário, então o idioma não afeta a compatibilidade.
 
+### 4.6 Aparência (como o TerraER desenha)
+
+Para o diagrama ficar igual ao do TerraER (detalhes e evidências em `INVESTIGACOES.md` seção 13):
+
+- O preenchimento do retângulo, do losango e da elipse é **fixo por tipo de forma** e ignora o `fillColor` do arquivo: verde `(175,255,175)`, amarelo `(255,255,100)` e lilás `(175,175,255)`. Só o círculo usa o `fillColor`.
+- Traço duplo: duas faixas de largura `w` com vão de `w × (fator − 1)`.
+- Rótulos `1`, `N` e o texto da generalização seguem a regra de posição do TerraER (8 unidades, −45°).
+- A conexão `generalizacaoLine` leva um arco de 210° no centro.
+
 ## 5. Regras de validação de conexões
 
 O TerraER **não impede** conexões inválidas: ele só as pinta de **vermelho** ("Verificação do Modelo", ligável/desligável). A validade abaixo foi medida executando `ModelValidation` do TerraER (`harness/Matrix.java`).
@@ -273,6 +282,8 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 - `docs/referencia-terraer/amostra-basica.xml`: 2 entidades, 1 relacionamento, 2 atributos, conexões `llabelUm`, `llabelMuitos` e `lcaf`.
 - `docs/referencia-terraer/amostra-todos-os-tipos.xml`: um exemplar de cada elemento e de cada conexão.
 - `docs/INVESTIGACOES.md`: resultados das investigações sobre o comportamento do TerraER (QA-01 a QA-14), com as decisões que elas abrem.
+- `docs/referencia-terraer/amostra-estilos.xml`: cor e espessura do traço, tracejado, cores com transparência, fonte, itálico e sublinhado.
+- `docs/referencia-terraer/imagens/`: desenhos que o próprio TerraER exportou das amostras, para comparação visual.
 - `docs/referencia-terraer/amostra-escapes-e-numeros.xml`, `amostra-numeros.xml`, `amostra-unicode.xml` e `amostra-vazios.xml`: caracteres especiais, números extremos, emoji e valores vazios.
 - `docs/referencia-terraer/amostra-ordem-empilhamento.xml`: conexões antes dos nós (dono inline e `ref`).
 - `docs/referencia-terraer/amostra-figuras-de-apoio.xml`: texto livre, formas, linhas, bézier, grupo e imagem.

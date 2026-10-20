@@ -4,7 +4,7 @@ Ferramenta de modelagem Entidade-Relacionamento em Python, compatível com o arq
 TerraER 3.14: um modelo salvo no HaradaER abre no TerraER com o mesmo
 diagrama, e o inverso também vale.
 
-Estado: em construção (marco M0, esqueleto do projeto). Nada utilizável ainda.
+Estado: em construção. Já abre e mostra arquivos `.xml` do TerraER (somente leitura), com zoom e gestos de trackpad. Ainda não edita.
 
 ## Documentação
 
@@ -21,6 +21,12 @@ python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 .venv/bin/pytest
 .venv/bin/ruff check .
+```
+
+Para abrir um modelo:
+
+```
+.venv/bin/python -m haradaer docs/referencia-terraer/amostra-basica.xml
 ```
 
 O `TerraER3.14.jar` é só material de consulta e não faz parte do repositório (está no `.gitignore`).
