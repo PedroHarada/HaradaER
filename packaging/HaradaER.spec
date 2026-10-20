@@ -39,6 +39,11 @@ a = Analysis(
     excludes=NAO_USADOS,
     noarchive=False,
 )
+if sys.platform.startswith("linux"):
+    # A biblioteca de fontes vem do sistema: a da máquina que gera o executável (Ubuntu 22.04)
+    # não entende a configuração de fontes de distribuições mais novas (Arch, por exemplo).
+    a.binaries = [b for b in a.binaries if not b[0].startswith(("libfontconfig", "libfreetype"))]
+
 pyz = PYZ(a.pure)
 
 if sys.platform == "darwin":
