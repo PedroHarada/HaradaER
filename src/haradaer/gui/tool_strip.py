@@ -11,6 +11,7 @@ from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QAction, QWheelEvent
 from PySide6.QtWidgets import (
     QFrame,
+    QGraphicsOpacityEffect,
     QHBoxLayout,
     QScrollArea,
     QSizePolicy,
@@ -29,7 +30,11 @@ BUTTON_STYLE = (
     "QToolButton:hover { background: palette(midlight); }"
     "QToolButton:checked { background: palette(midlight); border-color: palette(highlight); }"
     "QToolButton:pressed { background: palette(mid); }"
+    # Conexão aceita entre os dois elementos selecionados (RF-10): o fundo de destaque do tema.
+    'QToolButton[recomendado="true"] { background: palette(highlight);'
+    " color: palette(highlighted-text); border-color: palette(highlight); font-weight: bold; }"
 )
+DIMMED_OPACITY = 0.3  # as conexões que não servem para o par selecionado
 
 
 class ToolStrip(QWidget):
@@ -103,6 +108,34 @@ class ToolStrip(QWidget):
         for botao in self._botoes.values():
             botao.setStyleSheet("")
             botao.setStyleSheet(BUTTON_STYLE)
+
+    def set_recommendation(self, candidatas: list[QAction], aceitas: set[QAction] | None) -> None:
+        """Com `aceitas`, destaca essas e apaga as outras `candidatas`; com `None`, volta ao
+        normal. As apagadas continuam clicáveis (a conexão livre e as vermelhas também valem).
+        A faixa rola até a primeira aceita."""
+        for acao in candidatas:
+            botao = self._botoes[acao]
+            destaque = aceitas is not None and acao in aceitas
+            if botao.property("recomendado") != destaque:
+                botao.setProperty("recomendado", destaque)
+                botao.style().unpolish(botao)
+                botao.style().polish(botao)
+            apagado = aceitas is not None and not destaque
+            if apagado and botao.graphicsEffect() is None:
+                efeito = QGraphicsOpacityEffect(botao)
+                efeito.setOpacity(DIMMED_OPACITY)
+                botao.setGraphicsEffect(efeito)
+            elif not apagado and botao.graphicsEffect() is not None:
+                botao.setGraphicsEffect(None)
+        primeira = next((a for a in candidatas if aceitas and a in aceitas), None)
+        if primeira is not None:
+            self.ensure_visible(primeira)
+
+    def is_highlighted(self, acao: QAction) -> bool:
+        return bool(self._botoes[acao].property("recomendado"))
+
+    def is_dimmed(self, acao: QAction) -> bool:
+        return self._botoes[acao].graphicsEffect() is not None
 
     def button_for(self, acao: QAction) -> QToolButton:
         return self._botoes[acao]

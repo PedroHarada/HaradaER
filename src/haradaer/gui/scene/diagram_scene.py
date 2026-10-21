@@ -111,6 +111,12 @@ class DiagramScene(QGraphicsScene):
         for chave, item in self._itens.items():
             item.set_problem(textos.get(chave))
 
+    def show_warnings(self, avisos: list[Issue]) -> None:
+        """Marca os elementos com aviso de estrutura e limpa os demais."""
+        textos = {id(a.figure): issue_text(a) for a in avisos}
+        for chave, item in self._itens.items():
+            item.set_warning(textos.get(chave))
+
     def _add_item(self, figura: Element) -> FigureItem | None:
         ops = describe_figure(figura, self._medidor)
         if not ops:

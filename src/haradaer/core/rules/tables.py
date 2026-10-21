@@ -2,7 +2,8 @@
 
 Medidas no TerraER 3.14 com `ModelValidation` (a validação em vermelho). Os pares são
 (tag de uma ponta, tag da outra ponta). Cada conjunto foi conferido par a par contra a saída do
-próprio TerraER (`docs/referencia-terraer/matriz-validacao.txt`).
+próprio TerraER (`docs/referencia-terraer/matriz-validacao.txt`), menos as diferenças de
+`BEYOND_TERRAER`.
 """
 
 from __future__ import annotations
@@ -41,7 +42,11 @@ _ATTRIBUTES_OF = {
     REL: ("atr", "atrderivado", "atrmulti"),
     RELFRACO: ("atr", "atrderivado", "atrmulti"),
     ENTREL: ("atr", "atrchave", "atrderivado", "atrmulti"),
-    "atr": ("atr",),  # atributo composto
+    "atr": ("atr", "atrmulti"),  # atributo composto
+    # Só no HaradaER (BEYOND_TERRAER): chave composta e os aninhamentos com multivalorado.
+    "atrchave": ("atr",),
+    "atrchaveparcial": ("atr",),
+    "atrmulti": ("atr", "atrmulti"),
 }
 _ATTRIBUTE_LINK = _symmetric(
     {(dono, a) for dono, atributos in _ATTRIBUTES_OF.items() for a in atributos}
@@ -53,6 +58,28 @@ _GENERALIZATION_LINK = _symmetric(
 
 # `generalizacaoLine` é a única conexão assimétrica: o círculo fica na origem.
 _SIMPLE_GENERALIZATION = frozenset({(ENT, ENT), *((g, ENT) for g in GENERALIZATIONS)})
+
+# Pares que o HaradaER aceita e o TerraER pinta de vermelho, válidos no modelo ER (Elmasri e
+# Navathe, cap. 3). O TerraER só aceita sub-atributo simples em atributo simples. O arquivo não
+# muda: só a verificação.
+# - chave composta: `Registration(State, Number)` é a chave de CARRO; vale também para a chave
+#   parcial da entidade fraca;
+# - multivalorado composto: `{PreviousDegrees (College, Year, Degree, Field)}`, ou o telefone
+#   com DDD e número;
+# - aninhamento em qualquer nível: um composto com parte multivalorada, e um multivalorado
+#   composto com parte multivalorada (`{AddressPhone({Phone(AreaCode, Number)}, Address)}`).
+_ATRIBUTOS_ANINHADOS = _symmetric(
+    {
+        ("atrchave", "atr"),
+        ("atrchaveparcial", "atr"),
+        ("atrmulti", "atr"),
+        ("atrmulti", "atrmulti"),
+    }
+)
+BEYOND_TERRAER: dict[str, frozenset[Pair]] = {
+    "lcaf": _ATRIBUTOS_ANINHADOS,
+    "lcf": _ATRIBUTOS_ANINHADOS,
+}
 
 CONNECTION_RULES: dict[str, frozenset[Pair]] = {
     LINE_FREE: frozenset((a, b) for a in NODE_TAGS for b in NODE_TAGS),

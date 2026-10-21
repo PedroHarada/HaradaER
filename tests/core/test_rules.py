@@ -7,6 +7,7 @@ import pytest
 from haradaer.core import io
 from haradaer.core.figures.tags import CONNECTION_TAGS, NODE_TAGS
 from haradaer.core.rules import (
+    BEYOND_TERRAER,
     CONNECTION_RULES,
     INCOMPLETE,
     INVALID_PAIR,
@@ -31,7 +32,9 @@ def test_tabela_confere_com_o_terraer_par_a_par(referencia):
     medida = _matriz_do_terraer(referencia)
     assert set(medida) == CONNECTION_TAGS - {"lcf"}
     for conexao, pares in medida.items():
-        assert set(CONNECTION_RULES[conexao]) == pares, conexao
+        extra = BEYOND_TERRAER.get(conexao, frozenset())
+        assert set(CONNECTION_RULES[conexao]) == pares | extra, conexao
+        assert not pares & extra, conexao  # o que é só nosso é mesmo vermelho no TerraER
 
 
 def test_todos_os_pares_de_todas_as_conexoes(referencia):
@@ -39,7 +42,7 @@ def test_todos_os_pares_de_todas_as_conexoes(referencia):
     for conexao, pares in medida.items():
         for origem in NODE_TAGS:
             for destino in NODE_TAGS:
-                esperado = (origem, destino) in pares
+                esperado = (origem, destino) in pares | BEYOND_TERRAER.get(conexao, set())
                 assert is_valid_connection(conexao, origem, destino) is esperado
 
 
@@ -149,7 +152,7 @@ def test_elementos_possiveis_para_uma_conexao():
         ("sobreposicao", "ent"),
     ]
     assert recommend_elements("llabelUm")[0] == ("ent", "rel")
-    assert len(recommend_elements("lcaf")) == 37
+    assert len(recommend_elements("lcaf")) == 44  # 37 do TerraER + 7 de BEYOND_TERRAER
 
 
 def _recomendacao_do_terraer(referencia) -> dict[str, set[tuple[str, str]]]:
@@ -205,8 +208,41 @@ def test_diferencas_conhecidas_entre_a_recomendacao_do_terraer_e_a_nossa(referen
     }
     assert so_nosso == {
         **{c: set() for c in terraer},
+        "lcaf": set(BEYOND_TERRAER["lcaf"]),
         "generalizacaoLine": {(g, "ent") for g in ("uniao", "disjuncao", "sobreposicao")},
     }
+
+
+@pytest.mark.parametrize(
+    ("dono", "parte"),
+    [
+        ("atrmulti", "atr"),  # multivalorado composto: telefone (DDD, número)
+        ("atrchave", "atr"),  # chave composta: placa (estado, número)
+        ("atrchaveparcial", "atr"),  # chave parcial composta
+        ("atr", "atrmulti"),  # composto com parte multivalorada
+        ("atrmulti", "atrmulti"),  # multivalorado composto com parte multivalorada
+    ],
+)
+def test_atributos_aninhados_que_so_o_haradaer_aceita(dono, parte):
+    for conexao in ("lcaf", "lcf"):
+        assert is_valid_connection(conexao, dono, parte)
+        assert is_valid_connection(conexao, parte, dono)
+        assert (dono, parte) in BEYOND_TERRAER[conexao]
+
+
+@pytest.mark.parametrize(
+    ("a", "b"),
+    [
+        ("atrchave", "atrchave"),  # chave dentro de chave
+        ("atrchave", "atrmulti"),  # chave não é multivalorada
+        ("atrchave", "atrderivado"),
+        ("atrderivado", "atr"),  # derivado não tem partes
+        ("atrchaveparcial", "atrchave"),
+    ],
+)
+def test_aninhamentos_que_continuam_invalidos(a, b):
+    assert not is_valid_connection("lcaf", a, b)
+    assert not is_valid_connection("lcaf", b, a)
 
 
 @pytest.mark.parametrize("conexao", sorted(CONNECTION_TAGS - {"llabel"}))

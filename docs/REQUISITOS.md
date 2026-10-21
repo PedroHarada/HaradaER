@@ -195,9 +195,35 @@ Dono × atributo em `lcaf` (qualquer direção; o par de ids segue a origem):
 | `entfraca` | `atr`, `atrchaveparcial`, `atrderivado`, `atrmulti` |
 | `rel`, `relfraco` | `atr`, `atrderivado`, `atrmulti` |
 | `entrel` | `atr`, `atrchave`, `atrderivado`, `atrmulti` |
-| `atr` | `atr` (atributo composto) |
+| `atr` | `atr` (atributo composto); `atrmulti` (**só no HaradaER**) |
+| `atrchave`, `atrchaveparcial` | `atr` (chave composta; **só no HaradaER**) |
+| `atrmulti` | `atr`, `atrmulti` (multivalorado composto; **só no HaradaER**) |
 
 > A tabela de `lcaf` vale **nas duas direções**: a validação do TerraER é simétrica (por exemplo, `atr→ent` é tão válido quanto `ent→atr`). Ver QA-03 e `INVESTIGACOES.md` seção 4.
+
+> **Diferença deliberada:** o TerraER só aceita sub-atributo simples em atributo simples. O
+> modelo ER aceita mais (Elmasri e Navathe, cap. 3): chave composta (`Registration(State,
+> Number)` em CARRO), multivalorado composto (`{PreviousDegrees (College, Year, Degree,
+> Field)}`, ou o telefone com DDD e número) e aninhamento em qualquer nível (um composto com
+> parte multivalorada). O HaradaER aceita esses pares na verificação; o arquivo não muda e
+> continua abrindo no TerraER, que apenas segue marcando a linha. Os pares ficam em
+> `BEYOND_TERRAER` (`core/rules/tables.py`), e os testes conferem que o resto é igual ao TerraER.
+> Continuam inválidos: chave dentro de chave, chave multivalorada e derivado com partes.
+
+**Avisos de estrutura** (`core/rules/structure.py`; Exibir › Avisos de estrutura, ligados por
+padrão e lembrados entre sessões). Contorno laranja tracejado no elemento, com a explicação na
+dica. Olham o modelo inteiro e só apontam o que a teoria considera errado em qualquer caso:
+
+| Aviso | Exceções (sem aviso) |
+|---|---|
+| Entidade sem atributo chave | Subclasse de especialização (herda a chave), entidade ligada a uma união (categoria) e entidade associativa (a chave vem do relacionamento) |
+| Entidade fraca sem relacionamento identificador | |
+| Relacionamento identificador sem entidade fraca | |
+| Relacionamento com menos de dois participantes | O recursivo conta duas vezes, uma por papel |
+| Especialização (círculo) com menos de dois elementos ligados | |
+| Atributo sem ligação de atributo com um dono | |
+
+Sem aviso para entidade fraca sem chave parcial: ela normalmente tem uma, mas pode não ter.
 
 O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction`): dados dois elementos, lista as ligações válidas entre eles (RF-10).
 
@@ -215,7 +241,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-06 | Desfazer e refazer (o TerraER tem `UndoAction`/`RedoAction`). |
 | RF-07 | Zoom, grade, alinhamento, trazer para frente e enviar para trás, selecionar todos do mesmo tipo. |
 | RF-08 | Localizar elementos no modelo. |
-| RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão (exceto a livre, `llabel`) que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). |
+| RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão (exceto a livre, `llabel`) que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). Também avisa, em laranja e com opção de desligar, os problemas de estrutura da seção 5. |
 | RF-10 | Recomendação de conexão entre dois elementos selecionados (tipos de conexão válidos para o par) e dos elementos possíveis para um tipo de conexão. Usa a mesma tabela da verificação, então nunca recomenda algo que apareceria em vermelho; difere do TerraER em dois pontos (`INVESTIGACOES.md` seção 12). A conexão livre não é recomendada. |
 | RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
 | RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
@@ -309,7 +335,7 @@ Conferência de cada requisito com o programa e os testes (414 testes automátic
 | RF-06 | Pronto | Desfazer e refazer de toda edição |
 | RF-07 | Pronto | Zoom, grade, alinhar, frente/trás, selecionar do mesmo tipo (M3, M5b) |
 | RF-08 | Pronto | Localizar (Ctrl+F) no inspetor (M5c) |
-| RF-09 | Pronto | Conexões com problema em vermelho, liga/desliga em Exibir (M5a) |
+| RF-09 | Pronto | Conexões com problema em vermelho, liga/desliga em Exibir (M5a); avisos de estrutura em laranja, também com liga/desliga |
 | RF-10 | Pronto | Conexões aceitas entre dois elementos (negrito na barra) e pares aceitos de um tipo (barra de status) (M5a) |
 | RF-11 | Pronto | PNG, JPG, SVG, PDF e copiar como imagem (M5d) |
 | RF-12 | Pronto | Figuras de apoio regravadas iguais (testes de ida e volta) |
@@ -333,7 +359,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-06 | **Fora da v1 (decisão do autor)** | A interface está só em português; a opção de inglês fica para depois |
 | RNF-07 | Pronto | Python 3.14, PySide6 6.12, Linux/Wayland |
 | RNF-08 | Pronto | Núcleo sem Qt, conferido por teste |
-| RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor e propriedades) com disposição lembrada. Ficam para depois a paleta como painel (hoje é uma barra de ferramentas fixa) e o painel de mensagens da verificação (hoje a mensagem aparece ao parar o mouse sobre a conexão vermelha) |
+| RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois a paleta como painel (hoje é uma faixa de ferramentas fixa) |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
 | RNF-12 | Pronto | 414 testes, sem tela |

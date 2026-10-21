@@ -135,6 +135,42 @@ def test_dono_aceita_as_duas_direcoes_e_atributo_composto():
     assert id(nos["aluno"]) not in donos
 
 
+def test_multivalorado_composto_e_dono_em_qualquer_direcao():
+    doc, h, nos = modelo()
+    telefone = new_node("atrmulti", 400, 300, MEDIDOR)
+    h.execute(add_node_command(doc, telefone))
+    h.execute(connect_command(doc, "lcaf", telefone, nos["aluno"]))
+    h.execute(connect_command(doc, "lcaf", telefone, nos["rua"]))  # dono -> parte
+    h.execute(connect_command(doc, "lcaf", nos["nome"], telefone))  # parte -> dono
+    donos = attribute_owners(doc)
+    assert donos[id(telefone)] is nos["aluno"]
+    assert donos[id(nos["rua"])] is telefone
+    assert donos[id(nos["nome"])] is telefone
+
+
+def test_dono_de_aninhamento_em_tres_niveis_vem_de_cima():
+    """Contato (composto) > {Telefone} (multivalorado) > DDD: a direção das linhas não importa."""
+    doc, h, nos = modelo()
+    telefone = new_node("atrmulti", 400, 300, MEDIDOR)
+    h.execute(add_node_command(doc, telefone))
+    contato, ddd = nos["nome"], nos["rua"]
+    h.execute(connect_command(doc, "lcaf", ddd, telefone))  # gravada antes das de cima
+    h.execute(connect_command(doc, "lcaf", contato, telefone))  # parte desenhada como "dona"
+    h.execute(connect_command(doc, "lcaf", nos["aluno"], contato))
+    donos = attribute_owners(doc)
+    assert donos[id(contato)] is nos["aluno"]
+    assert donos[id(telefone)] is contato
+    assert donos[id(ddd)] is telefone
+
+
+def test_chave_composta_solta_e_a_dona_das_partes():
+    doc, h, nos = modelo()
+    placa = new_node("atrchave", 400, 300, MEDIDOR)
+    h.execute(add_node_command(doc, placa))
+    h.execute(connect_command(doc, "lcaf", placa, nos["rua"]))  # chave -> parte, sem entidade
+    assert attribute_owners(doc)[id(nos["rua"])] is placa
+
+
 # ------------------------------------------------------------- localizar
 
 

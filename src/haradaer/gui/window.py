@@ -28,6 +28,7 @@ from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.figures.types import NodeFigure
 from haradaer.core.model.document import Document
 from haradaer.core.rules import (
+    check_structure,
     is_valid_connection,
     recommend_connections,
     recommend_elements,
@@ -36,11 +37,19 @@ from haradaer.core.rules import (
 from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
-from haradaer.gui.inspector import ObjectInspector
+from haradaer.gui.inspector import ObjectInspector, display_name
+from haradaer.gui.messages import MessagesPanel
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
-from haradaer.gui.settings import RecentFiles, save_window_layout, window_layout
+from haradaer.gui.scene.items import WARNING_COLOR
+from haradaer.gui.settings import (
+    RecentFiles,
+    save_window_layout,
+    set_structure_warnings_enabled,
+    structure_warnings_enabled,
+    window_layout,
+)
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
@@ -50,7 +59,7 @@ from haradaer.gui.tool_icons import (
     select_icon,
 )
 from haradaer.gui.tool_strip import ToolStrip
-from haradaer.gui.verification import name_of, pairs_text
+from haradaer.gui.verification import name_of, pairs_text, summary_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 
 TITLE = "HaradaER"
@@ -106,6 +115,14 @@ class DocumentWindow(QMainWindow):
         self._tool_actions: dict[Tool, QAction] = {}
 
         self._zoom_label = QLabel("100%")
+        self._verification_label = QLabel()  # resumo dos erros e avisos; some sem nenhum
+        self._verification_label.setStyleSheet(f"color: {WARNING_COLOR.name()};")
+        self._verification_label.hide()
+        self.statusBar().addPermanentWidget(self._verification_label)
+        self._recommendation_label = QLabel()
+        self._recommendation_label.setStyleSheet("font-weight: bold;")
+        self._recommendation_label.hide()
+        self.statusBar().addPermanentWidget(self._recommendation_label)  # mensagens não a cobrem
         self.statusBar().addPermanentWidget(self._zoom_label)
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
@@ -222,11 +239,19 @@ class DocumentWindow(QMainWindow):
         self.action_validate.setCheckable(True)
         self.action_validate.setChecked(True)
         self.action_validate.toggled.connect(self._refresh_issues)
+        self.action_structure = QAction("&Avisos de estrutura", self)
+        self.action_structure.setCheckable(True)
+        self.action_structure.setChecked(structure_warnings_enabled())
+        self.action_structure.setToolTip(
+            "Laranja: o que a teoria do modelo ER pede além das ligações (entidade sem chave,"
+            " relacionamento com um participante só...)"
+        )
+        self.action_structure.toggled.connect(self._structure_toggled)
         self.action_grid = QAction("&Grade", self)
         self.action_grid.setShortcut("Ctrl+'")
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
-        exibir.addActions([self.action_validate, self.action_grid])
+        exibir.addActions([self.action_validate, self.action_structure, self.action_grid])
         tema = exibir.addMenu("&Tema")
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
@@ -244,7 +269,11 @@ class DocumentWindow(QMainWindow):
         theme_manager().changed.connect(self._theme_changed)
         exibir.addSeparator()
         exibir.addActions(
-            [self.inspector_dock.toggleViewAction(), self.properties_dock.toggleViewAction()]
+            [
+                self.inspector_dock.toggleViewAction(),
+                self.properties_dock.toggleViewAction(),
+                self.messages_dock.toggleViewAction(),
+            ]
         )
 
     def _build_docks(self) -> None:
@@ -262,6 +291,18 @@ class DocumentWindow(QMainWindow):
         for dock in (self.inspector_dock, self.properties_dock):
             dock.setMinimumWidth(DOCK_MIN_WIDTH)  # sem isso os nomes ficavam cortados
             self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
+        self.messages = MessagesPanel()
+        self.messages.locate_requested.connect(self.locate)
+        self.messages_dock = QDockWidget("Mensagens", self)
+        self.messages_dock.setObjectName("mensagens")
+        self.messages_dock.setWidget(self.messages)
+        self.messages_dock.setMinimumWidth(DOCK_MIN_WIDTH)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.messages_dock)
+        # Padrão: os três em abas à direita, nesta ordem, com o inspetor à frente. A disposição
+        # que o usuário escolher depois é lembrada e vale por cima desta.
+        self.tabifyDockWidget(self.properties_dock, self.messages_dock)
+        self.tabifyDockWidget(self.messages_dock, self.inspector_dock)
+        self.inspector_dock.raise_()
 
     def _build_toolbar(self) -> None:
         """Uma faixa no alto com todas as ferramentas, que rola na horizontal (`ToolStrip`).
@@ -335,22 +376,29 @@ class DocumentWindow(QMainWindow):
         return None
 
     def _update_recommendation(self) -> None:
-        """Com dois elementos selecionados, põe em negrito as conexões aceitas entre eles."""
+        """Com dois elementos selecionados, destaca na faixa as conexões aceitas entre eles,
+        apaga as outras e diz quais são na barra de status (fica enquanto o par estiver
+        selecionado, sem ser apagado por outras mensagens)."""
         par = self._selected_pair()
         validos = set() if par is None else self._valid_for(*par)
-        for tool, acao in self._tool_actions.items():
-            if tool.kind == "connect":
-                fonte = acao.font()
-                fonte.setBold(tool.tag in validos)
-                acao.setFont(fonte)
+        conexoes = {t: a for t, a in self._tool_actions.items() if t.kind == "connect"}
+        self.tool_strip.set_recommendation(
+            list(conexoes.values()),
+            None if par is None else {a for t, a in conexoes.items() if t.tag in validos},
+        )
         if par is None:
+            self._recommendation_label.clear()
+            self._recommendation_label.hide()
             return
         a, b = (name_of(f.tag) for f in par)
         if validos:
-            nomes = ", ".join(name_of(t) for t in RECOMMENDATION_ORDER if t in validos)
-            self.statusBar().showMessage(f"Conexões aceitas entre {a} e {b}: {nomes}")
+            # os nomes escritos nos botões, para achá-los na faixa
+            nomes = ", ".join(SHORT_NAMES[t] for t in RECOMMENDATION_ORDER if t in validos)
+            texto = f"Conexões aceitas entre {a} e {b}: {nomes}"
         else:
-            self.statusBar().showMessage(f"Nenhuma conexão aceita entre {a} e {b}")
+            texto = f"Nenhuma conexão aceita entre {a} e {b}"
+        self._recommendation_label.setText(texto)
+        self._recommendation_label.show()
 
     @staticmethod
     def _valid_for(a: NodeFigure, b: NodeFigure) -> set[str]:
@@ -662,8 +710,21 @@ class DocumentWindow(QMainWindow):
 
     def _refresh_issues(self) -> None:
         """Refaz a verificação do modelo inteiro; os diagramas de ER são pequenos."""
+        documento = self._editor.document
         ligada = self.action_validate.isChecked()
-        self.diagram_scene.show_issues(validate(self._editor.document) if ligada else [])
+        problemas = validate(documento) if ligada else []
+        com_avisos = ligada and self.action_structure.isChecked()
+        avisos = check_structure(documento) if com_avisos else []
+        self.diagram_scene.show_issues(problemas)
+        self.diagram_scene.show_warnings(avisos)
+        self.messages.show_messages(problemas, avisos, ligada)
+        resumo = summary_text(problemas, avisos, display_name)
+        self._verification_label.setText(resumo)
+        self._verification_label.setVisible(bool(resumo))
+
+    def _structure_toggled(self, ligado: bool) -> None:
+        set_structure_warnings_enabled(ligado)  # lembrado para as próximas janelas e sessões
+        self._refresh_issues()
 
     def _update_title(self) -> None:
         nome = self.path.name if self.path else UNTITLED

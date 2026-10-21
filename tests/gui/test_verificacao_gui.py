@@ -54,8 +54,12 @@ def selecionar(qtbot, janela, *figuras):
     QApplication.processEvents()
 
 
-def negrito(janela, tag) -> bool:
-    return janela._tool_actions[Tool("connect", tag)].font().bold()
+def destacada(janela, tag) -> bool:
+    return janela.tool_strip.is_highlighted(janela._tool_actions[Tool("connect", tag)])
+
+
+def apagada(janela, tag) -> bool:
+    return janela.tool_strip.is_dimmed(janela._tool_actions[Tool("connect", tag)])
 
 
 # --- verificação ---------------------------------------------------------------------------
@@ -81,6 +85,29 @@ def test_desligar_a_verificacao_limpa_o_vermelho(janela, referencia):
     assert all(i.problem is None for i in itens_de_conexao(janela))
     janela.action_validate.setChecked(True)
     assert any(i.problem for i in itens_de_conexao(janela))
+
+
+def test_avisos_de_estrutura_aparecem_e_podem_ser_desligados(janela, qtbot):
+    from haradaer.core.commands import add_node_command, new_node
+    from haradaer.gui.settings import structure_warnings_enabled
+
+    documento = janela._editor.document
+    entidade = new_node("ent", 50, 50, janela.diagram_scene._medidor)
+    janela._editor.history.execute(add_node_command(documento, entidade))
+    item = janela.diagram_scene.item_for(entidade)
+    assert janela.action_structure.isChecked()
+    assert item.warning == "Aviso: entidade sem atributo chave"
+    assert item.toolTip() == item.warning
+    janela.action_structure.setChecked(False)
+    assert item.warning is None and item.toolTip() == ""
+    assert not structure_warnings_enabled()  # lembrado para as próximas janelas
+    outra = DocumentWindow()
+    qtbot.addWidget(outra)
+    assert not outra.action_structure.isChecked()
+    janela.action_structure.setChecked(True)
+    assert item.warning
+    janela.action_validate.setChecked(False)  # desligar a verificação desliga os avisos também
+    assert item.warning is None
 
 
 def _cor_mais_vermelha(janela, de, para) -> tuple[int, int, int]:
@@ -125,28 +152,46 @@ def test_conexao_valida_nao_fica_vermelha(janela):
 # --- recomendação --------------------------------------------------------------------------
 
 
-def test_dois_elementos_selecionados_poem_em_negrito_as_conexoes_aceitas(qtbot, janela):
+def test_dois_elementos_selecionados_destacam_as_aceitas_e_apagam_as_outras(qtbot, janela):
     a = janela.editor.create("ent", 100, 100)
     b = janela.editor.create("rel", 300, 100)
+    assert not apagada(janela, "lcaf") and not destacada(janela, "llabelUm")
     selecionar(qtbot, janela, a, b)
-    assert negrito(janela, "llabelUm") and negrito(janela, "llabelDoubleMuitos")
-    assert not negrito(janela, "lcaf") and not negrito(janela, "llabel")
-    assert (
-        janela.statusBar()
-        .currentMessage()
-        .startswith("Conexões aceitas entre Entidade e Relacionamento")
-    )
+    for tag in ("llabelUm", "llabelDoubleMuitos"):
+        assert destacada(janela, tag) and not apagada(janela, tag)
+    for tag in ("lcaf", "llabel"):
+        assert apagada(janela, tag) and not destacada(janela, tag)
+    assert not janela.tool_strip.is_dimmed(janela._tool_actions[Tool("create", "ent")])
+    rotulo = janela._recommendation_label
+    assert rotulo.isVisible()
+    assert rotulo.text().startswith("Conexões aceitas entre Entidade e Relacionamento: Lado 1")
+    janela.statusBar().showMessage("outra mensagem")  # não apaga a recomendação
+    assert rotulo.isVisible() and rotulo.text().startswith("Conexões aceitas")
     selecionar(qtbot, janela, a)
-    assert not negrito(janela, "llabelUm")
+    assert not destacada(janela, "llabelUm") and not apagada(janela, "lcaf")
+    assert not rotulo.isVisible()
+
+
+def test_a_faixa_rola_ate_a_primeira_conexao_aceita(qtbot, janela):
+    janela.resize(500, 400)
+    QApplication.processEvents()
+    if not janela.tool_strip.overflows():
+        pytest.skip("a faixa coube inteira nesta tela")
+    janela.tool_strip.scroll.horizontalScrollBar().setValue(0)
+    a = janela.editor.create("atr", 100, 100)
+    b = janela.editor.create("ent", 300, 100)
+    selecionar(qtbot, janela, a, b)
+    assert janela.tool_strip.scroll.horizontalScrollBar().value() > 0
 
 
 def test_par_sem_conexao_aceita_avisa(qtbot, janela):
     a = janela.editor.create("rel", 100, 100)
     b = janela.editor.create("rel", 300, 100)
     selecionar(qtbot, janela, a, b)
-    assert janela.statusBar().currentMessage() == (
+    assert janela._recommendation_label.text() == (
         "Nenhuma conexão aceita entre Relacionamento e Relacionamento"
     )
+    assert apagada(janela, "llabelUm") and apagada(janela, "llabel")
 
 
 def test_clicar_no_tipo_aceito_liga_os_dois_selecionados(qtbot, janela):
@@ -223,3 +268,64 @@ def test_disco_cheio_explica(monkeypatch, janela, tmp_path, mensagens):
 def test_tradutor_do_qt_em_portugues_e_instalado(qapp):
     assert install_translator(qapp)
     assert QApplication.translate("QPlatformTheme", "Save") == "Salvar"
+
+
+# --- painel Mensagens e resumo na barra de status ----------------------------------------------
+
+
+def _duas_entidades_sem_chave(janela):
+    a = janela.editor.create("ent", 100, 100)
+    b = janela.editor.create("ent", 400, 100)
+    janela.editor.rename(a, "Entidade1")
+    janela.editor.rename(b, "Entidade2")
+    return a, b
+
+
+def test_resumo_na_barra_diz_quais_elementos_tem_aviso(janela):
+    _duas_entidades_sem_chave(janela)
+    rotulo = janela._verification_label
+    assert rotulo.isVisible()
+    assert rotulo.text() == (
+        "2 avisos de estrutura: Entidade1 e Entidade2 (entidade sem atributo chave)"
+    )
+    janela.action_structure.setChecked(False)
+    assert not rotulo.isVisible()
+
+
+def test_resumo_com_erros_e_avisos_conta_e_manda_ao_painel(janela, referencia):
+    janela.load(referencia / "amostra-conexoes-incompletas.xml")
+    texto = janela._verification_label.text()
+    assert texto.startswith("6 erros de conexão e ")
+    assert texto.endswith("(veja o painel Mensagens)")
+
+
+def test_painel_mensagens_lista_e_leva_ao_elemento(janela):
+    a, b = _duas_entidades_sem_chave(janela)
+    painel = janela.messages
+    assert painel.rows() == [
+        ("Aviso", "Entidade1 (Entidade)", "entidade sem atributo chave"),
+        ("Aviso", "Entidade2 (Entidade)", "entidade sem atributo chave"),
+    ]
+    painel.tree.itemClicked.emit(painel.tree.topLevelItem(1), 0)
+    assert janela.diagram_scene.selected_figures() == [b]
+    janela.action_validate.setChecked(False)
+    assert painel.rows() == [] and "desligada" in painel.status.text()
+
+
+def test_painel_mensagens_sem_problemas(janela):
+    assert janela.messages.rows() == []
+    assert janela.messages.status.text() == "Nenhum problema no modelo."
+    assert not janela._verification_label.isVisible()
+
+
+def test_paineis_comecam_em_abas_com_o_inspetor_a_frente(janela):
+    from PySide6.QtWidgets import QTabBar
+
+    abas = [
+        [b.tabText(i) for i in range(b.count())]
+        for b in janela.findChildren(QTabBar)
+        if b.count() and b.isVisible()
+    ]
+    assert abas == [["Propriedades", "Mensagens", "Inspetor de objetos"]]
+    assert not janela.inspector_dock.visibleRegion().isEmpty()
+    assert janela.messages_dock.visibleRegion().isEmpty()  # atrás, na sua aba

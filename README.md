@@ -56,12 +56,16 @@ conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
 
 **Painéis e menus**
 
+- **Mensagens**: os erros de conexão (vermelho) e os avisos de estrutura (laranja) do modelo;
+  clicar numa linha leva ao elemento. A barra de status também resume a verificação.
 - **Inspetor de objetos**: a árvore do modelo, com os atributos dentro do dono. Ctrl+F procura
   um elemento pelo nome (sem diferenciar maiúsculas e acentos).
 - **Propriedades**: nome, tipo SQL e "pode ser nulo" dos atributos, tipo de uma conexão e
   rótulo das generalizações.
 - **Exibir**: zoom (também pinça e rolagem com dois dedos no trackpad, ou Ctrl + roda), grade
-  com encaixe, verificação do modelo (conexões com problema em vermelho), os painéis e o tema
+  com encaixe, verificação do modelo (conexões com problema em vermelho), avisos de estrutura
+  (em laranja: entidade sem chave, relacionamento com um participante só...; dá para desligar),
+  os painéis e o tema
   (claro, escuro ou o do sistema, lido do qt6ct e atualizado quando você troca de tema; a
   escolha é lembrada e a exportação sai sempre no claro).
 - **Organizar**: trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar.

@@ -157,6 +157,7 @@ def ink_op(op: DrawOp, tinta: RGBA, *, textos: bool = True) -> DrawOp:
 
 HIT_WIDTH = 10.0  # largura da área de clique de uma linha
 PROBLEM_COLOR: RGBA = (220, 0, 0, 255)  # a mesma da prévia de conexão inválida
+WARNING_COLOR = QColor(235, 140, 0)  # aviso de estrutura: laranja, para não confundir com erro
 
 
 class FigureItem(QGraphicsItem):
@@ -173,6 +174,7 @@ class FigureItem(QGraphicsItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)
         self.ops = ops
         self.problem: str | None = None
+        self.warning: str | None = None
         self._limites = QRectF()
         self._area = QPainterPath()
         self._calcular()
@@ -226,8 +228,19 @@ class FigureItem(QGraphicsItem):
         if texto == self.problem:
             return
         self.problem = texto
-        self.setToolTip(texto or "")
+        self._update_tooltip()
         self.update()
+
+    def set_warning(self, texto: str | None) -> None:
+        """Marca o elemento com um aviso de estrutura: contorno laranja tracejado e a dica."""
+        if texto == self.warning:
+            return
+        self.warning = texto
+        self._update_tooltip()
+        self.update()
+
+    def _update_tooltip(self) -> None:
+        self.setToolTip("\n".join(t for t in (self.problem, self.warning) if t))
 
     def paint(self, painter: QPainter, option, widget=None) -> None:
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -238,6 +251,12 @@ class FigureItem(QGraphicsItem):
             if self.problem and not exportando and isinstance(op, (PolylineOp, ArcOp)):
                 op = replace(op, stroke=replace(op.stroke, color=PROBLEM_COLOR))
             paint_op(painter, op)
+        if self.warning and not exportando:
+            pen = QPen(WARNING_COLOR, 2, Qt.PenStyle.DashLine)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawRoundedRect(self._limites.adjusted(-5, -5, 5, 5), 4, 4)
         if self.isSelected() and not exportando:
             self._paint_selection(painter)
 

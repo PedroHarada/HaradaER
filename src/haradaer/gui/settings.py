@@ -1,4 +1,4 @@
-"""O que o programa lembra entre sessões: arquivos recentes e a disposição da janela.
+"""O que o programa lembra entre sessões: arquivos recentes, a disposição da janela e os avisos.
 
 Fica nas configurações do usuário (`QSettings`; no Linux, em `~/.config/HaradaER/`).
 """
@@ -13,6 +13,7 @@ MAX_RECENT = 10
 RECENT_KEY = "arquivos/recentes"
 STATE_KEY = "janela/estado"
 GEOMETRY_KEY = "janela/geometria"
+STRUCTURE_KEY = "verificacao/avisos-de-estrutura"
 
 
 def settings() -> QSettings:
@@ -63,3 +64,14 @@ def save_window_layout(geometria: QByteArray, estado: QByteArray) -> None:
 def window_layout() -> tuple[QByteArray | None, QByteArray | None]:
     config = settings()
     return config.value(GEOMETRY_KEY), config.value(STATE_KEY)
+
+
+def structure_warnings_enabled() -> bool:
+    """Os avisos de estrutura (Exibir › Avisos de estrutura) começam ligados."""
+    return str(settings().value(STRUCTURE_KEY, "true")).lower() == "true"
+
+
+def set_structure_warnings_enabled(ligado: bool) -> None:
+    config = settings()
+    config.setValue(STRUCTURE_KEY, "true" if ligado else "false")
+    config.sync()
