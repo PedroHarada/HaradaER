@@ -111,6 +111,7 @@ def test_avisos_de_estrutura_aparecem_e_podem_ser_desligados(janela, qtbot):
 
 
 def _cor_mais_vermelha(janela, de, para) -> tuple[int, int, int]:
+    janela.action_structure.setChecked(False)  # só o vermelho: o laranja dos avisos atrapalha
     area = janela.diagram_scene.sceneRect()
     imagem = QImage(int(area.width()), int(area.height()), QImage.Format.Format_RGB32)
     imagem.fill(QColor("white"))
