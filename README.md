@@ -82,6 +82,7 @@ v1, como a geração de DDL e a impressão.
 
 ## Documentação
 
+- [Primeiros passos](docs/PRIMEIROS-PASSOS.md): baixar, abrir e instalar em cada sistema
 - [Requisitos](docs/REQUISITOS.md)
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)
@@ -92,7 +93,7 @@ Cada versão publicada em **Releases** traz executáveis prontos para Linux (Ubu
 Fedora...), Windows 10/11 e macOS 14+ com chip Apple, sem precisar de Python. No Linux, o `instalar.sh` do pacote põe o HaradaER no menu de
 aplicativos, com ícone (`packaging/linux/`). As instruções de
 como abrir (e o aviso de "programa não reconhecido" no Windows e no macOS) estão na página de
-cada versão.
+cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.md).
 
 ## Lançar uma versão
 
