@@ -4,7 +4,12 @@
 #
 # Linux e Windows: um arquivo único em dist/. macOS: dist/HaradaER.app.
 # Módulos do Qt que o HaradaER não usa ficam de fora, para o arquivo ficar menor.
+# Os ícones do Windows e do macOS vêm de `python packaging/gerar_icones.py`, que roda antes.
+import os
 import sys
+
+GERADO = os.path.join(SPECPATH, "gerado")
+ICONE_SVG = os.path.join(SPECPATH, "..", "src", "haradaer", "resources", "haradaer.svg")
 
 NAO_USADOS = [
     "PySide6.QtWebEngineCore",
@@ -35,7 +40,7 @@ NAO_USADOS = [
 
 a = Analysis(
     ["entrada.py"],
-    datas=[("AVISOS-DE-LICENCA.txt", ".")],
+    datas=[("AVISOS-DE-LICENCA.txt", "."), (ICONE_SVG, "haradaer/resources")],
     excludes=NAO_USADOS,
     noarchive=False,
 )
@@ -53,6 +58,7 @@ if sys.platform == "darwin":
         coll,
         name="HaradaER.app",
         bundle_identifier="io.github.pedroharada.haradaer",
+        icon=os.path.join(GERADO, "haradaer.icns"),
         info_plist={
             "CFBundleDocumentTypes": [
                 {"CFBundleTypeName": "Modelo ER", "CFBundleTypeExtensions": ["xml"],
@@ -70,4 +76,5 @@ else:
         name="HaradaER",
         console=False,
         upx=False,
+        icon=os.path.join(GERADO, "haradaer.ico") if sys.platform == "win32" else None,
     )

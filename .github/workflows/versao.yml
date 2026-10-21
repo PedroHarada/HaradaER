@@ -49,13 +49,15 @@ jobs:
           ruff format --check .
       - name: Testes
         run: pytest -q -rs
+      - name: Gerar os ícones do Windows e do macOS
+        run: python packaging/gerar_icones.py
       - name: Gerar o executável
         run: pyinstaller --noconfirm packaging/HaradaER.spec
       - name: Empacotar (Linux)
         if: matrix.sistema == 'linux'
         run: |
           mkdir pacote && cp dist/HaradaER pacote/HaradaER && chmod +x pacote/HaradaER
-          cp packaging/AVISOS-DE-LICENCA.txt packaging/linux/* pacote/
+          cp packaging/AVISOS-DE-LICENCA.txt packaging/linux/* src/haradaer/resources/haradaer.svg pacote/
           chmod +x pacote/instalar.sh
           tar -czf "$NOME.tar.gz" -C pacote .
       - name: Empacotar (Windows)

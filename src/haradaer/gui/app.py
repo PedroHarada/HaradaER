@@ -6,13 +6,37 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import QLibraryInfo, QObject, QTranslator
+from PySide6.QtCore import QLibraryInfo, QObject, QRectF, QTranslator
+from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QFileDialog
 
+import haradaer
 from haradaer.gui.settings import RecentFiles
 from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.window import DocumentWindow
+
+ICON_PATH = Path(haradaer.__file__).parent / "resources" / "haradaer.svg"
+ICON_SIZES = (16, 24, 32, 48, 64, 128, 256)
+
+
+def app_icon() -> QIcon:
+    """O ícone das janelas (barra de título, barra de tarefas, Alt+Tab), desenhado do SVG em
+    vários tamanhos. Vazio se o arquivo faltar: o programa abre do mesmo jeito."""
+    renderizador = QSvgRenderer(str(ICON_PATH))
+    icone = QIcon()
+    if not renderizador.isValid():
+        return icone
+    for lado in ICON_SIZES:
+        imagem = QImage(lado, lado, QImage.Format.Format_ARGB32)
+        imagem.fill(0)
+        pintor = QPainter(imagem)
+        pintor.setRenderHint(QPainter.RenderHint.Antialiasing)
+        renderizador.render(pintor, QRectF(0, 0, lado, lado))
+        pintor.end()
+        icone.addPixmap(QPixmap.fromImage(imagem))
+    return icone
 
 
 class WindowManager(QObject):
@@ -79,6 +103,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     app = QApplication(argumentos)
     app.setApplicationName("HaradaER")
     app.setDesktopFileName("io.github.pedroharada.haradaer")  # liga a janela ao atalho e ícone
+    app.setWindowIcon(app_icon())
     install_translator(app)
     apply_theme(saved_theme(), save=False)
     theme_manager().watch_system()  # segue a troca de tema do sistema (qt6ct)

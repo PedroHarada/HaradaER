@@ -25,6 +25,9 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+haradaer = ["resources/*.svg"]  # o ícone: a janela o usa, e o empacotamento gera os outros dele
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
