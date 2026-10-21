@@ -78,6 +78,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     argumentos = list(sys.argv if argv is None else argv)
     app = QApplication(argumentos)
     app.setApplicationName("HaradaER")
+    app.setDesktopFileName("io.github.pedroharada.haradaer")  # liga a janela ao atalho e ícone
     install_translator(app)
     apply_theme(saved_theme(), save=False)
     theme_manager().watch_system()  # segue a troca de tema do sistema (qt6ct)

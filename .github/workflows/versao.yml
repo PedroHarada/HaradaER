@@ -55,7 +55,8 @@ jobs:
         if: matrix.sistema == 'linux'
         run: |
           mkdir pacote && cp dist/HaradaER pacote/HaradaER && chmod +x pacote/HaradaER
-          cp packaging/AVISOS-DE-LICENCA.txt pacote/
+          cp packaging/AVISOS-DE-LICENCA.txt packaging/linux/* pacote/
+          chmod +x pacote/instalar.sh
           tar -czf "$NOME.tar.gz" -C pacote .
       - name: Empacotar (Windows)
         if: matrix.sistema == 'windows'

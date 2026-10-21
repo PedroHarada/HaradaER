@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=HaradaER
+GenericName=Modelagem Entidade-Relacionamento
+Comment=Diagramas ER compatíveis com o TerraER
+Exec=HaradaER %F
+Icon=io.github.pedroharada.haradaer
+Terminal=false
+Categories=Development;
+MimeType=application/xml;text/xml;
+StartupWMClass=HaradaER

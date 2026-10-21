@@ -12,8 +12,10 @@ Não precisa instalar Python nem nada mais: é só extrair e abrir.
 
 ## Como abrir
 
-**Linux:** extraia e rode `./HaradaER` (ou dê dois cliques, se o gerenciador de arquivos permitir).
-Em X11 (sem Wayland), se não abrir, instale a biblioteca do cursor do Qt: `xcb-util-cursor` no
+**Linux:** extraia e, na pasta extraída, rode `./instalar.sh` uma vez. O HaradaER aparece no
+menu de aplicativos, com ícone, e os arquivos `.xml` passam a ter a opção "Abrir com HaradaER".
+Não precisa de sudo, e `./instalar.sh --remover` desinstala. Sem instalar, dá para abrir pelo
+terminal com `./HaradaER` (o duplo clique no arquivo costuma abrir outro programa). Em X11 (sem Wayland), se não abrir, instale a biblioteca do cursor do Qt: `xcb-util-cursor` no
 Arch, `libxcb-cursor0` no Ubuntu/Debian.
 
 **Windows:** extraia e abra `HaradaER.exe`. Como o programa não é assinado, o Windows mostra

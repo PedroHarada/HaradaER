@@ -85,7 +85,8 @@ v1, como a geração de DDL e a impressão.
 ## Baixar sem instalar
 
 Cada versão publicada em **Releases** traz executáveis prontos para Linux (Ubuntu 22.04+, Arch,
-Fedora...), Windows 10/11 e macOS 14+ com chip Apple, sem precisar de Python. As instruções de
+Fedora...), Windows 10/11 e macOS 14+ com chip Apple, sem precisar de Python. No Linux, o `instalar.sh` do pacote põe o HaradaER no menu de
+aplicativos, com ícone (`packaging/linux/`). As instruções de
 como abrir (e o aviso de "programa não reconhecido" no Windows e no macOS) estão na página de
 cada versão.
 
