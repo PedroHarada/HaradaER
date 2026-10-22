@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "haradaer"
-version = "0.0.1"
+version = "1.0.0"
 description = "Ferramenta de modelagem Entidade-Relacionamento compatível com o TerraER 3.14"
 readme = "README.md"
 requires-python = ">=3.14"

@@ -35,3 +35,40 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 - O HaradaER foi desenvolvido e testado no Linux. No Windows e no macOS os testes automáticos
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
 - Os avisos de licença das bibliotecas incluídas estão em `AVISOS-DE-LICENCA.txt`.
+
+---
+
+## English
+
+Entity-Relationship modeling tool compatible with TerraER 3.14's `.xml` file. The interface is
+available in Portuguese and English (**View › Language**; the first time, it follows the
+system's language).
+
+| System | File | Requirements |
+|---|---|---|
+| Linux | `HaradaER-…-linux.tar.gz` | Distributions from 2021 on (Ubuntu 22.04+, Arch, Fedora 35+, Mint 21+), 64-bit |
+| Windows | `HaradaER-…-windows.zip` | Windows 10 or 11, 64-bit |
+| macOS | `HaradaER-…-macos.zip` | macOS 14 (Sonoma) or newer, Apple chip (M1 onward) |
+
+No need to install Python or anything else: just extract and open.
+
+**Linux:** extract it and, in the extracted folder, run `./instalar.sh` once. HaradaER shows up
+in the applications menu, with its icon, and `.xml` files get the option "Open with HaradaER".
+No sudo needed, and `./instalar.sh --remover` uninstalls it. Without installing, open it from
+the terminal with `./HaradaER` (double-clicking the file usually opens another program). On X11
+(without Wayland), if it doesn't open, install Qt's cursor library: `xcb-util-cursor` on Arch,
+`libxcb-cursor0` on Ubuntu/Debian.
+
+**Windows:** extract it and open `HaradaER.exe`. Since the program isn't signed, Windows shows
+"Windows protected your PC": click **More info** › **Run anyway**.
+
+**macOS:** extract it and move `HaradaER.app` to Applications. The first time, macOS warns that
+it can't verify the developer: right-click the app › **Open** › **Open** (or System Settings ›
+Privacy & Security › **Open Anyway**).
+
+The first start may take a few seconds. Each package includes `GETTING-STARTED.txt` for its
+system: the full step-by-step guide, with what to do if it doesn't open.
+
+- HaradaER was developed and tested on Linux. On Windows and macOS the automated tests pass,
+  but real use is just starting: let us know if anything odd happens.
+- The license notices of the bundled libraries are in `AVISOS-DE-LICENCA.txt`.
