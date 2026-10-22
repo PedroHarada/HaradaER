@@ -202,6 +202,7 @@ Decididas pelo autor em 2026-10-22, na revisão do que ficou fora da v1:
 | 12 | GIF (QA-14) | **Descartado.** O PNG cobre a necessidade |
 | 13 | Copiar e colar com o TerraER (QA-13) | **Descartado.** Só o arquivo é compatível |
 | 14 | Inglês (RNF-06) | **Volta para a v1.** Troca ao reabrir (com aviso), nomes padrão no idioma escolhido, manual em inglês |
+| 15 | Paleta como painel (RNF-09) | **Depois da v1, como opção.** Exibir › Paleta: No alto (faixa de hoje) ou À esquerda (painel). Sem fechar e sem soltar |
 
 ## 11. Achados durante o M1 (leitura e gravação)
 

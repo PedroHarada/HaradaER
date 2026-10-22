@@ -359,7 +359,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-06 | **Em andamento** | Trazido de volta para a v1 em 2026-10-22: catálogo pt/en, troca ao reabrir, manual em inglês |
 | RNF-07 | Pronto | Python 3.14, PySide6 6.12, Linux/Wayland |
 | RNF-08 | Pronto | Núcleo sem Qt, conferido por teste |
-| RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois a paleta como painel (hoje é uma faixa de ferramentas fixa) |
+| RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois da v1 (decisão do autor em 2026-10-22, depois de ver uma maquete): a paleta como opção, sem substituir a faixa. Exibir › Paleta escolhe entre **No alto** (a faixa de hoje) e **À esquerda** (painel acoplado em duas colunas, com Elementos e Conexões). As duas usam as mesmas ações; o destaque das conexões aceitas (RF-10) vale nas duas; o painel não fecha nem solta, para nunca ficar sem ferramentas |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
 | RNF-12 | Pronto | 470 testes, sem tela |
