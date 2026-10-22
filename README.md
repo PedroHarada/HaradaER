@@ -100,13 +100,13 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 ## Lançar uma versão
 
 ```
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
 (`packaging/HaradaER.spec`) e publica a versão em Releases. Se algum teste falhar, nada é
-publicado. Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento. Cada versão nova substitui a anterior em
+publicado. O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento. Cada versão nova substitui a anterior em
 Releases (as etiquetas antigas continuam no git). A cada envio ao
 `main` e a cada pull request, só o lint e os testes rodam (no Linux).
 

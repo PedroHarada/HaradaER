@@ -2,7 +2,7 @@
 
 Versão 0.9 · 2026-10-20 · Rascunho
 
-Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9) e, em 2026-10-22, a D-11 e as duas exceções à D-09 (seção 5.7). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
+Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9) e, em 2026-10-22, a D-11 e as duas exceções à D-09 (seção 5.7), e a D-12 (seção 13). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
 ## 1. Princípios
 
@@ -382,6 +382,7 @@ Estado: **Decidida** = confirmada pelo autor.
 | D-09 | Núcleo devolve códigos; a interface traduz | Texto no núcleo | RNF-06 sem acoplar a Qt | **Decidida**; exceções aceitas em 2026-10-22: erros ao abrir arquivo e nome padrão dos elementos (seção 5.7) |
 | D-10 | Tabelas de dados para tags, regras e estilos | Código condicional | Fácil de validar contra o TerraER | **Decidida** |
 | D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (aceita pelo autor em 2026-10-22) |
+| D-12 | Versões `x.y.z` pelo efeito para quem usa (seção 13) | Subir o `x` por acúmulo de versões | Critério que dá para conferir; segue o Versionamento Semântico | **Decidida** (aceita pelo autor em 2026-10-22) |
 
 ## 10. Riscos
 
@@ -446,6 +447,68 @@ Pendências (depois da v1):
 
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
+
+## 13. Numeração das versões (D-12)
+
+As versões seguem `x.y.z`, no espírito do Versionamento Semântico. O que decide o número é o efeito para quem usa, não o tamanho da mudança. Cada versão fica registrada em `CHANGELOG.md`.
+
+- **`z` (correção):** o programa faz o mesmo que antes, só que melhor. Bugs, ajustes visuais, desempenho, textos e traduções, empacotamento e dependências sem mudança visível.
+- **`y` (funcionalidade):** o usuário passa a conseguir algo que não conseguia, e nada do que já existia quebra. O `z` volta a 0.
+- **`x` (quebra):** algo que já funcionava deixa de funcionar como antes. O `y` e o `z` voltam a 0. O autor também pode subir o `x` para marcar um marco, mas como exceção anunciada.
+
+Regras:
+
+- Na dúvida, ou com mudanças de mais de um tipo na mesma versão, vale o número mais alto.
+- Pré-versões levam hífen (`1.1.0-rc1`) e saem como pré-lançamento.
+- Uma versão publicada não muda: se sair com erro, a correção é a versão seguinte (a 1.0.0 virou a 1.0.1).
+- Mudança só na documentação do repositório, que não altera os pacotes, não gera versão; entra na próxima.
+
+Exemplos de `z`:
+
+| Mudança | Por quê |
+|---|---|
+| Tradução para o inglês errada ou faltando | Texto, não funcionalidade |
+| Aviso "entidade sem atributo-chave" onde não devia | Bug numa regra que já existe |
+| Seta da conexão torta ao mover um elemento | Bug de desenho |
+| Abrir um modelo grande mais rápido | Desempenho, mesmo comportamento |
+| Cor de um ícone ajustada no tema escuro | Ajuste visual |
+| `instalar.sh` que não criava o atalho em alguma distribuição | Empacotamento |
+| App do macOS com a versão certa (1.0.1) | Empacotamento |
+| PySide6 atualizado sem mudança visível | Dependência |
+| `.xml` do TerraER com caractere raro que não abria | Bug de leitura; o formato não muda |
+
+Exemplos de `y`:
+
+| Mudança | Por quê |
+|---|---|
+| Paleta à esquerda como opção (RNF-09) | Opção nova |
+| Gerar DDL (RF-13) | Funcionalidade nova |
+| Editar o SQL do derivado ou o Modo de Edição Rápida (RF-20) | Funcionalidade nova |
+| Um terceiro idioma | Opção nova |
+| Atalho novo, sem mudar os existentes | Recurso novo |
+| Exportar para SVG, além de PNG e PDF | Saída nova |
+| Regra nova nos avisos de estrutura | Verificação nova, desligável em Exibir |
+| Funcionar no Mac com chip Intel | Mais sistemas suportados |
+| Opções novas na linha de comando | Recurso novo |
+| Ler um formato novo, mantendo o `.xml` como padrão | Entrada nova, sem quebrar a antiga |
+
+Exemplos de `x`:
+
+| Mudança | Por quê |
+|---|---|
+| Salvar por padrão num formato que o TerraER 3.14 não abre | Quebra a compatibilidade (RNF-01) |
+| Retirar uma função, como exportar em PDF | O usuário perde algo |
+| Trocar o sentido de um atalho (o Delete apagar em cascata) | Hábito quebrado |
+| Deixar de suportar o Windows 10 ou o macOS 14 | Quem usava fica de fora |
+| Guardar as preferências em outro lugar sem migrar as antigas | O usuário perde as configurações |
+| Arquivos antigos passam a aparecer diferentes ao abrir | O desenho salvo muda |
+
+Casos de fronteira:
+
+- Correção que muda o arquivo salvo: `z` se a versão anterior e o TerraER ainda o abrem; `x` se não.
+- Funcionalidade nova e bug corrigido na mesma versão: `y`.
+- Mudar um padrão (o tema inicial, por exemplo) mantendo o antigo como opção: `y`.
+- Funcionalidade nova ainda em teste: `1.1.0-rc1`; a `1.1.0` sai quando confirmada.
 
 ## 14. Como a edição está montada (M4)
 
