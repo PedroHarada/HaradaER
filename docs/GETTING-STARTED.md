@@ -124,4 +124,10 @@ English); to change it, use **View › Language** and open the program again. To
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
 without a key attribute. You can turn them off in **View › Structure warnings**.
 
+Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
+improvement** open the GitHub page already filled in (a GitHub account is needed).
+
+Once a day, when opening, HaradaER checks GitHub for a new version and lets you know; nothing
+is downloaded by itself. To turn it off, uncheck **Help › Check when opening**.
+
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).

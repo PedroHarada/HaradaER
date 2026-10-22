@@ -6,8 +6,8 @@ import errno
 from pathlib import Path
 
 import shiboken6
-from PySide6.QtCore import QMimeData, Qt, Signal
-from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
+from PySide6.QtCore import QMimeData, Qt, QUrl, Signal
+from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QDockWidget,
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QToolBar,
 )
 
+import haradaer
 from haradaer.core import io
 from haradaer.core.commands import (
     PASTE_OFFSET,
@@ -35,6 +36,7 @@ from haradaer.core.rules import (
     validate,
 )
 from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
+from haradaer.feedback import Tipo, issue_url, system_description
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
@@ -49,7 +51,9 @@ from haradaer.gui.settings import (
     saved_language,
     set_saved_language,
     set_structure_warnings_enabled,
+    set_update_check_enabled,
     structure_warnings_enabled,
+    update_check_enabled,
     window_layout,
 )
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
@@ -61,6 +65,7 @@ from haradaer.gui.tool_icons import (
     select_icon,
 )
 from haradaer.gui.tool_strip import ToolStrip
+from haradaer.gui.updates import UpdateChecker
 from haradaer.gui.verification import name_of, pairs_text, summary_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
 from haradaer.i18n import LANGUAGES, N_, _, language, translate
@@ -132,6 +137,7 @@ class DocumentWindow(QMainWindow):
         self.view.tool_changed.connect(self._tool_changed)
         self.diagram_scene.selectionChanged.connect(self._selection_changed)
         self._build_docks()
+        self.update_checker = UpdateChecker(self)  # aviso de versão nova (RF-22)
         self._build_menus()
         self._build_toolbar()
         self._restore_layout()
@@ -295,6 +301,19 @@ class DocumentWindow(QMainWindow):
                 self.messages_dock.toggleViewAction(),
             ]
         )
+
+        ajuda = self.menuBar().addMenu(_("Aj&uda"))
+        self.report_action = ajuda.addAction(_("&Relatar um problema…"))
+        self.report_action.triggered.connect(lambda: self._open_issue("bug"))
+        self.suggest_action = ajuda.addAction(_("&Sugerir uma melhoria…"))
+        self.suggest_action.triggered.connect(lambda: self._open_issue("melhoria"))
+        ajuda.addSeparator()
+        self.check_updates_action = ajuda.addAction(_("Verificar &atualizações…"))
+        self.check_updates_action.triggered.connect(lambda: self.update_checker.check(manual=True))
+        self.auto_updates_action = ajuda.addAction(_("Verificar ao a&brir"))
+        self.auto_updates_action.setCheckable(True)
+        self.auto_updates_action.setChecked(update_check_enabled())
+        self.auto_updates_action.toggled.connect(set_update_check_enabled)
 
     def _build_docks(self) -> None:
         """Painéis acopláveis à direita do desenho (RNF-09)."""
@@ -766,6 +785,16 @@ class DocumentWindow(QMainWindow):
             translate(N_("Idioma"), codigo),
             translate(N_("O idioma muda quando o HaradaER for fechado e aberto de novo."), codigo),
         )
+
+    def _open_issue(self, tipo: Tipo) -> None:
+        """Abre no navegador a issue já preenchida (RF-21). Sem navegador, mostra o endereço."""
+        url = issue_url(tipo, haradaer.__version__, system_description(), language())
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.information(
+                self,
+                _("Abrir no navegador"),
+                _("Não foi possível abrir o navegador. Copie este endereço:") + f"\n\n{url}",
+            )
 
     def _structure_toggled(self, ligado: bool) -> None:
         set_structure_warnings_enabled(ligado)  # lembrado para as próximas janelas e sessões

@@ -131,4 +131,5 @@ def main(argv: Sequence[str] | None = None) -> int:
         gerenciador.open_path(caminho)
     if not gerenciador.windows:
         return 1
+    gerenciador.windows[0].update_checker.check_if_due()  # no máximo uma vez por dia (RF-22)
     return app.exec()

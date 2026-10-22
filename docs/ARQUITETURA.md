@@ -71,6 +71,8 @@ HaradaER/
 │   │   ├── tool_strip.py, tool_icons.py, palette.py # barra de ferramentas
 │   │   └── export.py, settings.py, theme.py, qt_utils.py
 │   ├── i18n/             # idioma: _() e N_(), catálogo en.py (sem Qt)
+│   ├── feedback.py       # endereço da issue de Ajuda › Relatar (sem Qt)
+│   ├── updates.py        # versão mais recente no GitHub e comparação (sem Qt)
 │   └── __main__.py       # python -m haradaer
 ├── tests/
 │   ├── core/             # sem tela
@@ -298,6 +300,20 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 - A verificação continua devolvendo códigos (D-09), postos em palavras por `gui/verification.py`. O núcleo usa `_()` em dois lugares: as mensagens de `ArquivoInvalidoError`, que vão direto para a tela, e o nome padrão dos elementos novos (`Entidade` ou `Entity`, `característica` ou `characteristic`), que vai para o arquivo como qualquer nome digitado (RNF-01 não muda).
 - Termos em inglês: os do TerraER (`Labels_en`), exceto "Associative entity" (o TerraER diz "Entity Relationship") e "Multivalued attribute" (o TerraER diz "Multivalue Attribute"), aceitos pelo autor.
 - `tests/test_idioma.py` confere que todo texto marcado tem tradução, que os campos `{...}` e as letras de atalho `&` batem, e procura texto na tela que escapou do `_()`.
+
+### 5.8 Relatar e sugerir (RF-21)
+
+- Menu Ajuda › Relatar um problema e Sugerir uma melhoria. `haradaer/feedback.py` monta o endereço de nova issue do GitHub, com o formulário (`.github/ISSUE_TEMPLATE/bug.yml` ou `melhoria.yml`) e os campos versão, sistema e idioma já preenchidos pelo `id`; `gui/window.py` abre com `QDesktopServices.openUrl`.
+- Nada é enviado pelo programa: quem relata vê a página e envia pela própria conta do GitHub. Não há servidor nem chave no programa. O sistema vem de `platform` (e, no Linux, `XDG_SESSION_TYPE`), sem nome de usuário nem caminhos.
+- Sem navegador, o endereço aparece numa caixa para copiar.
+
+### 5.9 Aviso de versão nova (RF-22)
+
+- `haradaer/updates.py` lê a versão mais recente em `api.github.com/repos/PedroHarada/HaradaER/releases/latest` (as pré-versões ficam de fora) e a compara com `haradaer.__version__` por número; uma pré-versão vem antes da final de mesmo número. Resposta estranha, erro do GitHub ou falta de rede viram `OSError`.
+- `gui/updates.py` (`UpdateChecker`) consulta numa linha de execução à parte e devolve o resultado por sinal do Qt: a janela nunca espera pela rede (limite de 5 s).
+- Ao abrir, no máximo uma vez por dia (`atualizacoes/ultima-verificacao`), e só se Ajuda › Verificar ao abrir estiver ligado (padrão). Sem novidade ou sem rede, fica quieto. Ajuda › Verificar atualizações sempre responde.
+- Só avisa: **Baixar** abre a página Releases. O programa não baixa nem troca a si mesmo (decisão do autor, 2026-10-22). A única coisa que sai do computador é essa consulta, sem nada pessoal.
+- Os testes nunca usam a rede: o `tests/conftest.py` troca a consulta por uma falha.
 
 ## 6. Fluxos principais
 

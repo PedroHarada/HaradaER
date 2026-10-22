@@ -282,4 +282,28 @@ EN: dict[str, str] = {
     "o arquivo é grande demais (limite {limite} MiB)": "the file is too large (limit {limite} MiB)",
     "XML inválido: {motivo}": "Invalid XML: {motivo}",
     "o arquivo não tem nenhum elemento": "the file has no elements",
+    # Ajuda (RF-21)
+    "Aj&uda": "&Help",
+    "&Relatar um problema…": "&Report a problem…",
+    "&Sugerir uma melhoria…": "&Suggest an improvement…",
+    "Abrir no navegador": "Open in browser",
+    "Não foi possível abrir o navegador. Copie este endereço:": (
+        "The browser couldn't be opened. Copy this address:"
+    ),
+    # Atualizações (RF-22)
+    "Verificar &atualizações…": "Check for &updates…",
+    "Verificar ao a&brir": "Check when &opening",
+    "Versão nova": "New version",
+    "O HaradaER {nova} está disponível (você tem a {atual}).": (
+        "HaradaER {nova} is available (you have {atual})."
+    ),
+    "&Baixar": "&Download",
+    "Agora &não": "&Not now",
+    "Atualizações": "Updates",
+    "Você já tem a versão mais recente ({atual}).": (
+        "You already have the latest version ({atual})."
+    ),
+    "Não foi possível verificar agora (sem internet ou o GitHub não respondeu).": (
+        "Couldn't check right now (no internet, or GitHub didn't respond)."
+    ),
 }

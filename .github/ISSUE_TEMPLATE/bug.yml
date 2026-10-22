@@ -1,0 +1,43 @@
+name: Relatar um problema / Report a problem
+description: Algo não funciona como deveria. / Something doesn't work as it should.
+labels: [bug]
+body:
+  - type: textarea
+    id: aconteceu
+    attributes:
+      label: O que aconteceu? / What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que você esperava? / What did you expect?
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como repetir / Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: textarea
+    id: anexos
+    attributes:
+      label: Anexos / Attachments
+      description: >-
+        Arraste aqui o modelo (.xml) ou uma imagem, se ajudar. /
+        Drop the model (.xml) or a screenshot here, if it helps.
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do HaradaER / HaradaER version
+    validations:
+      required: true
+  - type: input
+    id: sistema
+    attributes:
+      label: Sistema / System
+  - type: input
+    id: idioma
+    attributes:
+      label: Idioma / Language

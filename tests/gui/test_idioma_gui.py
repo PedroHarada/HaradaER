@@ -26,14 +26,15 @@ def _menus(janela: DocumentWindow) -> list[str]:
 def test_janela_em_portugues(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&Arquivo", "&Editar", "&Organizar", "E&xibir"]
+    assert _menus(janela) == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "Aj&uda"]
 
 
 def test_janela_em_ingles(qtbot):
     set_language("en")
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&File", "&Edit", "&Arrange", "&View"]
+    assert _menus(janela) == ["&File", "&Edit", "&Arrange", "&View", "&Help"]
+    assert janela.report_action.text() == "&Report a problem…"
     assert janela.windowTitle() == "Untitled[*] - HaradaER"
     assert janela.action_save.text() == "&Save"
     assert janela.inspector_dock.windowTitle() == "Object inspector"

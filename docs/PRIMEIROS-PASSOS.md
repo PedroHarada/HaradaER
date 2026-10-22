@@ -126,4 +126,10 @@ para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
 atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
 
+Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
+melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
+
+Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e avisa; nada é
+baixado sozinho. Para desligar, desmarque **Ajuda › Verificar ao abrir**.
+
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.

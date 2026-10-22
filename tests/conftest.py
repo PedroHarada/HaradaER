@@ -36,3 +36,14 @@ def pytest_runtest_makereport(item, call):
     ):
         relatorio.outcome = "skipped"
         relatorio.longrepr = (str(item.path), 0, f"gabarito do TerraER ausente: {erro.filename}")
+
+
+@pytest.fixture(autouse=True)
+def sem_rede(monkeypatch):
+    """Nenhum teste consulta o GitHub: a busca de versão nova falha como se estivesse sem rede."""
+    from haradaer import updates
+
+    def sem_internet():
+        raise OSError("testes sem rede")
+
+    monkeypatch.setattr(updates, "fetch_latest", sem_internet)

@@ -34,6 +34,10 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 
 - O HaradaER foi desenvolvido e testado no Linux. No Windows e no macOS os testes automáticos
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
+- Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
+  **Ajuda › Sugerir uma melhoria**, no próprio programa.
+- Uma vez por dia, ao abrir, o programa avisa se há versão nova (desliga em
+  **Ajuda › Verificar ao abrir**). Nada é baixado sozinho.
 - Os avisos de licença das bibliotecas incluídas estão em `AVISOS-DE-LICENCA.txt`.
 
 ---
@@ -71,4 +75,8 @@ system: the full step-by-step guide, with what to do if it doesn't open.
 
 - HaradaER was developed and tested on Linux. On Windows and macOS the automated tests pass,
   but real use is just starting: let us know if anything odd happens.
+- To report a problem or suggest an improvement: **Help › Report a problem** or
+  **Help › Suggest an improvement**, inside the program.
+- Once a day, when opening, the program tells you if there's a new version (turn it off in
+  **Help › Check when opening**). Nothing is downloaded by itself.
 - The license notices of the bundled libraries are in `AVISOS-DE-LICENCA.txt`.

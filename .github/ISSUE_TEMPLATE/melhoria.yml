@@ -1,0 +1,22 @@
+name: Sugerir uma melhoria / Suggest an improvement
+description: Uma ideia para o HaradaER. / An idea for HaradaER.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: ideia
+    attributes:
+      label: Qual é a ideia? / What's the idea?
+    validations:
+      required: true
+  - type: textarea
+    id: motivo
+    attributes:
+      label: Para que serviria? / What would it be for?
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do HaradaER / HaradaER version
+  - type: input
+    id: idioma
+    attributes:
+      label: Idioma / Language

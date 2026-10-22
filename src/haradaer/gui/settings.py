@@ -15,6 +15,8 @@ STATE_KEY = "janela/estado"
 GEOMETRY_KEY = "janela/geometria"
 STRUCTURE_KEY = "verificacao/avisos-de-estrutura"
 LANGUAGE_KEY = "aparencia/idioma"
+UPDATES_KEY = "atualizacoes/verificar"
+LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
 
 
 def settings() -> QSettings:
@@ -87,4 +89,26 @@ def saved_language() -> str | None:
 def set_saved_language(codigo: str) -> None:
     config = settings()
     config.setValue(LANGUAGE_KEY, codigo)
+    config.sync()
+
+
+def update_check_enabled() -> bool:
+    """Verificar ao abrir se há versão nova (RF-22); ligado se nunca foi mudado."""
+    return str(settings().value(UPDATES_KEY, "true")).lower() == "true"
+
+
+def set_update_check_enabled(ligado: bool) -> None:
+    config = settings()
+    config.setValue(UPDATES_KEY, "true" if ligado else "false")
+    config.sync()
+
+
+def last_update_check() -> str | None:
+    valor = settings().value(LAST_CHECK_KEY)
+    return str(valor) if valor else None
+
+
+def set_last_update_check(dia: str) -> None:
+    config = settings()
+    config.setValue(LAST_CHECK_KEY, dia)
     config.sync()
