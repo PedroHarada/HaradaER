@@ -45,11 +45,15 @@ def test_uma_vez_por_dia():
 
 def test_contexto_carrega_os_certificados_do_sistema(tmp_path, monkeypatch):
     carregados = []
-    monkeypatch.setattr(
-        updates.ssl.SSLContext,
-        "load_verify_locations",
-        lambda self, cafile: carregados.append(cafile),
-    )
+    original = updates.ssl.SSLContext.load_verify_locations
+
+    def carregar(self, cafile=None, capath=None, cadata=None):
+        if cafile is None:  # no Windows, os certificados do sistema chegam por `cadata`
+            return original(self, cafile, capath, cadata)
+        carregados.append(cafile)
+        return None
+
+    monkeypatch.setattr(updates.ssl.SSLContext, "load_verify_locations", carregar)
     existe = tmp_path / "ca.pem"
     existe.write_text("x")
     updates.ssl_context((str(tmp_path / "nao-existe.pem"), str(existe), str(existe)))
