@@ -11,6 +11,8 @@ para mudanças que quebram algo que já funcionava.
 - O aviso de versão nova não funcionava no executável do Linux fora do Ubuntu (Arch, Fedora) e,
   provavelmente, no macOS: a conexão segura com o GitHub não achava os certificados do sistema.
 - Quando a verificação pedida em Ajuda falha, a mensagem mostra também o motivo técnico.
+- Publicar uma pré-versão não tira mais a versão final da página Releases (a `v1.1.2-rc2`
+  tirou a 1.1.1, e o aviso de versão nova ficou sem resposta até a 1.1.2).
 
 ## 1.1.1 — 2026-10-22
 

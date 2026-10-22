@@ -4,8 +4,9 @@
 #   git push origin v1.0.0
 #
 # Em cada sistema: lint, testes e PyInstaller. Se algo falhar, a versão não é publicada.
-# Etiquetas com hífen (v1.0.0-teste) saem como "pré-lançamento". A versão nova substitui as
-# anteriores: as páginas e arquivos antigos saem de Releases, mas as etiquetas do git ficam.
+# Etiquetas com hífen (v1.0.0-teste) saem como "pré-lançamento" e não apagam nada. Uma versão
+# final substitui as anteriores: as páginas e arquivos antigos saem de Releases, mas as
+# etiquetas do git ficam.
 name: Versão
 
 on:
@@ -105,6 +106,8 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: arquivos/*
       - name: Tirar as versões anteriores (fica só a nova; as etiquetas do git ficam)
+        # Só numa versão final: uma pré-versão não apaga a final, que o aviso de versão nova lê.
+        if: ${{ !contains(github.ref_name, '-') }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
