@@ -194,6 +194,15 @@ Decididas pelo autor em 2026-10-19. Regra aplicada: o que pôde sair da v1 saiu;
 | 9 | Cardinalidade | Só `1` e `N`, pela tag |
 | 10 | Direção da ligação de atributo | **Sem impacto.** O HaradaER lê as duas direções e grava atributo→dono; o TerraER aceita ambas (validação simétrica e DDL com os dois casos) |
 
+Decididas pelo autor em 2026-10-22, na revisão do que ficou fora da v1:
+
+| # | Decisão | Resultado |
+|---|---|---|
+| 11 | Impressão (RF-14) | **Descartada.** O PDF de Exportar desenho cobre a necessidade |
+| 12 | GIF (QA-14) | **Descartado.** O PNG cobre a necessidade |
+| 13 | Copiar e colar com o TerraER (QA-13) | **Descartado.** Só o arquivo é compatível |
+| 14 | Inglês (RNF-06) | **Volta para a v1.** Troca ao reabrir (com aviso), nomes padrão no idioma escolhido, manual em inglês |
+
 ## 11. Achados durante o M1 (leitura e gravação)
 
 Programas: `harness/Gen10.java`, `Gen11.java`, `Gen12.java`. Amostras em `referencia-terraer/`.

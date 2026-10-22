@@ -77,8 +77,8 @@ Se a faixa não couber na janela, role-a com dois dedos, com a roda do mouse ou 
 
 ## Estado
 
-A v1 está pronta, exceto o que `docs/REQUISITOS.md` (seção 10) lista como pendente ou fora da
-v1, como a geração de DDL e a impressão.
+Falta para a v1 a opção de inglês, em andamento. O que fica para depois dela, como a geração de
+DDL, está em `docs/REQUISITOS.md` (seção 10).
 
 ## Documentação
 

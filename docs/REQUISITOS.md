@@ -41,11 +41,11 @@ Os arquivos em `docs/referencia-terraer/` são a saída real do TerraER e servem
 - Banco de dados real, engenharia reversa a partir de SQL, edição colaborativa.
 - Qualquer extensão do formato que o TerraER não leia (ver RNF-02).
 - Interface de linha de comando (RNF-08).
-- Compatibilidade da área de transferência com a do TerraER (copiar e colar de elementos entre os dois programas).
-- Exportação para GIF.
+- Compatibilidade da área de transferência com a do TerraER (copiar e colar de elementos entre os dois programas): **descartada** (QA-13).
+- Exportação para GIF: **descartada** (QA-14).
 - Geração de DDL SQL (RF-13): adiada para depois da v1; o levantamento do TerraER já está feito (`INVESTIGACOES.md` seção 6).
 - Edição da instrução SQL do atributo derivado e Modo de Edição Rápida (RF-20): adiados. A instrução SQL já gravada num arquivo continua sendo lida e regravada.
-- Impressão (RF-14).
+- Impressão (RF-14): **descartada**; o PDF de Exportar desenho cobre a necessidade.
 
 ## 3. Elementos do modelo
 
@@ -246,7 +246,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
 | RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
 | RF-13 | **(Fora da v1)** Gerar o DDL SQL do modelo. Regras e defeitos do TerraER levantados em `INVESTIGACOES.md` seção 6. Quando voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido com as mesmas convenções. |
-| RF-14 | **(Fora da v1)** Imprimir. |
+| RF-14 | **(Descartado, decisão do autor em 2026-10-22)** Imprimir. O PDF de Exportar desenho cobre a necessidade. |
 | **RF-15** | **Gestos de trackpad (obrigatório).** Na área do diagrama: pinça com dois dedos para zoom e rolagem com dois dedos para mover a visão. O zoom e a rolagem por teclado e menu continuam disponíveis como alternativa. Teste em Linux/Wayland com PySide6 6.12.0 confirmou: o zoom chega como `QNativeGestureEvent` do tipo `ZoomNativeGesture` (591 eventos, valores de -0,043 a +0,059 por evento, que se acumulam na escala) e a rolagem como `QWheelEvent` com `pixelDelta` e fases `ScrollBegin`/`ScrollUpdate` (145 eventos). A API `QPinchGesture` **não** disparou no Wayland; usar o evento nativo. Na v1 os gestos são considerados só no Linux/Wayland desta máquina, onde foram verificados; nos demais sistemas valem apenas as alternativas de teclado e menu (QA-11). |
 | RF-16 | Inspetor de objetos: painel com a lista/árvore dos elementos do modelo, que permite selecionar um elemento e localizá-lo no diagrama (o TerraER tem o "Inspetor de Objetos"). |
 | RF-17 | Perguntar se deseja salvar as alterações ao fechar um documento modificado ou sair (Salvar / Não salvar / Cancelar), e mostrar mensagem clara quando não for possível gravar o arquivo. |
@@ -263,7 +263,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RNF-03 | Reproduzir quirks do formato, como `INTEGER` gravado como `NUMBER` (seção 3.3), sem "corrigi-los". |
 | RNF-04 | Leitura tolerante: aceitar qualquer ordem de filhos em `<a>`, com ou sem quebras de linha, e ids em qualquer ordem, desde que consistentes. |
 | RNF-05 | Escrita conservadora: seguir a seção 4.1 (ASCII com referências numéricas, sem declaração XML, sem DOCTYPE, números no formato Java). |
-| RNF-06 | Interface em português, com opção de inglês, como o TerraER (`Labels_pt` / `Labels_en`). |
+| RNF-06 | Interface em português, com opção de inglês, como o TerraER (`Labels_pt` / `Labels_en`). A troca de idioma vale ao reabrir o programa, que avisa disso; os nomes padrão dos elementos novos seguem o idioma; o manual também tem versão em inglês (decisões do autor em 2026-10-22). |
 | RNF-07 | **Plataforma da v1:** Linux com Wayland, que é onde o HaradaER é desenvolvido e testado, com **Python 3.14** e **PySide6 6.12** (as versões verificadas). Outras versões do Python, Windows, macOS e Linux com X11 não são alvo da v1: o código não deve impedi-los (nada específico de Linux fora de `gui`), mas não são verificados. |
 | RNF-08 | Arquitetura em camadas: um **núcleo** (modelo, leitura/escrita do `.xml`, validação e, no futuro, DDL) que não importa nada de interface gráfica, e uma interface gráfica fina por cima. Isso permite testar a compatibilidade (seção 7) sem tela. Uma CLI é opcional e fica fora da v1 salvo decisão contrária. |
 | RNF-09 | A interface gráfica usa **Qt**, o mesmo sistema do Octave, via **PySide6** (LGPL; funcionou no teste de gestos, Qt 6.12.0). Organização de janela como a do Octave: painéis acopláveis, redimensionáveis e que podem ser ocultados, em volta da área central do diagrama. Painéis previstos: paleta de elementos, inspetor de objetos (RF-16) e mensagens da verificação do modelo (RF-09). A disposição dos painéis é lembrada entre sessões. Lista de painéis confirmada pelo autor. |
@@ -298,10 +298,10 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 | QA-08 | Modo de Edição Rápida | **Investigada** (inferida do bytecode); adiado para depois da v1 (RF-20) |
 | QA-09 | Instrução SQL | **Resolvida.** Só no atributo derivado, gravada em `sql`; leitura e gravação na v1, edição adiada |
 | QA-10 | Licença do TerraER | Informada pelo autor (GPLv3); não verificável no `.jar` |
-| QA-11 | Gestos no Windows, macOS e X11; ctrl + rolagem | **Fora da v1 (decisão do autor):** a v1 considera só esta máquina (Linux/Wayland). Ctrl + rolagem como atalho de zoom não foi exercitado; implementar e testar aqui no M3 |
+| QA-11 | Gestos no Windows, macOS e X11; ctrl + rolagem | **Fora da v1 (decisão do autor):** a v1 considera só esta máquina (Linux/Wayland). Ctrl + rolagem como atalho de zoom está implementado (`gui/view.py`) |
 | QA-12 | Versão mínima do Python e do PySide6 | **Decidida (autor):** a v1 mira só Python 3.14 e PySide6 6.12, as versões instaladas e verificadas nesta máquina. Não haverá piso em Python 3.11; versões mais antigas ficam sem suporte declarado |
-| QA-13 | Copiar e colar com o TerraER | **Resolvida (decisão do autor):** na v1 só o arquivo é compatível; a área de transferência do TerraER fica fora do escopo |
-| QA-14 | GIF | **Resolvida (decisão do autor):** exportar PNG, JPG, SVG e PDF; sem GIF |
+| QA-13 | Copiar e colar com o TerraER | **Descartada (decisão do autor em 2026-10-22):** só o arquivo é compatível; a área de transferência do TerraER não será feita |
+| QA-14 | GIF | **Descartada (decisão do autor em 2026-10-22):** exportar PNG, JPG, SVG e PDF; o PNG cobre a necessidade |
 
 ## 9. Material de referência
 
@@ -321,7 +321,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 
 ## 10. Estado da v1 (revisão de 2026-10-20)
 
-Conferência de cada requisito com o programa e os testes (414 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a opção de inglês (RNF-06) e os painéis de paleta e mensagens (RNF-09).
+Conferência de cada requisito com o programa e os testes (470 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
 
 **Requisitos funcionais**
 
@@ -340,7 +340,7 @@ Conferência de cada requisito com o programa e os testes (414 testes automátic
 | RF-11 | Pronto | PNG, JPG, SVG, PDF e copiar como imagem (M5d) |
 | RF-12 | Pronto | Figuras de apoio regravadas iguais (testes de ida e volta) |
 | RF-13 | Fora da v1 | DDL |
-| RF-14 | Fora da v1 | Impressão |
+| RF-14 | Descartado | Impressão (decisão do autor em 2026-10-22) |
 | RF-15 | Pronto | Pinça e rolagem com dois dedos, testados pelo autor no Linux/Wayland (M3) |
 | RF-16 | Pronto | Inspetor de objetos (M5c) |
 | RF-17 | Pronto | Pergunta ao fechar; mensagens claras ao não conseguir gravar (M4, M5a) |
@@ -356,13 +356,13 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 |---|---|---|
 | RNF-01 | Pronto | Ida e volta idêntica byte a byte com as amostras do TerraER; arquivos criados no HaradaER regravados pelo TerraER sem mudar o modelo (`criados-no-haradaer/`) |
 | RNF-02, 03, 04, 05 | Pronto | Leitura e gravação (M1) |
-| RNF-06 | **Fora da v1 (decisão do autor)** | A interface está só em português; a opção de inglês fica para depois |
+| RNF-06 | **Em andamento** | Trazido de volta para a v1 em 2026-10-22: catálogo pt/en, troca ao reabrir, manual em inglês |
 | RNF-07 | Pronto | Python 3.14, PySide6 6.12, Linux/Wayland |
 | RNF-08 | Pronto | Núcleo sem Qt, conferido por teste |
 | RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois a paleta como painel (hoje é uma faixa de ferramentas fixa) |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
-| RNF-12 | Pronto | 414 testes, sem tela |
+| RNF-12 | Pronto | 470 testes, sem tela |
 | RNF-13 | Pronto | Nada copiado do `.jar` |
 | RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
 

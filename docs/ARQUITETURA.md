@@ -55,23 +55,25 @@ HaradaER/
 │   │   ├── model/        # Element (árvore com identidade), Document
 │   │   ├── xmlfmt/       # reader, writer, escape, numbers (formato exato do TerraER)
 │   │   ├── figures/      # tags (tabelas), types (NodeFigure...), validation
-│   │   ├── commands/     # Command, History e os comandos de edição
-│   │   ├── rules/        # matriz de validação, recomendação de conexão
-│   │   ├── ddl/          # (pós-v1) ErView, esquema relacional, gerador SQL
+│   │   ├── commands/     # Command, History, comandos de edição, copiar e colar
+│   │   ├── rules/        # matriz de validação, recomendação de conexão, avisos de estrutura
+│   │   ├── erview.py     # dono de cada atributo (inspetor)
 │   │   └── geometry.py   # pontos, retângulos, conectores (interseção com a borda)
 │   ├── gui/
 │   │   ├── app.py        # QApplication, lista de janelas, arquivos recentes
 │   │   ├── window.py     # DocumentWindow
+│   │   ├── editor.py     # Editor: Document + History + medida de texto
 │   │   ├── scene/        # DiagramScene e itens gráficos por tipo de figura
-│   │   ├── view.py       # DiagramView: zoom, rolagem, gestos
-│   │   ├── tools/        # selecionar, criar nó, conectar, editar texto
-│   │   ├── docks/        # paleta, inspetor de objetos, mensagens
-│   │   └── i18n/         # catálogos pt e en
+│   │   ├── view.py       # DiagramView: zoom, rolagem, gestos, ferramentas
+│   │   ├── inline_edit.py # campo de nome sobre o elemento
+│   │   ├── inspector.py, properties.py, messages.py # painéis acopláveis
+│   │   ├── verification.py # marcas vermelhas e laranja
+│   │   ├── tool_strip.py, tool_icons.py, palette.py # barra de ferramentas
+│   │   └── export.py, settings.py, theme.py, qt_utils.py
 │   └── __main__.py       # python -m haradaer
 ├── tests/
 │   ├── core/             # sem tela
-│   ├── gui/              # pytest-qt, modo offscreen
-│   └── fixtures/         # cópias dos golden files e da matriz de validação
+│   └── gui/              # pytest-qt, modo offscreen
 └── docs/
 ```
 
@@ -394,7 +396,7 @@ Cada marco termina com algo que roda e passa em testes.
 
 | Marco | Entrega | Pronto quando |
 |---|---|---|
-| M0 | Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
+| M0 | **Concluído.** Esqueleto: `pyproject.toml` (Python 3.14, PySide6 6.12), pacotes, `pytest`, teste "núcleo sem Qt" | Os testes rodam vazios e passam |
 | M1 | **Concluído.** `xmlfmt` e `figures`: ler e gravar as amostras | Critério 1 passa para 8 amostras (ida e volta idêntica byte a byte ao TerraER); 83 testes |
 | M2 | **Concluído.** `rules`: validação e recomendação | Tabela confere par a par com o TerraER; 22 conexões dos arquivos de referência conferem; 109 testes |
 | M3 | **Concluído.** Interface de leitura: abrir um `.xml` e ver o diagrama, com zoom e gestos | Pinça e rolagem com dois dedos funcionam no Linux/Wayland; as amostras de referência desenham como no TerraER; 167 testes |
@@ -407,7 +409,9 @@ Cada marco termina com algo que roda e passa em testes.
 
 M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do TerraER é o teste mais forte de compatibilidade, e já exercita a parte mais arriscada (geometria e estilo).
 
-## 12. Pendências deste documento
+## 12. Notas de implementação
+
+O que foi decidido em cada marco, além do que as seções anteriores descrevem.
 
 - No M5c:
   - **Inspetor de objetos** (`gui/inspector.py`): árvore com Entidades, Relacionamentos, Generalizações, Atributos sem dono e Conexões. Cada atributo aparece pendurado no dono, calculado das ligações `lcaf` por `core/erview.py` (atributo composto fica dentro do atributo). A seleção anda nos dois sentidos entre a árvore e o desenho.
@@ -432,6 +436,9 @@ M3 vem antes da edição de propósito: ler e desenhar fielmente os arquivos do 
 - Edição da linha das conexões: adicionar, mover e remover vértices, endireitar e reconectar uma ponta (`add_bend_command`, `move_bend_command`, `remove_bend_command`, `straighten_command`, `reconnect_command`; alças em `DiagramView.connection_handles`). Detalhes em `INVESTIGACOES.md`, seção 16.
 - Barra de ferramentas (pedido do autor depois da v1): uma faixa no alto com todas as ferramentas, com ícone e nome curto embaixo (nome completo na dica). O que não cabe se alcança rolando a faixa (dois dedos, roda do mouse ou as setas das pontas, que só aparecem quando falta espaço), em vez do menu "»" do `QToolBar` (`gui/tool_strip.py`). A faixa fica numa barra fixa com nome próprio, que a disposição salva não consegue mover nem quebrar em duas linhas. Os ícones são desenhados pelas mesmas regras do diagrama (`gui/tool_icons.py`), a partir de um elemento ou de uma conexão de verdade, reduzidos; nada vem das imagens do TerraER (RNF-13). Os painéis da direita têm largura mínima de 230.
 - Temas claro, escuro e do sistema (`gui/theme.py`, Exibir › Tema), lembrados entre sessões. O tema do sistema vem do qt6ct: o Qt do PySide6 não tem o plugin do qt6ct que o sistema usa (`QT_QPA_PLATFORMTHEME=qt6ct` não faz efeito nele), então o HaradaER lê `~/.config/qt6ct/qt6ct.conf` e o arquivo de cores apontado por `color_scheme_path` (uma cor por papel, na ordem de `QPalette.ColorRole`), e vigia esses arquivos para acompanhar a troca de tema. Do tema do sistema saem o fundo do diagrama (Base), a tinta das linhas (Text) e o destaque da seleção (Highlight). Claro e escuro são paletas próprias sobre o Fusion. No escuro, as formas mantêm as cores do TerraER (com texto preto dentro) e só o que fica direto sobre o fundo clareia: linhas e rótulos das conexões, linhas livres e texto solto. O arquivo não muda, e a exportação sai sempre no tema claro.
+
+Pendências (depois da v1):
+
 - Revisar o suporte a outras versões do Python e do PySide6 se um dia for preciso (QA-12).
 - Quando o DDL voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido (`INVESTIGACOES.md` seção 6).
 
