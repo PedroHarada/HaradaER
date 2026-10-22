@@ -78,7 +78,7 @@ jobs:
           mkdir pacote && cp -R dist/HaradaER.app pacote/ && cp packaging/AVISOS-DE-LICENCA.txt pacote/
           python packaging/manual_do_sistema.py macos pacote/PRIMEIROS-PASSOS.txt
           python packaging/manual_do_sistema.py macos pacote/GETTING-STARTED.txt en
-          ditto -c -k --keepParent pacote "$NOME.zip"
+          ditto -c -k pacote "$NOME.zip"  # sem a pasta pacote/ dentro do zip
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.NOME }}
