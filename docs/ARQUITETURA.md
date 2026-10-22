@@ -2,7 +2,7 @@
 
 Versão 0.9 · 2026-10-20 · Rascunho
 
-Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
+Este documento descreve **como** o HaradaER será construído para cumprir `REQUISITOS.md`. Cada decisão aponta o requisito que a motiva. O autor aceitou todas as recomendações das decisões D-01 a D-10 (seção 9) e, em 2026-10-22, a D-11 e as duas exceções à D-09 (seção 5.7). Pontos que dependem dos resultados de `INVESTIGACOES.md` estão sinalizados no texto.
 
 ## 1. Princípios
 
@@ -296,6 +296,7 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 - `N_("...")` marca um texto de tabela criada ao importar (nomes da faixa, avisos, nomes dos passos de desfazer) para ser traduzido só ao mostrar, com `_()`.
 - O idioma é escolhido uma vez, em `gui/app.py` (`choose_language`), antes de criar as janelas: o gravado em Exibir › Idioma ou, na primeira vez, o do sistema (`QLocale`). Trocar no menu grava a escolha e avisa, no idioma novo, que vale ao reabrir. O tradutor `qtbase_pt_BR` dos botões do Qt só é carregado em português.
 - A verificação continua devolvendo códigos (D-09), postos em palavras por `gui/verification.py`. O núcleo usa `_()` em dois lugares: as mensagens de `ArquivoInvalidoError`, que vão direto para a tela, e o nome padrão dos elementos novos (`Entidade` ou `Entity`, `característica` ou `characteristic`), que vai para o arquivo como qualquer nome digitado (RNF-01 não muda).
+- Termos em inglês: os do TerraER (`Labels_en`), exceto "Associative entity" (o TerraER diz "Entity Relationship") e "Multivalued attribute" (o TerraER diz "Multivalue Attribute"), aceitos pelo autor.
 - `tests/test_idioma.py` confere que todo texto marcado tem tradução, que os campos `{...}` e as letras de atalho `&` batem, e procura texto na tela que escapou do `_()`.
 
 ## 6. Fluxos principais
@@ -378,9 +379,9 @@ Estado: **Decidida** = confirmada pelo autor.
 | D-06 | Qt Graphics View para a tela | Pintura manual em `QWidget` | Zoom, seleção e ordem prontos | **Decidida** |
 | D-07 | `History` próprio no núcleo | `QUndoStack` | Núcleo sem Qt e testável | **Decidida** |
 | D-08 | Exportar PNG e JPG, SVG e PDF com Qt; sem GIF | `Pillow` para GIF | Qt não grava GIF; SVG/PDF não exigem dependência extra | **Decidida** |
-| D-09 | Núcleo devolve códigos; a interface traduz | Texto no núcleo | RNF-06 sem acoplar a Qt | **Decidida** |
+| D-09 | Núcleo devolve códigos; a interface traduz | Texto no núcleo | RNF-06 sem acoplar a Qt | **Decidida**; exceções aceitas em 2026-10-22: erros ao abrir arquivo e nome padrão dos elementos (seção 5.7) |
 | D-10 | Tabelas de dados para tags, regras e estilos | Código condicional | Fácil de validar contra o TerraER | **Decidida** |
-| D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (2026-10-22) |
+| D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (aceita pelo autor em 2026-10-22) |
 
 ## 10. Riscos
 
