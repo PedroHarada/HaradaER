@@ -46,6 +46,7 @@ from haradaer.gui.inline_edit import InlineEdit
 from haradaer.gui.qt_utils import qfont
 from haradaer.gui.scene.items import FigureItem, op_bounds
 from haradaer.gui.theme import current_theme
+from haradaer.i18n import N_, _
 
 MIN_ZOOM = 0.05
 MAX_ZOOM = 20.0
@@ -279,7 +280,7 @@ class DiagramView(QGraphicsView):
         painter.setBrush(QColor("white"))
         for quadro in self.handle_rects().values():
             painter.drawRect(quadro)
-        for tipo, _, quadro in self.connection_handles():
+        for tipo, _indice, quadro in self.connection_handles():
             if tipo == "mid":
                 painter.setBrush(current_theme().accent)
                 painter.drawEllipse(quadro)
@@ -339,10 +340,10 @@ class DiagramView(QGraphicsView):
             return
         self._scene.hold_extent(True)
         if tipo == "mid":
-            self.editor.history.begin_macro("Adicionar vértice")
+            self.editor.history.begin_macro(N_("Adicionar vértice"))
             self.editor.add_bend(conexao, indice, (self.snap(pos.x()), self.snap(pos.y())))
         else:
-            self.editor.history.begin_macro("Mover vértice")
+            self.editor.history.begin_macro(N_("Mover vértice"))
         self._bend_drag = (conexao, indice)
 
     def _drag_bend(self, pos: QPointF) -> None:
@@ -416,14 +417,14 @@ class DiagramView(QGraphicsView):
         menu = QMenu(self)
         alca = self._connection_handle_at(pos)
         if alca is not None and alca[0] == "bend":
-            menu.addAction("&Remover vértice", lambda: editor.remove_bend(conexao, alca[1]))
+            menu.addAction(_("&Remover vértice"), lambda: editor.remove_bend(conexao, alca[1]))
         else:
-            trecho, _ = self._on_line(conexao, pos)
+            trecho, _ponto = self._on_line(conexao, pos)
             ponto = (self.snap(pos.x()), self.snap(pos.y()))
             menu.addAction(
-                "&Adicionar vértice aqui", lambda: editor.add_bend(conexao, trecho, ponto)
+                _("&Adicionar vértice aqui"), lambda: editor.add_bend(conexao, trecho, ponto)
             )
-        endireitar = menu.addAction("&Endireitar linha", lambda: editor.straighten(conexao))
+        endireitar = menu.addAction(_("&Endireitar linha"), lambda: editor.straighten(conexao))
         endireitar.setEnabled(len(conexao.points) > 2)
         return menu
 
@@ -450,7 +451,7 @@ class DiagramView(QGraphicsView):
         assert rect is not None
         self._resizing = (no, alca, rect)
         self._scene.hold_extent(True)
-        self.editor.history.begin_macro("Redimensionar")
+        self.editor.history.begin_macro(N_("Redimensionar"))
 
     def _resize_to(self, pos: QPointF) -> None:
         assert self._resizing is not None and self.editor is not None
@@ -654,7 +655,7 @@ class DiagramView(QGraphicsView):
 
     def _create(self, pos: QPointF, *, keep_tool: bool) -> None:
         assert self.editor is not None and self.tool.tag is not None
-        self.editor.history.begin_macro("Criar")  # criar e dar nome é um passo só
+        self.editor.history.begin_macro(N_("Criar"))  # criar e dar nome é um passo só
         self._creating = True
         no = self.editor.create(self.tool.tag, self.snap(pos.x()), self.snap(pos.y()))
         self._scene.select_only(no)
@@ -727,7 +728,9 @@ class DiagramView(QGraphicsView):
             valida = is_valid_connection(self.tool.tag, origem.tag, alvo.tag)
             cor = VALID_COLOR if valida else INVALID_COLOR
             self.message.emit(
-                "" if valida else "Esta conexão não é aceita entre estes elementos (será marcada)."
+                ""
+                if valida
+                else _("Esta conexão não é aceita entre estes elementos (será marcada).")
             )
         pen = QPen(cor, 2, Qt.PenStyle.DashLine)
         pen.setCosmetic(True)

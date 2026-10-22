@@ -1,6 +1,6 @@
 """Textos da verificação e da recomendação (RF-09, RF-10).
 
-O núcleo dá códigos estáveis; quem os põe em português é a interface (D-09).
+O núcleo dá códigos estáveis; quem os põe em palavras, no idioma escolhido, é a interface (D-09).
 """
 
 from __future__ import annotations
@@ -15,29 +15,31 @@ from haradaer.core.rules.structure import (
     WEAK_WITHOUT_IDENTIFYING,
 )
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS
+from haradaer.i18n import N_, _
 
-_NOMES = dict(ELEMENTS) | dict(CONNECTIONS) | {"g": "Grupo", "lcf": "Ligação de atributo"}
+_NOMES = dict(ELEMENTS) | dict(CONNECTIONS) | {"g": N_("Grupo"), "lcf": N_("Ligação de atributo")}
 
 _FALTANDO = {
-    "ambas": "as duas pontas estão soltas",
-    "início": "a ponta de início está solta",
-    "fim": "a ponta de fim está solta",
+    "ambas": N_("as duas pontas estão soltas"),
+    "início": N_("a ponta de início está solta"),
+    "fim": N_("a ponta de fim está solta"),
 }
 
 
 _AVISOS = {
-    NO_KEY: "entidade sem atributo chave",
-    WEAK_WITHOUT_IDENTIFYING: "entidade fraca sem relacionamento identificador",
-    IDENTIFYING_WITHOUT_WEAK: "relacionamento identificador sem entidade fraca",
-    FEW_PARTICIPANTS: "relacionamento com menos de dois participantes"
-    " (no recursivo, ligue a entidade duas vezes)",
-    INCOMPLETE_SPECIALIZATION: "especialização sem superclasse ou sem subclasse",
-    ORPHAN_ATTRIBUTE: "atributo sem ligação de atributo com um dono",
+    NO_KEY: N_("entidade sem atributo chave"),
+    WEAK_WITHOUT_IDENTIFYING: N_("entidade fraca sem relacionamento identificador"),
+    IDENTIFYING_WITHOUT_WEAK: N_("relacionamento identificador sem entidade fraca"),
+    FEW_PARTICIPANTS: N_(
+        "relacionamento com menos de dois participantes (no recursivo, ligue a entidade duas vezes)"
+    ),
+    INCOMPLETE_SPECIALIZATION: N_("especialização sem superclasse ou sem subclasse"),
+    ORPHAN_ATTRIBUTE: N_("atributo sem ligação de atributo com um dono"),
 }
 
 
 def name_of(tag: str) -> str:
-    return _NOMES.get(tag, tag)
+    return _(_NOMES.get(tag, tag))
 
 
 def is_warning(issue: Issue) -> bool:
@@ -48,7 +50,7 @@ def is_warning(issue: Issue) -> bool:
 def issue_text(issue: Issue) -> str:
     """O texto da dica no desenho."""
     if is_warning(issue):
-        return f"Aviso: {_AVISOS[issue.code]}"
+        return _("Aviso: {aviso}").format(aviso=_(_AVISOS[issue.code]))
     return message_text(issue)
 
 
@@ -57,21 +59,26 @@ def message_text(issue: Issue) -> str:
     detalhes = issue.details
     conexao = name_of(detalhes.get("connection", issue.figure.tag))
     if issue.code == INCOMPLETE:
-        return f"{conexao}: {_FALTANDO.get(detalhes.get('missing', ''), 'ponta solta')}"
+        falta = _FALTANDO.get(detalhes.get("missing", ""), N_("ponta solta"))
+        return f"{conexao}: {_(falta)}"
     if issue.code == INVALID_PAIR:
         inicio, fim = name_of(detalhes["start"]), name_of(detalhes["end"])
-        return f"{conexao} não é aceita entre {inicio} e {fim}"
+        return _("{conexao} não é aceita entre {inicio} e {fim}").format(
+            conexao=conexao, inicio=inicio, fim=fim
+        )
     if is_warning(issue):
-        return _AVISOS[issue.code]
+        return _(_AVISOS[issue.code])
     return conexao
 
 
 def _contagem(n: int, singular: str, plural: str) -> str:
-    return f"{n} {singular if n == 1 else plural}"
+    return f"{n} {_(singular) if n == 1 else _(plural)}"
 
 
 def _lista(nomes: list[str]) -> str:
-    return nomes[0] if len(nomes) == 1 else f"{', '.join(nomes[:-1])} e {nomes[-1]}"
+    if len(nomes) == 1:
+        return nomes[0]
+    return _("{primeiros} e {ultimo}").format(primeiros=", ".join(nomes[:-1]), ultimo=nomes[-1])
 
 
 def summary_text(problemas: list[Issue], avisos: list[Issue], nome) -> str:
@@ -84,14 +91,14 @@ def summary_text(problemas: list[Issue], avisos: list[Issue], nome) -> str:
         return ""
     if not problemas and len(avisos) <= 3 and len({a.code for a in avisos}) == 1:
         nomes = _lista([nome(a.figure) for a in avisos])
-        contagem = _contagem(len(avisos), "aviso", "avisos")
-        return f"{contagem} de estrutura: {nomes} ({_AVISOS[avisos[0].code]})"
+        contagem = _contagem(len(avisos), N_("aviso de estrutura"), N_("avisos de estrutura"))
+        return f"{contagem}: {nomes} ({_(_AVISOS[avisos[0].code])})"
     partes = []
     if problemas:
-        partes.append(_contagem(len(problemas), "erro de conexão", "erros de conexão"))
+        partes.append(_contagem(len(problemas), N_("erro de conexão"), N_("erros de conexão")))
     if avisos:
-        partes.append(_contagem(len(avisos), "aviso de estrutura", "avisos de estrutura"))
-    return f"{' e '.join(partes)} (veja o painel Mensagens)"
+        partes.append(_contagem(len(avisos), N_("aviso de estrutura"), N_("avisos de estrutura")))
+    return _("{partes} (veja o painel Mensagens)").format(partes=_(" e ").join(partes))
 
 
 def pairs_text(pares: list[tuple[str, str]]) -> str:

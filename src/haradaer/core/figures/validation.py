@@ -9,15 +9,16 @@ from __future__ import annotations
 from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.figures.tags import CONTAINERS_OF_OBJECTS, KNOWN_OBJECT_TAGS
 from haradaer.core.model.element import Element
+from haradaer.i18n import _
 
 
 def validate_structure(raiz: Element) -> None:
     if raiz.tag != "drawing":
         raise ArquivoInvalidoError(
-            f"o elemento raiz deve ser <drawing>, mas é <{raiz.tag}>", raiz.line
+            _("o elemento raiz deve ser <drawing>, mas é <{tag}>").format(tag=raiz.tag), raiz.line
         )
     if raiz.child("figures") is None:
-        raise ArquivoInvalidoError("o desenho não tem o elemento <figures>", raiz.line)
+        raise ArquivoInvalidoError(_("o desenho não tem o elemento <figures>"), raiz.line)
 
     for elemento in raiz.walk():
         if elemento.tag not in CONTAINERS_OF_OBJECTS:
@@ -25,7 +26,9 @@ def validate_structure(raiz: Element) -> None:
         for filho in elemento.children:
             if filho.tag not in KNOWN_OBJECT_TAGS:
                 raise ArquivoInvalidoError(
-                    f"tag desconhecida <{filho.tag}> dentro de <{elemento.tag}>: "
-                    "o TerraER também não abre arquivos com essa tag",
+                    _(
+                        "tag desconhecida <{tag}> dentro de <{pai}>: "
+                        "o TerraER também não abre arquivos com essa tag"
+                    ).format(tag=filho.tag, pai=elemento.tag),
                     filho.line,
                 )

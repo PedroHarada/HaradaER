@@ -1,7 +1,8 @@
-"""Tira de `docs/PRIMEIROS-PASSOS.md` o manual de um sistema só, para ir dentro do pacote dele.
+"""Tira do manual o de um sistema só, para ir dentro do pacote dele.
 
-    python packaging/manual_do_sistema.py linux|windows|macos SAIDA.txt
+    python packaging/manual_do_sistema.py linux|windows|macos SAIDA.txt [pt|en]
 
+O idioma é `pt` (`docs/PRIMEIROS-PASSOS.md`) se não for dito; `en` usa `docs/GETTING-STARTED.md`.
 Fica a introdução (com a linha da tabela só daquele sistema), a seção do sistema e "Depois de
 abrir". As seções do manual são separadas por `---`; cada uma começa com `## <Sistema>`.
 """
@@ -11,10 +12,44 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
-MANUAL = Path(__file__).resolve().parent.parent / "docs" / "PRIMEIROS-PASSOS.md"
+DOCS = Path(__file__).resolve().parent.parent / "docs"
 SISTEMAS = {"linux": "Linux", "windows": "Windows", "macos": "macOS"}
-DEPOIS = "Depois de abrir"
+
+
+class Idioma(NamedTuple):
+    manual: Path
+    depois: str  # título da última seção, igual em todos os sistemas
+    cada_sistema: str  # trecho da introdução que vira "no <sistema>"
+    no_sistema: str
+    teclas: str  # trecho com as duas teclas, que fica só com a do sistema
+    ctrl: str
+    cmd: str
+
+
+IDIOMAS = {
+    "pt": Idioma(
+        DOCS / "PRIMEIROS-PASSOS.md",
+        "Depois de abrir",
+        "abrir e instalar o HaradaER em cada sistema",
+        "abrir e instalar o HaradaER no {nome}",
+        "Ctrl + clique; no Mac, Cmd + clique",
+        "Ctrl + clique",
+        "Cmd + clique",
+    ),
+    "en": Idioma(
+        DOCS / "GETTING-STARTED.md",
+        "After opening",
+        "open and install HaradaER on each system",
+        "open and install HaradaER on {nome}",
+        "Ctrl-click; on a Mac, Cmd-click",
+        "Ctrl-click",
+        "Cmd-click",
+    ),
+}
+MANUAL = IDIOMAS["pt"].manual
+DEPOIS = IDIOMAS["pt"].depois
 
 
 def _titulo(secao: str) -> str:
@@ -29,13 +64,8 @@ def _sem_links(texto: str) -> str:
     return re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", "\n".join(linhas)).rstrip("\n")
 
 
-def _teclas(texto: str, sistema: str) -> str:
-    """Só a tecla do próprio sistema: Cmd no Mac, Ctrl nos outros."""
-    tecla = "Cmd + clique" if sistema == "macos" else "Ctrl + clique"
-    return texto.replace("Ctrl + clique; no Mac, Cmd + clique", tecla)
-
-
-def manual_de(sistema: str, texto: str) -> str:
+def manual_de(sistema: str, texto: str, idioma: str = "pt") -> str:
+    config = IDIOMAS[idioma]
     nome = SISTEMAS[sistema]
     secoes = [s.strip("\n") for s in re.split(r"^---$", texto, flags=re.MULTILINE)]
     introducao, resto = secoes[0], secoes[1:]
@@ -44,21 +74,23 @@ def manual_de(sistema: str, texto: str) -> str:
         for linha in introducao.splitlines()
         if not linha.startswith("| [") or linha.startswith(f"| [{nome}]")
     ]
-    introducao = "\n".join(linhas).replace(
-        "abrir e instalar o HaradaER em cada sistema", f"abrir e instalar o HaradaER no {nome}"
-    )
-    proprias = [s for s in resto if _titulo(s) in (nome, DEPOIS)]
-    if [_titulo(s) for s in proprias] != [nome, DEPOIS]:
-        raise ValueError(f"o manual não tem as seções '{nome}' e '{DEPOIS}'")
+    introducao = "\n".join(linhas).replace(config.cada_sistema, config.no_sistema.format(nome=nome))
+    proprias = [s for s in resto if _titulo(s) in (nome, config.depois)]
+    if [_titulo(s) for s in proprias] != [nome, config.depois]:
+        raise ValueError(f"o manual não tem as seções '{nome}' e '{config.depois}'")
     juntas = "\n\n---\n\n".join([introducao, *proprias])
-    return _teclas(_sem_links(juntas), sistema) + "\n"
+    # Só a tecla do próprio sistema: Cmd no Mac, Ctrl nos outros.
+    tecla = config.cmd if sistema == "macos" else config.ctrl
+    return _sem_links(juntas).replace(config.teclas, tecla) + "\n"
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 3 or argv[1] not in SISTEMAS:
+    idioma = argv[3] if len(argv) == 4 else "pt"
+    if len(argv) not in (3, 4) or argv[1] not in SISTEMAS or idioma not in IDIOMAS:
         print(__doc__, file=sys.stderr)
         return 2
-    Path(argv[2]).write_text(manual_de(argv[1], MANUAL.read_text(encoding="utf-8")), "utf-8")
+    texto = IDIOMAS[idioma].manual.read_text(encoding="utf-8")
+    Path(argv[2]).write_text(manual_de(argv[1], texto, idioma), "utf-8")
     return 0
 
 

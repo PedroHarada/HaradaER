@@ -59,6 +59,7 @@ jobs:
           mkdir pacote && cp dist/HaradaER pacote/HaradaER && chmod +x pacote/HaradaER
           cp packaging/AVISOS-DE-LICENCA.txt packaging/linux/* src/haradaer/resources/haradaer.svg pacote/
           python packaging/manual_do_sistema.py linux pacote/PRIMEIROS-PASSOS.txt
+          python packaging/manual_do_sistema.py linux pacote/GETTING-STARTED.txt en
           chmod +x pacote/instalar.sh
           tar -czf "$NOME.tar.gz" -C pacote .
       - name: Empacotar (Windows)
@@ -69,12 +70,14 @@ jobs:
           Copy-Item dist/HaradaER.exe pacote/HaradaER.exe
           Copy-Item packaging/AVISOS-DE-LICENCA.txt pacote/
           python packaging/manual_do_sistema.py windows pacote/PRIMEIROS-PASSOS.txt
+          python packaging/manual_do_sistema.py windows pacote/GETTING-STARTED.txt en
           Compress-Archive -Path pacote/* -DestinationPath "$env:NOME.zip"
       - name: Empacotar (macOS)
         if: matrix.sistema == 'macos'
         run: |
           mkdir pacote && cp -R dist/HaradaER.app pacote/ && cp packaging/AVISOS-DE-LICENCA.txt pacote/
           python packaging/manual_do_sistema.py macos pacote/PRIMEIROS-PASSOS.txt
+          python packaging/manual_do_sistema.py macos pacote/GETTING-STARTED.txt en
           ditto -c -k --keepParent pacote "$NOME.zip"
       - uses: actions/upload-artifact@v7
         with:

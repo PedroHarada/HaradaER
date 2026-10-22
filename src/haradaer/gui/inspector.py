@@ -16,19 +16,20 @@ from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
 from haradaer.core.model.element import Element
 from haradaer.gui.verification import name_of
+from haradaer.i18n import N_, _
 
 CATEGORIES = [
-    ("Entidades", ("ent", "entfraca", "entrel")),
-    ("Relacionamentos", ("rel", "relfraco")),
-    ("Generalizações", ("uniao", "disjuncao", "sobreposicao")),
-    ("Atributos sem dono", tuple(sorted(ATTRIBUTE_TAGS))),
+    (N_("Entidades"), ("ent", "entfraca", "entrel")),
+    (N_("Relacionamentos"), ("rel", "relfraco")),
+    (N_("Generalizações"), ("uniao", "disjuncao", "sobreposicao")),
+    (N_("Atributos sem dono"), tuple(sorted(ATTRIBUTE_TAGS))),
 ]
-NO_NAME = "(sem nome)"
+NO_NAME = N_("(sem nome)")
 
 
 def display_name(figura: Element) -> str:
     if isinstance(figura, NodeFigure):
-        return figura.name or NO_NAME
+        return figura.name or _(NO_NAME)
     if isinstance(figura, ConnectionFigure):
         inicio = display_name(figura.start) if figura.start is not None else "?"
         fim = display_name(figura.end) if figura.end is not None else "?"
@@ -43,12 +44,12 @@ class ObjectInspector(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.search = QLineEdit()
-        self.search.setPlaceholderText("Localizar elemento...")
+        self.search.setPlaceholderText(_("Localizar elemento..."))
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self._apply_filter)
         self.search.returnPressed.connect(self._locate_first)
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Nome", "Tipo"])
+        self.tree.setHeaderLabels([_("Nome"), _("Tipo")])
         self.tree.setSelectionMode(QTreeWidget.SelectionMode.ExtendedSelection)
         self.tree.itemSelectionChanged.connect(self._tree_selection_changed)
         self.tree.itemActivated.connect(self._item_activated)
@@ -85,9 +86,9 @@ class ObjectInspector(QWidget):
             self._add_category(titulo, grupo, filhos)
         # Atributos que só pendem uns dos outros (ciclo) não teriam onde aparecer.
         soltos = [f for f in nos if id(f) not in self._items]
-        self._add_category("Outros", soltos, {})
+        self._add_category(N_("Outros"), soltos, {})
         conexoes = [f for f in documento.figures if isinstance(f, ConnectionFigure)]
-        self._add_category("Conexões", conexoes, {})
+        self._add_category(N_("Conexões"), conexoes, {})
         self.tree.expandAll()
         self.tree.resizeColumnToContents(0)
         self._syncing = False
@@ -99,7 +100,7 @@ class ObjectInspector(QWidget):
     ) -> None:
         if not figuras:
             return
-        categoria = QTreeWidgetItem([titulo])
+        categoria = QTreeWidgetItem([_(titulo)])
         categoria.setFlags(Qt.ItemFlag.ItemIsEnabled)
         fonte = categoria.font(0)
         fonte.setBold(True)
@@ -155,7 +156,9 @@ class ObjectInspector(QWidget):
         for i in range(self.tree.topLevelItemCount()):
             achados += self._filter(self.tree.topLevelItem(i), procurado, categoria=True)
         if procurado:
-            self.status.setText("Nada encontrado" if achados == 0 else f"{achados} encontrado(s)")
+            self.status.setText(
+                _("Nada encontrado") if achados == 0 else _("{n} encontrado(s)").format(n=achados)
+            )
         else:
             self.status.setText("")
 

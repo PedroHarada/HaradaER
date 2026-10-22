@@ -46,6 +46,8 @@ from haradaer.gui.scene.items import WARNING_COLOR
 from haradaer.gui.settings import (
     RecentFiles,
     save_window_layout,
+    saved_language,
+    set_saved_language,
     set_structure_warnings_enabled,
     structure_warnings_enabled,
     window_layout,
@@ -61,39 +63,40 @@ from haradaer.gui.tool_icons import (
 from haradaer.gui.tool_strip import ToolStrip
 from haradaer.gui.verification import name_of, pairs_text, summary_text
 from haradaer.gui.view import SELECT, DiagramView, Tool
+from haradaer.i18n import LANGUAGES, N_, _, language, translate
 
 TITLE = "HaradaER"
 DOCK_MIN_WIDTH = 230
 CLIPBOARD_MIME = "application/x-haradaer-figuras"  # pedaço de arquivo no formato do TerraER
-UNTITLED = "Sem título"
+UNTITLED = N_("Sem título")
 
 ALIGN_NAMES = [
-    ("left", "À &esquerda"),
-    ("center", "Centro &horizontal"),
-    ("right", "À &direita"),
-    ("top", "No &topo"),
-    ("middle", "Centro &vertical"),
-    ("bottom", "Na &base"),
+    ("left", N_("À &esquerda")),
+    ("center", N_("Centro &horizontal")),
+    ("right", N_("À &direita")),
+    ("top", N_("No &topo")),
+    ("middle", N_("Centro &vertical")),
+    ("bottom", N_("Na &base")),
 ]
 
 _SAVE_ERRORS = {
-    errno.ENOSPC: "Não há espaço livre no disco.",
-    errno.EROFS: "O disco é somente leitura.",
+    errno.ENOSPC: N_("Não há espaço livre no disco."),
+    errno.EROFS: N_("O disco é somente leitura."),
 }
 
 
 def save_error_text(erro: OSError) -> str:
-    """Explica em português por que a gravação falhou (RF-17); o detalhe técnico vai embaixo."""
+    """Explica no idioma da interface por que a gravação falhou (RF-17); o detalhe vai embaixo."""
     if isinstance(erro, PermissionError):
-        motivo = "Sem permissão para gravar neste local."
+        motivo = _("Sem permissão para gravar neste local.")
     elif isinstance(erro, IsADirectoryError):
-        motivo = "Já existe uma pasta com esse nome."
+        motivo = _("Já existe uma pasta com esse nome.")
     elif isinstance(erro, FileNotFoundError):
-        motivo = "A pasta de destino não existe."
+        motivo = _("A pasta de destino não existe.")
     else:
-        motivo = _SAVE_ERRORS.get(erro.errno, "Ocorreu um erro ao gravar o arquivo.")
+        motivo = _(_SAVE_ERRORS.get(erro.errno, N_("Ocorreu um erro ao gravar o arquivo.")))
     detalhe = erro.strerror or str(erro)
-    return f"{motivo}\n\nDetalhe: {detalhe}"
+    return _("{motivo}\n\nDetalhe: {detalhe}").format(motivo=motivo, detalhe=detalhe)
 
 
 class DocumentWindow(QMainWindow):
@@ -144,88 +147,92 @@ class DocumentWindow(QMainWindow):
         return acao
 
     def _build_menus(self) -> None:
-        arquivo = self.menuBar().addMenu("&Arquivo")
+        arquivo = self.menuBar().addMenu(_("&Arquivo"))
         self.action_new = self._action(
-            "&Novo", QKeySequence.StandardKey.New, self.new_requested.emit
+            _("&Novo"), QKeySequence.StandardKey.New, self.new_requested.emit
         )
         self.action_open = self._action(
-            "&Abrir...", QKeySequence.StandardKey.Open, self.open_requested.emit
+            _("&Abrir..."), QKeySequence.StandardKey.Open, self.open_requested.emit
         )
-        self.action_save = self._action("&Salvar", QKeySequence.StandardKey.Save, self.save)
+        self.action_save = self._action(_("&Salvar"), QKeySequence.StandardKey.Save, self.save)
         self.action_save_as = self._action(
-            "Salvar &como...", QKeySequence.StandardKey.SaveAs, self.save_as
+            _("Salvar &como..."), QKeySequence.StandardKey.SaveAs, self.save_as
         )
-        self.action_close = self._action("&Fechar", QKeySequence.StandardKey.Close, self.close)
-        self.action_quit = self._action("&Sair", QKeySequence.StandardKey.Quit, self._quit)
+        self.action_close = self._action(_("&Fechar"), QKeySequence.StandardKey.Close, self.close)
+        self.action_quit = self._action(_("&Sair"), QKeySequence.StandardKey.Quit, self._quit)
         arquivo.addActions([self.action_new, self.action_open])
-        self.recent_menu = arquivo.addMenu("Abrir &recente")
+        self.recent_menu = arquivo.addMenu(_("Abrir &recente"))
         self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
         arquivo.addSeparator()
         arquivo.addActions([self.action_save, self.action_save_as])
         arquivo.addSeparator()
-        self.action_export = self._action("&Exportar desenho...", "Ctrl+E", self.export)
+        self.action_export = self._action(_("&Exportar desenho..."), "Ctrl+E", self.export)
         arquivo.addAction(self.action_export)
         arquivo.addSeparator()
         arquivo.addActions([self.action_close, self.action_quit])
 
-        editar = self.menuBar().addMenu("&Editar")
-        self.action_undo = self._action("&Desfazer", QKeySequence.StandardKey.Undo, self._undo)
-        self.action_redo = self._action("&Refazer", QKeySequence.StandardKey.Redo, self._redo)
-        self.action_delete = self._action("E&xcluir", QKeySequence.StandardKey.Delete, self._delete)
+        editar = self.menuBar().addMenu(_("&Editar"))
+        self.action_undo = self._action(_("&Desfazer"), QKeySequence.StandardKey.Undo, self._undo)
+        self.action_redo = self._action(_("&Refazer"), QKeySequence.StandardKey.Redo, self._redo)
+        self.action_delete = self._action(
+            _("E&xcluir"), QKeySequence.StandardKey.Delete, self._delete
+        )
         editar.addActions([self.action_undo, self.action_redo])
         editar.addSeparator()
-        self.action_cut = self._action("Recor&tar", QKeySequence.StandardKey.Cut, self.cut)
-        self.action_copy = self._action("&Copiar", QKeySequence.StandardKey.Copy, self.copy)
-        self.action_paste = self._action("C&olar", QKeySequence.StandardKey.Paste, self.paste)
-        self.action_duplicate = self._action("D&uplicar", "Ctrl+D", self.duplicate)
+        self.action_cut = self._action(_("Recor&tar"), QKeySequence.StandardKey.Cut, self.cut)
+        self.action_copy = self._action(_("&Copiar"), QKeySequence.StandardKey.Copy, self.copy)
+        self.action_paste = self._action(_("C&olar"), QKeySequence.StandardKey.Paste, self.paste)
+        self.action_duplicate = self._action(_("D&uplicar"), "Ctrl+D", self.duplicate)
         editar.addActions([self.action_cut, self.action_copy, self.action_paste])
         editar.addAction(self.action_duplicate)
         editar.addSeparator()
         editar.addAction(self.action_delete)
         editar.addSeparator()
         self.action_select_all = self._action(
-            "Selecionar &tudo", QKeySequence.StandardKey.SelectAll, self._select_all
+            _("Selecionar &tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
         )
         self.action_select_same = self._action(
-            "Selecionar do &mesmo tipo", "Ctrl+Shift+A", self._select_same_kind
+            _("Selecionar do &mesmo tipo"), "Ctrl+Shift+A", self._select_same_kind
         )
         editar.addActions([self.action_select_all, self.action_select_same])
         editar.addSeparator()
-        self.action_find = self._action("&Localizar...", QKeySequence.StandardKey.Find, self._find)
+        self.action_find = self._action(
+            _("&Localizar..."), QKeySequence.StandardKey.Find, self._find
+        )
         editar.addAction(self.action_find)
         editar.addSeparator()
         self.action_copy_image = self._action(
-            "Copiar como &imagem", "Ctrl+Shift+C", self.copy_image
+            _("Copiar como &imagem"), "Ctrl+Shift+C", self.copy_image
         )
         editar.addAction(self.action_copy_image)
 
-        organizar = self.menuBar().addMenu("&Organizar")
-        self.action_front = self._action("&Trazer para a frente", "Ctrl+]", self._bring_to_front)
-        self.action_back = self._action("&Enviar para trás", "Ctrl+[", self._send_to_back)
+        organizar = self.menuBar().addMenu(_("&Organizar"))
+        self.action_front = self._action(_("&Trazer para a frente"), "Ctrl+]", self._bring_to_front)
+        self.action_back = self._action(_("&Enviar para trás"), "Ctrl+[", self._send_to_back)
         organizar.addActions([self.action_front, self.action_back])
         organizar.addSeparator()
-        self.action_group = self._action("A&grupar", "Ctrl+G", self.group)
-        self.action_ungroup = self._action("&Desagrupar", "Ctrl+Shift+G", self.ungroup)
+        self.action_group = self._action(_("A&grupar"), "Ctrl+G", self.group)
+        self.action_ungroup = self._action(_("&Desagrupar"), "Ctrl+Shift+G", self.ungroup)
         organizar.addActions([self.action_group, self.action_ungroup])
         organizar.addSeparator()
-        alinhar = organizar.addMenu("&Alinhar")
+        alinhar = organizar.addMenu(_("&Alinhar"))
         self.align_actions: dict[str, QAction] = {}
         for modo, texto in ALIGN_NAMES:
-            acao = self._action(texto, None, lambda _=False, m=modo: self._align(m))
+            acao = self._action(_(texto), None, lambda _x=False, m=modo: self._align(m))
             self.align_actions[modo] = acao
             alinhar.addAction(acao)
             if modo == "right":
                 alinhar.addSeparator()
 
-        exibir = self.menuBar().addMenu("E&xibir")
+        exibir = self.menuBar().addMenu(_("E&xibir"))
         self.action_zoom_in = self._action(
-            "&Ampliar", QKeySequence.StandardKey.ZoomIn, self.view.zoom_in
+            _("&Ampliar"), QKeySequence.StandardKey.ZoomIn, self.view.zoom_in
         )
         self.action_zoom_out = self._action(
-            "&Reduzir", QKeySequence.StandardKey.ZoomOut, self.view.zoom_out
+            _("&Reduzir"), QKeySequence.StandardKey.ZoomOut, self.view.zoom_out
         )
-        self.action_zoom_actual = self._action("&Tamanho real", "Ctrl+0", self.view.zoom_actual)
-        self.action_zoom_fit = self._action("A&justar à janela", "Ctrl+9", self.view.zoom_fit)
+        self.action_zoom_actual = self._action(_("&Tamanho real"), "Ctrl+0", self.view.zoom_actual)
+        self.action_zoom_fit = self._action(_("A&justar à janela"), "Ctrl+9", self.view.zoom_fit)
         exibir.addActions(
             [
                 self.action_zoom_in,
@@ -235,29 +242,31 @@ class DocumentWindow(QMainWindow):
             ]
         )
         exibir.addSeparator()
-        self.action_validate = QAction("&Verificar modelo", self)
+        self.action_validate = QAction(_("&Verificar modelo"), self)
         self.action_validate.setCheckable(True)
         self.action_validate.setChecked(True)
         self.action_validate.toggled.connect(self._refresh_issues)
-        self.action_structure = QAction("&Avisos de estrutura", self)
+        self.action_structure = QAction(_("&Avisos de estrutura"), self)
         self.action_structure.setCheckable(True)
         self.action_structure.setChecked(structure_warnings_enabled())
         self.action_structure.setToolTip(
-            "Laranja: o que a teoria do modelo ER pede além das ligações (entidade sem chave,"
-            " relacionamento com um participante só...)"
+            _(
+                "Laranja: o que a teoria do modelo ER pede além das ligações (entidade sem chave,"
+                " relacionamento com um participante só...)"
+            )
         )
         self.action_structure.toggled.connect(self._structure_toggled)
-        self.action_grid = QAction("&Grade", self)
+        self.action_grid = QAction(_("&Grade"), self)
         self.action_grid.setShortcut("Ctrl+'")
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
         exibir.addActions([self.action_validate, self.action_structure, self.action_grid])
-        tema = exibir.addMenu("&Tema")
+        tema = exibir.addMenu(_("&Tema"))
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
         for opcao in available_themes():
             nome = opcao.name
-            acao = QAction(opcao.label, self, checkable=True)
+            acao = QAction(_(opcao.label), self, checkable=True)
             acao.setChecked(nome == current_theme().name)
             # o tema do sistema é relido na hora: o usuário pode tê-lo trocado
             acao.triggered.connect(
@@ -267,6 +276,17 @@ class DocumentWindow(QMainWindow):
             tema.addAction(acao)
             self.theme_actions[nome] = acao
         theme_manager().changed.connect(self._theme_changed)
+        idioma = exibir.addMenu(_("&Idioma"))
+        idiomas = QActionGroup(self)
+        self.language_actions: dict[str, QAction] = {}
+        escolhido = saved_language() or language()
+        for codigo, nome in LANGUAGES.items():
+            acao = QAction(nome, self, checkable=True)  # cada idioma com o próprio nome
+            acao.setChecked(codigo == escolhido)
+            acao.triggered.connect(lambda _x=False, c=codigo: self._language_chosen(c))
+            idiomas.addAction(acao)
+            idioma.addAction(acao)
+            self.language_actions[codigo] = acao
         exibir.addSeparator()
         exibir.addActions(
             [
@@ -281,11 +301,11 @@ class DocumentWindow(QMainWindow):
         self.inspector = ObjectInspector()
         self.inspector.selection_requested.connect(self._select_from_inspector)
         self.inspector.locate_requested.connect(self.locate)
-        self.inspector_dock = QDockWidget("Inspetor de objetos", self)
+        self.inspector_dock = QDockWidget(_("Inspetor de objetos"), self)
         self.inspector_dock.setObjectName("inspetor")
         self.inspector_dock.setWidget(self.inspector)
         self.properties = PropertiesPanel()
-        self.properties_dock = QDockWidget("Propriedades", self)
+        self.properties_dock = QDockWidget(_("Propriedades"), self)
         self.properties_dock.setObjectName("propriedades")
         self.properties_dock.setWidget(self.properties)
         for dock in (self.inspector_dock, self.properties_dock):
@@ -293,7 +313,7 @@ class DocumentWindow(QMainWindow):
             self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
         self.messages = MessagesPanel()
         self.messages.locate_requested.connect(self.locate)
-        self.messages_dock = QDockWidget("Mensagens", self)
+        self.messages_dock = QDockWidget(_("Mensagens"), self)
         self.messages_dock.setObjectName("mensagens")
         self.messages_dock.setWidget(self.messages)
         self.messages_dock.setMinimumWidth(DOCK_MIN_WIDTH)
@@ -310,7 +330,7 @@ class DocumentWindow(QMainWindow):
         Fica dentro de uma barra fixa, com nome novo: uma disposição de janela salva antes não
         consegue mudá-la de lugar nem quebrá-la em duas linhas.
         """
-        barra = QToolBar("Ferramentas", self)
+        barra = QToolBar(_("Ferramentas"), self)
         barra.setObjectName("faixa-ferramentas")
         barra.setMovable(False)
         barra.setFloatable(False)
@@ -323,21 +343,21 @@ class DocumentWindow(QMainWindow):
 
         def adicionar(tool: Tool, texto: str) -> None:
             if tool.kind == "select":
-                icone, curto = select_icon(), "Selecionar"
+                icone, curto = select_icon(), _("Selecionar")
             elif tool.kind == "create":
-                icone, curto = element_icon(tool.tag), SHORT_NAMES[tool.tag]
+                icone, curto = element_icon(tool.tag), _(SHORT_NAMES[tool.tag])
             else:
-                icone, curto = connection_icon(tool.tag), SHORT_NAMES[tool.tag]
+                icone, curto = connection_icon(tool.tag), _(SHORT_NAMES[tool.tag])
             acao = QAction(icone, curto, self)
-            acao.setToolTip(texto)
-            acao.setStatusTip(texto)
+            acao.setToolTip(_(texto))
+            acao.setStatusTip(_(texto))
             acao.setCheckable(True)
             acao.triggered.connect(lambda _=False, t=tool: self._tool_clicked(t))
             grupo.addAction(acao)
             self.tool_strip.add_action(acao)
             self._tool_actions[tool] = acao
 
-        adicionar(SELECT, "Selecionar")
+        adicionar(SELECT, N_("Selecionar"))
         self.tool_strip.add_separator()
         for tag, nome in ELEMENTS:
             adicionar(Tool("create", tag), nome)
@@ -363,7 +383,9 @@ class DocumentWindow(QMainWindow):
         self._tool_actions[tool].setChecked(True)
         self.tool_strip.ensure_visible(self._tool_actions[tool])
         if tool.kind == "connect" and tool.tag != LINE_FREE:
-            self.statusBar().showMessage(f"Liga: {pairs_text(recommend_elements(tool.tag))}")
+            self.statusBar().showMessage(
+                _("Liga: {pares}").format(pares=pairs_text(recommend_elements(tool.tag)))
+            )
         else:
             self.statusBar().clearMessage()
 
@@ -393,10 +415,10 @@ class DocumentWindow(QMainWindow):
         a, b = (name_of(f.tag) for f in par)
         if validos:
             # os nomes escritos nos botões, para achá-los na faixa
-            nomes = ", ".join(SHORT_NAMES[t] for t in RECOMMENDATION_ORDER if t in validos)
-            texto = f"Conexões aceitas entre {a} e {b}: {nomes}"
+            nomes = ", ".join(_(SHORT_NAMES[t]) for t in RECOMMENDATION_ORDER if t in validos)
+            texto = _("Conexões aceitas entre {a} e {b}: {nomes}").format(a=a, b=b, nomes=nomes)
         else:
-            texto = f"Nenhuma conexão aceita entre {a} e {b}"
+            texto = _("Nenhuma conexão aceita entre {a} e {b}").format(a=a, b=b)
         self._recommendation_label.setText(texto)
         self._recommendation_label.show()
 
@@ -448,7 +470,7 @@ class DocumentWindow(QMainWindow):
             documento = io.load(caminho)
         except (ArquivoInvalidoError, OSError) as erro:
             QMessageBox.critical(
-                self, "Não foi possível abrir o arquivo", f"{caminho.name}\n\n{erro}"
+                self, _("Não foi possível abrir o arquivo"), f"{caminho.name}\n\n{erro}"
             )
             return False
         self._attach(documento, caminho)
@@ -465,15 +487,18 @@ class DocumentWindow(QMainWindow):
         invalidos = invalid_attribute_types(self._editor.document)
         if not invalidos:
             return
-        linhas = [f"• {no.name or '(sem nome)'}: {no.attribute_type}" for no in invalidos[:10]]
+        linhas = [f"• {no.name or _('(sem nome)')}: {no.attribute_type}" for no in invalidos[:10]]
         if len(invalidos) > 10:
-            linhas.append(f"... e mais {len(invalidos) - 10}")
+            linhas.append(_("... e mais {n}").format(n=len(invalidos) - 10))
         self._editor.history.execute(fix_attribute_types_command(self._editor.document))
         QMessageBox.warning(
             self,
-            "Tipos de atributo inválidos",
-            "Estes atributos tinham um tipo que o TerraER não reconhece e passaram a usar o tipo "
-            "padrão. O TerraER abriria o arquivo, mas não conseguiria salvá-lo.\n\n"
+            _("Tipos de atributo inválidos"),
+            _(
+                "Estes atributos tinham um tipo que o TerraER não reconhece e passaram a usar o"
+                " tipo padrão. O TerraER abriria o arquivo, mas não conseguiria salvá-lo."
+            )
+            + "\n\n"
             + "\n".join(linhas),
         )
 
@@ -484,9 +509,9 @@ class DocumentWindow(QMainWindow):
         return self._write(self.path)
 
     def save_as(self) -> bool:
-        inicial = str(self.path) if self.path else f"{UNTITLED}.xml"
-        nome, _ = QFileDialog.getSaveFileName(
-            self, "Salvar modelo", inicial, "Modelos do TerraER (*.xml)"
+        inicial = str(self.path) if self.path else f"{_(UNTITLED)}.xml"
+        nome, _filtro = QFileDialog.getSaveFileName(
+            self, _("Salvar modelo"), inicial, _("Modelos do TerraER (*.xml)")
         )
         if not nome:
             return False
@@ -501,14 +526,14 @@ class DocumentWindow(QMainWindow):
         except OSError as erro:
             QMessageBox.critical(
                 self,
-                "Não foi possível salvar o arquivo",
+                _("Não foi possível salvar o arquivo"),
                 f"{caminho.name}\n\n{save_error_text(erro)}",
             )
             return False
         self.path = caminho.resolve()
         self.recent.add(self.path)
         self._editor.history.mark_clean()
-        self.statusBar().showMessage(f"Salvo em {caminho}", 4000)
+        self.statusBar().showMessage(_("Salvo em {caminho}").format(caminho=caminho), 4000)
         return True
 
     # --- edição ------------------------------------------------------------------------------
@@ -529,17 +554,19 @@ class DocumentWindow(QMainWindow):
             acao = self.recent_menu.addAction(f"{rotulo}  ({caminho.parent})")
             acao.triggered.connect(lambda _=False, c=caminho: self.open_recent(c))
         if not caminhos:
-            vazio = self.recent_menu.addAction("Nenhum arquivo recente")
+            vazio = self.recent_menu.addAction(_("Nenhum arquivo recente"))
             vazio.setEnabled(False)
             return
         self.recent_menu.addSeparator()
-        self.recent_menu.addAction("&Limpar lista", self.recent.clear)
+        self.recent_menu.addAction(_("&Limpar lista"), self.recent.clear)
 
     def open_recent(self, caminho: Path) -> None:
         if not caminho.is_file():
             self.recent.remove(caminho)
             QMessageBox.critical(
-                self, "Não foi possível abrir o arquivo", f"{caminho}\n\nO arquivo não existe mais."
+                self,
+                _("Não foi possível abrir o arquivo"),
+                f"{caminho}\n\n" + _("O arquivo não existe mais."),
             )
             return
         self.open_path_requested.emit(caminho)
@@ -547,42 +574,45 @@ class DocumentWindow(QMainWindow):
     def export(self) -> bool:
         """Pergunta onde e grava o desenho como imagem, SVG ou PDF (RF-11)."""
         filtros = ";;".join(
-            f"{nome} (*.{ext}{' *.jpeg' if ext == 'jpg' else ''})" for ext, nome in EXPORT_FORMATS
+            f"{_(nome)} (*.{ext}{' *.jpeg' if ext == 'jpg' else ''})"
+            for ext, nome in EXPORT_FORMATS
         )
-        base = self.path.with_suffix(".png") if self.path else Path(f"{UNTITLED}.png")
-        nome, filtro = QFileDialog.getSaveFileName(self, "Exportar desenho", str(base), filtros)
+        base = self.path.with_suffix(".png") if self.path else Path(f"{_(UNTITLED)}.png")
+        nome, filtro = QFileDialog.getSaveFileName(self, _("Exportar desenho"), str(base), filtros)
         if not nome:
             return False
         caminho = Path(nome)
         extensoes = {f".{ext}" for ext, _ in EXPORT_FORMATS} | {".jpeg"}
         if caminho.suffix.lower() not in extensoes:
             escolhida = next(
-                (ext for ext, rotulo in EXPORT_FORMATS if filtro.startswith(rotulo)), "png"
+                (ext for ext, rotulo in EXPORT_FORMATS if filtro.startswith(_(rotulo))), "png"
             )
             caminho = caminho.with_name(f"{caminho.name}.{escolhida}")
         try:
-            export_diagram(self.diagram_scene, caminho, self.path.stem if self.path else UNTITLED)
+            export_diagram(
+                self.diagram_scene, caminho, self.path.stem if self.path else _(UNTITLED)
+            )
         except EmptyDiagramError:
-            QMessageBox.information(self, "Exportar desenho", "O desenho está vazio.")
+            QMessageBox.information(self, _("Exportar desenho"), _("O desenho está vazio."))
             return False
         except OSError as erro:
             QMessageBox.critical(
                 self,
-                "Não foi possível exportar o desenho",
+                _("Não foi possível exportar o desenho"),
                 f"{caminho.name}\n\n{save_error_text(erro)}",
             )
             return False
-        self.statusBar().showMessage(f"Exportado para {caminho}", 4000)
+        self.statusBar().showMessage(_("Exportado para {caminho}").format(caminho=caminho), 4000)
         return True
 
     def copy_image(self) -> bool:
         try:
             imagem = render_image(self.diagram_scene)
         except EmptyDiagramError:
-            self.statusBar().showMessage("O desenho está vazio.", 4000)
+            self.statusBar().showMessage(_("O desenho está vazio."), 4000)
             return False
         QApplication.clipboard().setImage(imagem)
-        self.statusBar().showMessage("Desenho copiado como imagem.", 4000)
+        self.statusBar().showMessage(_("Desenho copiado como imagem."), 4000)
         return True
 
     def _restore_layout(self) -> None:
@@ -630,7 +660,7 @@ class DocumentWindow(QMainWindow):
     def copy(self) -> bool:
         texto = self._editor.copy_text(self.diagram_scene.selected_figures())
         if texto is None:
-            self.statusBar().showMessage("Nada para copiar.", 3000)
+            self.statusBar().showMessage(_("Nada para copiar."), 3000)
             return False
         dados = QMimeData()
         dados.setData(CLIPBOARD_MIME, texto.encode("ascii"))
@@ -650,7 +680,7 @@ class DocumentWindow(QMainWindow):
         vezes = self._paste_count + 1 if texto == self._last_paste else 1
         novas = self._editor.paste(texto, PASTE_OFFSET * vezes)
         if novas is None:
-            self.statusBar().showMessage("A área de transferência não tem um modelo.", 3000)
+            self.statusBar().showMessage(_("A área de transferência não tem um modelo."), 3000)
             return False
         self._last_paste, self._paste_count = texto, vezes
         self._select_figures(novas)
@@ -701,8 +731,8 @@ class DocumentWindow(QMainWindow):
         historico = self._editor.history
         self.action_undo.setEnabled(historico.can_undo)
         self.action_redo.setEnabled(historico.can_redo)
-        self.action_undo.setText(f"&Desfazer {historico.undo_label}".rstrip())
-        self.action_redo.setText(f"&Refazer {historico.redo_label}".rstrip())
+        self.action_undo.setText(f"{_('&Desfazer')} {_(historico.undo_label)}".rstrip())
+        self.action_redo.setText(f"{_('&Refazer')} {_(historico.redo_label)}".rstrip())
         self._update_title()
         self._refresh_issues()
         self.inspector.refresh(self._editor.document)
@@ -722,12 +752,27 @@ class DocumentWindow(QMainWindow):
         self._verification_label.setText(resumo)
         self._verification_label.setVisible(bool(resumo))
 
+    def _language_chosen(self, codigo: str) -> None:
+        """Guarda o idioma para a próxima vez que o programa abrir (RNF-06) e avisa, já no
+        idioma escolhido, que é preciso reabrir. As janelas abertas continuam como estão."""
+        anterior = saved_language() or language()
+        set_saved_language(codigo)
+        for c, acao in self.language_actions.items():
+            acao.setChecked(c == codigo)
+        if codigo == anterior:
+            return
+        QMessageBox.information(
+            self,
+            translate(N_("Idioma"), codigo),
+            translate(N_("O idioma muda quando o HaradaER for fechado e aberto de novo."), codigo),
+        )
+
     def _structure_toggled(self, ligado: bool) -> None:
         set_structure_warnings_enabled(ligado)  # lembrado para as próximas janelas e sessões
         self._refresh_issues()
 
     def _update_title(self) -> None:
-        nome = self.path.name if self.path else UNTITLED
+        nome = self.path.name if self.path else _(UNTITLED)
         self.setWindowTitle(f"{nome}[*] - {TITLE}")
         self.setWindowModified(self._editor.history.is_dirty)
 
@@ -748,7 +793,9 @@ class DocumentWindow(QMainWindow):
         resposta = QMessageBox.question(
             self,
             TITLE,
-            f"Salvar as alterações em {self.path.name if self.path else UNTITLED}?",
+            _("Salvar as alterações em {nome}?").format(
+                nome=self.path.name if self.path else _(UNTITLED)
+            ),
             botoes.Save | botoes.Discard | botoes.Cancel,
             botoes.Save,
         )

@@ -20,6 +20,7 @@ from xml.parsers import expat
 
 from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.model.element import Element
+from haradaer.i18n import N_, _
 
 MAX_BYTES = 64 * 1024 * 1024
 MAX_DEPTH = 200
@@ -29,16 +30,16 @@ _PAR_DE_SURROGATES = re.compile(
 )
 
 _MENSAGENS = {
-    expat.errors.XML_ERROR_NO_ELEMENTS: "o arquivo está vazio ou foi cortado antes do fim",
-    expat.errors.XML_ERROR_UNCLOSED_TOKEN: "o arquivo foi cortado no meio de um elemento",
-    expat.errors.XML_ERROR_TAG_MISMATCH: "uma tag foi aberta e fechada com nomes diferentes",
-    expat.errors.XML_ERROR_JUNK_AFTER_DOC_ELEMENT: "há conteúdo depois do fim do desenho",
-    expat.errors.XML_ERROR_UNDEFINED_ENTITY: "o arquivo usa uma entidade não definida",
-    expat.errors.XML_ERROR_BAD_CHAR_REF: (
+    expat.errors.XML_ERROR_NO_ELEMENTS: N_("o arquivo está vazio ou foi cortado antes do fim"),
+    expat.errors.XML_ERROR_UNCLOSED_TOKEN: N_("o arquivo foi cortado no meio de um elemento"),
+    expat.errors.XML_ERROR_TAG_MISMATCH: N_("uma tag foi aberta e fechada com nomes diferentes"),
+    expat.errors.XML_ERROR_JUNK_AFTER_DOC_ELEMENT: N_("há conteúdo depois do fim do desenho"),
+    expat.errors.XML_ERROR_UNDEFINED_ENTITY: N_("o arquivo usa uma entidade não definida"),
+    expat.errors.XML_ERROR_BAD_CHAR_REF: N_(
         "o texto contém um caractere que o XML não aceita (por exemplo um caractere de controle)"
     ),
-    expat.errors.XML_ERROR_SYNTAX: "o XML tem um erro de sintaxe",
-    expat.errors.XML_ERROR_INVALID_TOKEN: "o XML tem um caractere ou símbolo inválido",
+    expat.errors.XML_ERROR_SYNTAX: N_("o XML tem um erro de sintaxe"),
+    expat.errors.XML_ERROR_INVALID_TOKEN: N_("o XML tem um caractere ou símbolo inválido"),
 }
 
 
@@ -75,17 +76,22 @@ class _Leitor:
     def _doctype(self, nome, sistema, publico, tem_subconjunto_interno):
         if tem_subconjunto_interno:
             raise ArquivoInvalidoError(
-                "o arquivo declara entidades no DOCTYPE, o que não é aceito por segurança",
+                _("o arquivo declara entidades no DOCTYPE, o que não é aceito por segurança"),
                 self._linha,
             )
 
     def _entidade(self, *_args):
-        raise ArquivoInvalidoError("declaração de entidade não é aceita por segurança", self._linha)
+        raise ArquivoInvalidoError(
+            _("declaração de entidade não é aceita por segurança"), self._linha
+        )
 
     def _inicio(self, nome: str, lista_attrs: list[str]) -> None:
         if len(self._pilha) >= MAX_DEPTH:
             raise ArquivoInvalidoError(
-                f"o arquivo tem elementos aninhados demais (limite {MAX_DEPTH})", self._linha
+                _("o arquivo tem elementos aninhados demais (limite {limite})").format(
+                    limite=MAX_DEPTH
+                ),
+                self._linha,
             )
         attrs = dict(zip(lista_attrs[::2], lista_attrs[1::2], strict=True))
         pai = self._pilha[-1][0] if self._pilha else None
@@ -93,18 +99,20 @@ class _Leitor:
         if "ref" in attrs:
             if len(attrs) > 1:
                 raise ArquivoInvalidoError(
-                    f"<{nome}> tem 'ref' junto com outros atributos", self._linha
+                    _("<{nome}> tem 'ref' junto com outros atributos").format(nome=nome),
+                    self._linha,
                 )
             alvo = self._ids.get(attrs["ref"])
             if alvo is None:
                 raise ArquivoInvalidoError(
-                    f'<{nome}> aponta para o id "{attrs["ref"]}", que não existe '
-                    "(ou aparece só depois)",
+                    _(
+                        '<{nome}> aponta para o id "{ref}", que não existe (ou aparece só depois)'
+                    ).format(nome=nome, ref=attrs["ref"]),
                     self._linha,
                 )
             if pai is None:
                 raise ArquivoInvalidoError(
-                    "o elemento raiz não pode ser uma referência", self._linha
+                    _("o elemento raiz não pode ser uma referência"), self._linha
                 )
             pai.children.append(alvo)
             self._pilha.append([alvo, True, []])
@@ -117,7 +125,9 @@ class _Leitor:
         if identificador is not None:
             if identificador in self._ids:
                 raise ArquivoInvalidoError(
-                    f'o id "{identificador}" aparece em mais de um elemento (<{nome}>)',
+                    _('o id "{id}" aparece em mais de um elemento (<{nome}>)').format(
+                        id=identificador, nome=nome
+                    ),
                     self._linha,
                 )
             self._ids[identificador] = elemento
@@ -139,7 +149,10 @@ class _Leitor:
         if elemento.children:
             if texto.strip():
                 raise ArquivoInvalidoError(
-                    f"<{nome}> mistura texto e elementos, o que o formato não permite", self._linha
+                    _("<{nome}> mistura texto e elementos, o que o formato não permite").format(
+                        nome=nome
+                    ),
+                    self._linha,
                 )
         elif texto:
             elemento.text = texto
@@ -153,13 +166,17 @@ def parse_xml(
     if isinstance(dados, str):
         dados = dados.encode("utf-8")
     if len(dados) > MAX_BYTES:
-        raise ArquivoInvalidoError(f"o arquivo é grande demais (limite {MAX_BYTES // 2**20} MiB)")
+        raise ArquivoInvalidoError(
+            _("o arquivo é grande demais (limite {limite} MiB)").format(limite=MAX_BYTES // 2**20)
+        )
     leitor = _Leitor(classe_para_tag)
     try:
         leitor.parser.Parse(_juntar_surrogates(dados), True)
     except expat.ExpatError as erro:
-        motivo = _MENSAGENS.get(expat.ErrorString(erro.code), expat.ErrorString(erro.code))
-        raise ArquivoInvalidoError(f"XML inválido: {motivo}", erro.lineno) from erro
+        motivo = _(_MENSAGENS.get(expat.ErrorString(erro.code), expat.ErrorString(erro.code)))
+        raise ArquivoInvalidoError(
+            _("XML inválido: {motivo}").format(motivo=motivo), erro.lineno
+        ) from erro
     if leitor.raiz is None:
-        raise ArquivoInvalidoError("o arquivo não tem nenhum elemento")
+        raise ArquivoInvalidoError(_("o arquivo não tem nenhum elemento"))
     return leitor.raiz

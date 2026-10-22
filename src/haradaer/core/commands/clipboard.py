@@ -14,6 +14,7 @@ from haradaer.core.commands.history import Command, Composite
 from haradaer.core.figures.types import ConnectionFigure
 from haradaer.core.model.document import Document
 from haradaer.core.model.element import Element
+from haradaer.i18n import N_
 
 PASTE_OFFSET = 20.0  # cada colagem sai deslocada, para não cair em cima da anterior
 
@@ -58,7 +59,7 @@ def paste_command(
             pedaco, [f for f in figuras if not isinstance(f, ConnectionFigure)], dx, dy
         ).apply()
     comandos: list[Command] = [InsertFigure(documento, f) for f in figuras]
-    return Composite(comandos, "Colar"), figuras
+    return Composite(comandos, N_("Colar")), figuras
 
 
 def duplicate_command(
@@ -69,5 +70,5 @@ def duplicate_command(
     if texto is None:
         return None
     comando, novas = paste_command(documento, texto, PASTE_OFFSET, PASTE_OFFSET)
-    comando.label = "Duplicar"
+    comando.label = N_("Duplicar")
     return comando, novas

@@ -1,7 +1,8 @@
 # Primeiros passos
 
 Como baixar, abrir e instalar o HaradaER em cada sistema. Este manual só traz o que já funciona
-em cada versão; ele é atualizado conforme o programa for testado em mais lugares.
+em cada versão; ele é atualizado conforme o programa for testado em mais lugares. A versão em
+inglês é o [Getting started](GETTING-STARTED.md).
 
 Os arquivos ficam na página **Releases** do repositório, na versão mais recente. Não é preciso
 instalar Python nem nada mais.
@@ -113,12 +114,13 @@ Para atualizar, arraste a versão nova para Aplicativos e escolha **Substituir**
 
 ## Depois de abrir
 
-O uso é o mesmo em qualquer sistema. Para começar:
+O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português ou inglês);
+para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
 
 1. Escolha **Entidade** na faixa de cima e clique no desenho; digite o nome e Enter.
 2. Crie um **Relacionamento** e outra entidade do mesmo jeito.
-3. Selecione o relacionamento e uma entidade (Ctrl + clique; no Mac, Cmd + clique): as conexões que servem para o par
-   ficam destacadas em azul na faixa. Clique numa delas para ligar os dois.
+3. Selecione o relacionamento e uma entidade (Ctrl + clique; no Mac, Cmd + clique): as conexões
+   que servem para o par ficam destacadas em azul na faixa. Clique numa delas para ligar os dois.
 4. **Arquivo › Salvar** grava um `.xml` que também abre no TerraER 3.14.
 
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem

@@ -20,34 +20,35 @@ from haradaer.core.xmlfmt.numbers import format_number
 from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene.items import ink_op, op_bounds, paint_op
 from haradaer.gui.theme import current_theme
+from haradaer.i18n import N_
 
 ICON_SIZE = QSize(40, 26)
 _ESCALA_TELA = 2  # desenha com o dobro de pixels, para ficar nítido em telas de alta densidade
 
 # Nome curto que aparece embaixo do ícone (o nome completo fica na dica).
 SHORT_NAMES = {
-    "ent": "Entidade",
-    "entfraca": "Ent. fraca",
-    "rel": "Relacion.",
-    "relfraco": "Rel. fraco",
-    "entrel": "Ent. assoc.",
-    "atr": "Atributo",
-    "atrchave": "Chave",
-    "atrchaveparcial": "Ch. parcial",
-    "atrderivado": "Derivado",
-    "atrmulti": "Multival.",
-    "uniao": "União",
-    "disjuncao": "Disjunção",
-    "sobreposicao": "Sobrepos.",
-    "llabelUm": "Lado 1",
-    "llabelMuitos": "Lado N",
-    "llabelDoubleUm": "Total 1",
-    "llabelDoubleMuitos": "Total N",
-    "lcaf": "Lig. atrib.",
-    "generalizacaoLine": "General.",
-    "llabelGeneralizacao": "Gen. opc.",
-    "llabelDoubleGeneralizacao": "Gen. obrig.",
-    "llabel": "Livre",
+    "ent": N_("Entidade"),
+    "entfraca": N_("Ent. fraca"),
+    "rel": N_("Relacion."),
+    "relfraco": N_("Rel. fraco"),
+    "entrel": N_("Ent. assoc."),
+    "atr": N_("Atributo"),
+    "atrchave": N_("Chave"),
+    "atrchaveparcial": N_("Ch. parcial"),
+    "atrderivado": N_("Derivado"),
+    "atrmulti": N_("Multival."),
+    "uniao": N_("União"),
+    "disjuncao": N_("Disjunção"),
+    "sobreposicao": N_("Sobrepos."),
+    "llabelUm": N_("Lado 1"),
+    "llabelMuitos": N_("Lado N"),
+    "llabelDoubleUm": N_("Total 1"),
+    "llabelDoubleMuitos": N_("Total N"),
+    "lcaf": N_("Lig. atrib."),
+    "generalizacaoLine": N_("General."),
+    "llabelGeneralizacao": N_("Gen. opc."),
+    "llabelDoubleGeneralizacao": N_("Gen. obrig."),
+    "llabel": N_("Livre"),
 }
 
 _ATRIBUTOS = ("atr", "atrchave", "atrchaveparcial", "atrderivado", "atrmulti")

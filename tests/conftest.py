@@ -12,6 +12,16 @@ def referencia() -> Path:
     return REFERENCIA
 
 
+@pytest.fixture(autouse=True)
+def idioma_portugues():
+    """Todo teste começa e termina em português, o padrão, qualquer que seja o do sistema."""
+    from haradaer.i18n import set_language
+
+    set_language("pt")
+    yield
+    set_language("pt")
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Sem os gabaritos do TerraER, os testes que os usam são pulados em vez de falhar (na

@@ -14,6 +14,7 @@ RECENT_KEY = "arquivos/recentes"
 STATE_KEY = "janela/estado"
 GEOMETRY_KEY = "janela/geometria"
 STRUCTURE_KEY = "verificacao/avisos-de-estrutura"
+LANGUAGE_KEY = "aparencia/idioma"
 
 
 def settings() -> QSettings:
@@ -74,4 +75,16 @@ def structure_warnings_enabled() -> bool:
 def set_structure_warnings_enabled(ligado: bool) -> None:
     config = settings()
     config.setValue(STRUCTURE_KEY, "true" if ligado else "false")
+    config.sync()
+
+
+def saved_language() -> str | None:
+    """O idioma escolhido em Exibir › Idioma (RNF-06); `None` se nunca foi escolhido."""
+    valor = settings().value(LANGUAGE_KEY)
+    return str(valor) if valor else None
+
+
+def set_saved_language(codigo: str) -> None:
+    config = settings()
+    config.setValue(LANGUAGE_KEY, codigo)
     config.sync()

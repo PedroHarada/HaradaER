@@ -14,6 +14,7 @@ from haradaer.gui.editor import Editor
 from haradaer.gui.inspector import display_name
 from haradaer.gui.palette import CONNECTIONS
 from haradaer.gui.verification import name_of
+from haradaer.i18n import _
 
 # (nome no TerraER, valor gravado) - REQUISITOS.md, seção 3.3.
 ATTRIBUTE_TYPE_CHOICES = [
@@ -40,26 +41,26 @@ class PropertiesPanel(QWidget):
         for nome, valor in ATTRIBUTE_TYPE_CHOICES:
             self.attribute_type.addItem(f"{nome}  ({valor})", valor)
         self.attribute_type.activated.connect(self._type_chosen)
-        self.nullable = QCheckBox("Pode ser nulo")
+        self.nullable = QCheckBox(_("Pode ser nulo"))
         self.nullable.clicked.connect(self._nullable_clicked)
         self.note = QLabel()
         self.note.setWordWrap(True)
         self.connection_type = QComboBox()
         for tag, nome in CONNECTIONS:
-            self.connection_type.addItem(nome, tag)
+            self.connection_type.addItem(_(nome), tag)
         self.connection_type.activated.connect(self._connection_type_chosen)
         self.ends = QLabel()
         self.label = QLineEdit()
         self.label.editingFinished.connect(self._label_edited)
 
         self.form = QFormLayout(self)
-        self.form.addRow("Tipo:", self.kind)
-        self.form.addRow("Nome:", self.name)
-        self.form.addRow("Tipo SQL:", self.attribute_type)
+        self.form.addRow(_("Tipo:"), self.kind)
+        self.form.addRow(_("Nome:"), self.name)
+        self.form.addRow(_("Tipo SQL:"), self.attribute_type)
         self.form.addRow("", self.nullable)
-        self.form.addRow("Conexão:", self.connection_type)
-        self.form.addRow("Liga:", self.ends)
-        self.form.addRow("Rótulo:", self.label)
+        self.form.addRow(_("Conexão:"), self.connection_type)
+        self.form.addRow(_("Liga:"), self.ends)
+        self.form.addRow(_("Rótulo:"), self.label)
         self.form.addRow(self.note)
         self.show_figures([])
 
@@ -102,9 +103,13 @@ class PropertiesPanel(QWidget):
             self.label.setText(conexao.generalization_label)
 
         if figura is None:
-            nota = "Nada selecionado." if not figuras else f"{len(figuras)} figuras selecionadas."
+            nota = (
+                _("Nada selecionado.")
+                if not figuras
+                else _("{n} figuras selecionadas.").format(n=len(figuras))
+            )
         elif no is not None and no.tag == "atrderivado":
-            nota = "Atributo derivado não tem tipo."
+            nota = _("Atributo derivado não tem tipo.")
         else:
             nota = ""
         self.note.setText(nota)

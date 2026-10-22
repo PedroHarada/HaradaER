@@ -28,7 +28,7 @@ não pode verificar o desenvolvedor: clique com o botão direito no app › **Ab
 O primeiro início pode levar alguns segundos.
 
 Cada pacote traz o `PRIMEIROS-PASSOS.txt` do seu sistema: o passo a passo completo, com o que
-fazer se não abrir.
+fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 
 ## Observações
 

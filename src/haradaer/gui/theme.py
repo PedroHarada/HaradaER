@@ -25,6 +25,7 @@ from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from haradaer.core.appearance.style import BLACK, RGBA
 from haradaer.gui.settings import settings
+from haradaer.i18n import N_
 
 THEME_KEY = "aparencia/tema"
 SYSTEM = "sistema"
@@ -47,9 +48,15 @@ class Theme:
 
 
 _AZUL = QColor(40, 120, 255)
-LIGHT = Theme("claro", "&Claro", QColor("white"), BLACK, QColor(225, 228, 235), _AZUL, False)
+LIGHT = Theme("claro", N_("&Claro"), QColor("white"), BLACK, QColor(225, 228, 235), _AZUL, False)
 DARK = Theme(
-    "escuro", "&Escuro", QColor(43, 45, 48), (220, 220, 220, 255), QColor(62, 65, 70), _AZUL, True
+    "escuro",
+    N_("&Escuro"),
+    QColor(43, 45, 48),
+    (220, 220, 220, 255),
+    QColor(62, 65, 70),
+    _AZUL,
+    True,
 )
 
 
@@ -139,7 +146,7 @@ def system_theme() -> Theme | None:
     escuro = paleta.color(QPalette.ColorRole.Window).lightness() < 128
     return Theme(
         SYSTEM,
-        "Do &sistema (qt6ct)",
+        N_("Do &sistema (qt6ct)"),
         fundo,
         (texto.red(), texto.green(), texto.blue(), 255) if escuro else BLACK,
         _misturar(fundo, texto, 0.12),

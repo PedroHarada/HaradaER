@@ -14,11 +14,12 @@ from haradaer.core.rules import Issue
 from haradaer.gui.inspector import display_name
 from haradaer.gui.scene.items import PROBLEM_COLOR, WARNING_COLOR
 from haradaer.gui.verification import is_warning, message_text, name_of
+from haradaer.i18n import N_, _
 
-ERROR_LABEL = "Erro"
-WARNING_LABEL = "Aviso"
-EMPTY_TEXT = "Nenhum problema no modelo."
-OFF_TEXT = "A verificação está desligada (Exibir › Verificar modelo)."
+ERROR_LABEL = N_("Erro")
+WARNING_LABEL = N_("Aviso")
+EMPTY_TEXT = N_("Nenhum problema no modelo.")
+OFF_TEXT = N_("A verificação está desligada (Exibir › Verificar modelo).")
 
 
 class MessagesPanel(QWidget):
@@ -27,7 +28,7 @@ class MessagesPanel(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Tipo", "Elemento", "Mensagem"])
+        self.tree.setHeaderLabels([_("Tipo"), _("Elemento"), _("Mensagem")])
         self.tree.setRootIsDecorated(False)
         self.tree.setAlternatingRowColors(True)
         self.tree.itemActivated.connect(self._escolhido)
@@ -45,7 +46,7 @@ class MessagesPanel(QWidget):
             aviso = is_warning(issue)
             linha = QTreeWidgetItem(
                 [
-                    WARNING_LABEL if aviso else ERROR_LABEL,
+                    _(WARNING_LABEL) if aviso else _(ERROR_LABEL),
                     f"{display_name(issue.figure)} ({name_of(issue.figure.tag)})",
                     message_text(issue),
                 ]
@@ -58,11 +59,15 @@ class MessagesPanel(QWidget):
         for coluna in range(2):
             self.tree.resizeColumnToContents(coluna)
         if not ligada:
-            self.status.setText(OFF_TEXT)
+            self.status.setText(_(OFF_TEXT))
         elif not problemas and not avisos:
-            self.status.setText(EMPTY_TEXT)
+            self.status.setText(_(EMPTY_TEXT))
         else:
-            self.status.setText(f"{len(problemas)} erro(s), {len(avisos)} aviso(s)")
+            self.status.setText(
+                _("{erros} erro(s), {avisos} aviso(s)").format(
+                    erros=len(problemas), avisos=len(avisos)
+                )
+            )
 
     def rows(self) -> list[tuple[str, str, str]]:
         return [

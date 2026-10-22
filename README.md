@@ -65,9 +65,10 @@ conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
 - **Exibir**: zoom (também pinça e rolagem com dois dedos no trackpad, ou Ctrl + roda), grade
   com encaixe, verificação do modelo (conexões com problema em vermelho), avisos de estrutura
   (em laranja: entidade sem chave, relacionamento com um participante só...; dá para desligar),
-  os painéis e o tema
+  os painéis, o tema
   (claro, escuro ou o do sistema, lido do qt6ct e atualizado quando você troca de tema; a
-  escolha é lembrada e a exportação sai sempre no claro).
+  escolha é lembrada e a exportação sai sempre no claro) e o idioma (português ou inglês; na
+  primeira vez vale o do sistema, e a troca vale ao reabrir o programa).
 - **Organizar**: trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar.
 - **Editar**: selecionar tudo ou do mesmo tipo, localizar, copiar o desenho como imagem.
 - **Arquivo**: novo, abrir, abrir recente, salvar, salvar como e exportar o desenho em PNG, JPG,
@@ -77,12 +78,13 @@ Se a faixa não couber na janela, role-a com dois dedos, com a roda do mouse ou 
 
 ## Estado
 
-Falta para a v1 a opção de inglês, em andamento. O que fica para depois dela, como a geração de
-DDL, está em `docs/REQUISITOS.md` (seção 10).
+A v1 está pronta, em português e em inglês. O que fica para depois dela, como a geração de DDL,
+está em `docs/REQUISITOS.md` (seção 10).
 
 ## Documentação
 
 - [Primeiros passos](docs/PRIMEIROS-PASSOS.md): baixar, abrir e instalar em cada sistema
+  (em inglês: [Getting started](docs/GETTING-STARTED.md))
 - [Requisitos](docs/REQUISITOS.md)
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)

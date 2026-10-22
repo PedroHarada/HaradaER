@@ -15,12 +15,13 @@ from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import Rect, route_ends
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number
+from haradaer.i18n import N_, _
 
 # Margem em volta do texto ao ajustar a forma (10 de cada lado), como no TerraER.
 TEXT_MARGIN = 20.0
 DEFAULT_FONT = FontSpec()
 GENERALIZATION_FONT = FontSpec(size=16.0, bold=True)
-DEFAULT_GENERALIZATION_LABEL = "característica"
+DEFAULT_GENERALIZATION_LABEL = N_("característica")
 
 ATTRIBUTE_TYPES = ("CHAR(128)", "VARCHAR2(128)", "NUMBER", "NUMBER(9,2)", "DATE")
 
@@ -42,10 +43,10 @@ class ElementKind:
     """O que um tipo de elemento tem ao ser criado."""
 
     tag: str
-    name: str  # nome padrão mostrado ao criar
+    name: str  # nome padrão ao criar, em português; vai para o arquivo no idioma escolhido
     shape: str  # tag da forma principal
     size: tuple[float, float]
-    label: str  # nome na interface
+    label: str  # nome na interface, em português (traduzido ao mostrar)
     associative: bool = False  # losango interno dentro do retângulo (entidade associativa)
     typed: tuple[bool, str] | None = None  # (anulável, tipo SQL) dos atributos com tipo
 
@@ -53,44 +54,53 @@ class ElementKind:
 KINDS: dict[str, ElementKind] = {
     kind.tag: kind
     for kind in (
-        ElementKind("ent", "Entidade", "r", (80, 40), "Entidade"),
-        ElementKind("entfraca", "Entidade fraca", "r", (80, 40), "Entidade fraca"),
-        ElementKind("rel", "Relacionamento", "diamond", (97, 50), "Relacionamento"),
+        ElementKind("ent", N_("Entidade"), "r", (80, 40), N_("Entidade")),
+        ElementKind("entfraca", N_("Entidade fraca"), "r", (80, 40), N_("Entidade fraca")),
+        ElementKind("rel", N_("Relacionamento"), "diamond", (97, 50), N_("Relacionamento")),
         ElementKind(
-            "relfraco", "Relacionamento fraco", "diamond", (97, 50), "Relacionamento fraco"
+            "relfraco", N_("Relacionamento fraco"), "diamond", (97, 50), N_("Relacionamento fraco")
         ),
         ElementKind(
             "entrel",
-            "Entidade associativa",
+            N_("Entidade associativa"),
             "r",
             (80, 40),
-            "Entidade associativa",
+            N_("Entidade associativa"),
             associative=True,
         ),
-        ElementKind("atr", "Atributo", "e", (125, 27), "Atributo", typed=(False, "VARCHAR2(128)")),
         ElementKind(
-            "atrchave", "Atributo chave", "e", (125, 27), "Atributo chave", typed=(False, "NUMBER")
+            "atr", N_("Atributo"), "e", (125, 27), N_("Atributo"), typed=(False, "VARCHAR2(128)")
+        ),
+        ElementKind(
+            "atrchave",
+            N_("Atributo chave"),
+            "e",
+            (125, 27),
+            N_("Atributo chave"),
+            typed=(False, "NUMBER"),
         ),
         ElementKind(
             "atrchaveparcial",
-            "Chave parcial",
+            N_("Chave parcial"),
             "e",
             (125, 27),
-            "Atributo chave parcial",
+            N_("Atributo chave parcial"),
             typed=(False, "NUMBER"),
         ),
-        ElementKind("atrderivado", "Atributo derivado", "e", (125, 27), "Atributo derivado"),
+        ElementKind(
+            "atrderivado", N_("Atributo derivado"), "e", (125, 27), N_("Atributo derivado")
+        ),
         ElementKind(
             "atrmulti",
-            "Atributo multivalorado",
+            N_("Atributo multivalorado"),
             "e",
             (125, 27),
-            "Atributo multivalorado",
+            N_("Atributo multivalorado"),
             typed=(False, "VARCHAR2(128)"),
         ),
-        ElementKind("uniao", "u", "circ", (20, 20), "União"),
-        ElementKind("disjuncao", "d", "circ", (20, 20), "Disjunção"),
-        ElementKind("sobreposicao", "o", "circ", (20, 20), "Sobreposição"),
+        ElementKind("uniao", "u", "circ", (20, 20), N_("União")),
+        ElementKind("disjuncao", "d", "circ", (20, 20), N_("Disjunção")),
+        ElementKind("sobreposicao", "o", "circ", (20, 20), N_("Sobreposição")),
     )
 }
 assert set(KINDS) == NODE_TAGS
@@ -186,7 +196,7 @@ def create_node(
 ) -> NodeFigure:
     """Elemento novo com o canto superior esquerdo em (x, y)."""
     tipo = KINDS[tag]
-    nome = tipo.name if nome is None else nome
+    nome = _(tipo.name) if nome is None else nome
     largura_texto, altura_texto = medidor.size(nome, text_font(tag))
     largura = max(tipo.size[0], largura_texto + TEXT_MARGIN)
     altura = tipo.size[1]
@@ -306,7 +316,7 @@ def create_connection(
     (x1, y1), (x2, y2) = route_ends(rect_origem, rect_destino, dobras)
     atributos: dict[str, str] = {}
     if tag in LABELED_GENERALIZATIONS:
-        atributos["labelGeneralizacaoText"] = DEFAULT_GENERALIZATION_LABEL
+        atributos["labelGeneralizacaoText"] = _(DEFAULT_GENERALIZATION_LABEL)
     pontos = [_point(x1, y1), *(bend_point(x, y) for x, y in dobras), _point(x2, y2)]
     filhos = [
         Element("points", children=pontos),

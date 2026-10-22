@@ -16,16 +16,17 @@ from PySide6.QtSvg import QSvgGenerator
 
 from haradaer.gui.scene.diagram_scene import DiagramScene
 from haradaer.gui.theme import LIGHT
+from haradaer.i18n import N_, _
 
 EXPORT_MARGIN = 20.0
 RASTER_SCALE = 2.0  # PNG e JPG com o dobro de pixels, para ficarem nítidos ao ampliar
 
 # (extensão, nome no diálogo)
 EXPORT_FORMATS = [
-    ("png", "Imagem PNG"),
-    ("jpg", "Imagem JPG"),
-    ("svg", "Desenho vetorial SVG"),
-    ("pdf", "Documento PDF"),
+    ("png", N_("Imagem PNG")),
+    ("jpg", N_("Imagem JPG")),
+    ("svg", N_("Desenho vetorial SVG")),
+    ("pdf", N_("Documento PDF")),
 ]
 
 
@@ -36,7 +37,7 @@ class EmptyDiagramError(ValueError):
 def export_area(cena: DiagramScene) -> QRectF:
     area = cena.content_rect()
     if area.isEmpty():
-        raise EmptyDiagramError("O desenho está vazio.")
+        raise EmptyDiagramError(_("O desenho está vazio."))
     return area.adjusted(-EXPORT_MARGIN, -EXPORT_MARGIN, EXPORT_MARGIN, EXPORT_MARGIN)
 
 
@@ -81,7 +82,7 @@ def _write_svg(cena: DiagramScene, caminho: Path, titulo: str) -> None:
     gerador.setTitle(titulo)
     painter = QPainter()
     if not painter.begin(gerador):
-        raise OSError(f"não foi possível gravar {caminho}")
+        raise OSError(_("não foi possível gravar {caminho}").format(caminho=caminho))
     painter.fillRect(QRectF(0, 0, largura, altura), QColor("white"))
     _render(cena, painter, QRectF(0, 0, largura, altura), area)
     painter.end()
@@ -96,7 +97,7 @@ def _write_pdf(cena: DiagramScene, caminho: Path, titulo: str) -> None:
     escritor.setPageMargins(QMarginsF(0, 0, 0, 0))
     painter = QPainter()
     if not painter.begin(escritor):
-        raise OSError(f"não foi possível gravar {caminho}")
+        raise OSError(_("não foi possível gravar {caminho}").format(caminho=caminho))
     _render(cena, painter, QRectF(0, 0, area.width(), area.height()), area)
     painter.end()
 
@@ -108,10 +109,14 @@ def export_diagram(cena: DiagramScene, caminho: Path, titulo: str = "") -> None:
         imagem = render_image(cena)
         qualidade = 95 if formato != "png" else -1
         if not imagem.save(str(caminho), None, qualidade):
-            raise OSError(f"não foi possível gravar {caminho}")
+            raise OSError(_("não foi possível gravar {caminho}").format(caminho=caminho))
     elif formato == "svg":
         _write_svg(cena, caminho, titulo)
     elif formato == "pdf":
         _write_pdf(cena, caminho, titulo)
     else:
-        raise ValueError(f"formato não suportado: {caminho.suffix or '(sem extensão)'}")
+        raise ValueError(
+            _("formato não suportado: {formato}").format(
+                formato=caminho.suffix or _("(sem extensão)")
+            )
+        )

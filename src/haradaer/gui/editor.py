@@ -41,6 +41,7 @@ from haradaer.core.geometry import node_rect
 from haradaer.core.model.document import Document
 from haradaer.core.model.element import Element
 from haradaer.gui.qt_utils import QtMeasurer
+from haradaer.i18n import N_
 
 
 class Editor:
@@ -70,7 +71,7 @@ class Editor:
             self.history.execute(remove_command(self.document, figuras))
 
     def begin_move(self) -> None:
-        self.history.begin_macro("Mover")
+        self.history.begin_macro(N_("Mover"))
 
     def move(self, figuras: list[Element], dx: float, dy: float) -> None:
         self.history.execute(move_command(self.document, figuras, dx, dy))

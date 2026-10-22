@@ -6,16 +6,17 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import QLibraryInfo, QObject, QRectF, QTranslator
+from PySide6.QtCore import QLibraryInfo, QLocale, QObject, QRectF, QTranslator
 from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 import haradaer
-from haradaer.gui.settings import RecentFiles
+from haradaer.gui.settings import RecentFiles, saved_language
 from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.window import DocumentWindow
+from haradaer.i18n import _, language, language_for_locale, set_language
 
 ICON_PATH = Path(haradaer.__file__).parent / "resources" / "haradaer.svg"
 ICON_SIZES = (16, 24, 32, 48, 64, 128, 256)
@@ -79,18 +80,32 @@ class WindowManager(QObject):
         return janela
 
     def ask_and_open(self, pai: DocumentWindow) -> None:
-        arquivos, _ = QFileDialog.getOpenFileNames(
+        arquivos, _filtro = QFileDialog.getOpenFileNames(
             pai,
-            "Abrir modelo",
+            _("Abrir modelo"),
             str(pai.path.parent) if pai.path else "",
-            "Modelos do TerraER (*.xml);;Todos os arquivos (*)",
+            _("Modelos do TerraER (*.xml);;Todos os arquivos (*)"),
         )
         for arquivo in arquivos:
             self.open_path(Path(arquivo))
 
 
+def choose_language() -> str:
+    """O idioma escolhido em Exibir › Idioma ou, na primeira vez, o do sistema (RNF-06).
+
+    Vale até fechar o programa: trocar no menu só tem efeito ao reabrir.
+    """
+    set_language(saved_language() or language_for_locale(QLocale.system().name()))
+    return language()
+
+
 def install_translator(app: QApplication) -> bool:
-    """Traduz os textos do próprio Qt (botões Salvar/Descartar/Cancelar, diálogos de arquivo)."""
+    """Traduz os textos do próprio Qt (botões Salvar/Descartar/Cancelar, diálogos de arquivo).
+
+    Só em português: em inglês o Qt já fala a língua dele.
+    """
+    if language() != "pt":
+        return False
     tradutor = QTranslator(app)
     pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
     if not tradutor.load("qtbase_pt_BR", pasta):
@@ -104,6 +119,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     app.setApplicationName("HaradaER")
     app.setDesktopFileName("io.github.pedroharada.haradaer")  # liga a janela ao atalho e ícone
     app.setWindowIcon(app_icon())
+    choose_language()
     install_translator(app)
     apply_theme(saved_theme(), save=False)
     theme_manager().watch_system()  # segue a troca de tema do sistema (qt6ct)

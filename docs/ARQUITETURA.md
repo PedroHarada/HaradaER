@@ -70,6 +70,7 @@ HaradaER/
 │   │   ├── verification.py # marcas vermelhas e laranja
 │   │   ├── tool_strip.py, tool_icons.py, palette.py # barra de ferramentas
 │   │   └── export.py, settings.py, theme.py, qt_utils.py
+│   ├── i18n/             # idioma: _() e N_(), catálogo en.py (sem Qt)
 │   └── __main__.py       # python -m haradaer
 ├── tests/
 │   ├── core/             # sem tela
@@ -291,9 +292,11 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 
 ### 5.7 Idiomas (RNF-06)
 
-- O núcleo devolve códigos (`connection.invalid`, `model.empty`...) e nunca texto para o usuário.
-- A interface traduz com catálogos do Qt (`tr`, arquivos `.ts`) em português e inglês. Português é o padrão.
-- Nomes padrão de elementos novos (`Entidade 1`...) também vêm do catálogo; o texto gravado no arquivo é o do usuário (compatível, seção 4.5 de `REQUISITOS.md`).
+- Catálogo próprio em `haradaer/i18n/` (D-11), sem Qt, como o `Labels_pt`/`Labels_en` do TerraER. O texto em português é a chave, como no gettext: `_("Salvar")` devolve "Salvar" ou "Save". As traduções ficam em `i18n/en.py`; texto sem tradução sai em português.
+- `N_("...")` marca um texto de tabela criada ao importar (nomes da faixa, avisos, nomes dos passos de desfazer) para ser traduzido só ao mostrar, com `_()`.
+- O idioma é escolhido uma vez, em `gui/app.py` (`choose_language`), antes de criar as janelas: o gravado em Exibir › Idioma ou, na primeira vez, o do sistema (`QLocale`). Trocar no menu grava a escolha e avisa, no idioma novo, que vale ao reabrir. O tradutor `qtbase_pt_BR` dos botões do Qt só é carregado em português.
+- A verificação continua devolvendo códigos (D-09), postos em palavras por `gui/verification.py`. O núcleo usa `_()` em dois lugares: as mensagens de `ArquivoInvalidoError`, que vão direto para a tela, e o nome padrão dos elementos novos (`Entidade` ou `Entity`, `característica` ou `characteristic`), que vai para o arquivo como qualquer nome digitado (RNF-01 não muda).
+- `tests/test_idioma.py` confere que todo texto marcado tem tradução, que os campos `{...}` e as letras de atalho `&` batem, e procura texto na tela que escapou do `_()`.
 
 ## 6. Fluxos principais
 
@@ -377,6 +380,7 @@ Estado: **Decidida** = confirmada pelo autor.
 | D-08 | Exportar PNG e JPG, SVG e PDF com Qt; sem GIF | `Pillow` para GIF | Qt não grava GIF; SVG/PDF não exigem dependência extra | **Decidida** |
 | D-09 | Núcleo devolve códigos; a interface traduz | Texto no núcleo | RNF-06 sem acoplar a Qt | **Decidida** |
 | D-10 | Tabelas de dados para tags, regras e estilos | Código condicional | Fácil de validar contra o TerraER | **Decidida** |
+| D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (2026-10-22) |
 
 ## 10. Riscos
 

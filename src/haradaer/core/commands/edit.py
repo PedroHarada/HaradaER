@@ -43,6 +43,7 @@ from haradaer.core.geometry import (
 from haradaer.core.model.document import ADDED, CHANGED, REMOVED, REORDERED, Document
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number, parse_number
+from haradaer.i18n import N_, _
 
 ATTRIBUTE_TAGS = TYPED_ATTRIBUTE_TAGS | {"atrderivado"}
 
@@ -214,7 +215,7 @@ def _reroute(
 
 def add_node_command(documento: Document, no: NodeFigure) -> Command:
     comando = InsertFigure(documento, no)
-    comando.label = "Adicionar elemento"
+    comando.label = N_("Adicionar elemento")
     return comando
 
 
@@ -295,7 +296,7 @@ def connect_command(documento: Document, tag: str, origem: Element, destino: Ele
         letra = many_letter(len(_many_of(documento, origem)))
         comandos.extend(_renumber(documento, _many_of(documento, origem)))
     conexao = create_connection(tag, origem, destino, rect_origem, rect_destino, dobras, letra)
-    return Composite([InsertFigure(documento, conexao), *comandos], "Conectar")
+    return Composite([InsertFigure(documento, conexao), *comandos], N_("Conectar"))
 
 
 def nested_nodes(figura: Element) -> list[NodeFigure]:
@@ -325,7 +326,7 @@ def remove_command(documento: Document, figuras: list[Element]) -> Command:
     ordem = {id(f): i for i, f in enumerate(documento.figures)}
     todas = [f for f in todas if id(f) in ordem]
     todas.sort(key=lambda f: ordem[id(f)], reverse=True)
-    return Composite([RemoveFigure(documento, f) for f in todas], "Excluir")
+    return Composite([RemoveFigure(documento, f) for f in todas], N_("Excluir"))
 
 
 def _shift(
@@ -353,7 +354,7 @@ def can_move(figura: Element) -> bool:
 
 def move_command(documento: Document, figuras: list[Element], dx: float, dy: float) -> Command:
     """Move elementos (e figuras de apoio) e religa as conexões que chegam neles."""
-    return _move_each(documento, [(f, dx, dy) for f in figuras], "Mover")
+    return _move_each(documento, [(f, dx, dy) for f in figuras], N_("Mover"))
 
 
 def _move_each(
@@ -387,7 +388,7 @@ def align_command(documento: Document, nos: list[Element], modo: str) -> Command
         raise ValueError(f"alinhamento desconhecido: {modo}")
     caixas = [(no, r) for no in nos if isinstance(no, NodeFigure) and (r := node_rect(no))]
     if len(caixas) < 2:
-        return Composite([], "Alinhar")
+        return Composite([], N_("Alinhar"))
     esquerda = min(r[0] for _, r in caixas)
     direita = max(r[0] + r[2] for _, r in caixas)
     topo = min(r[1] for _, r in caixas)
@@ -409,7 +410,7 @@ def align_command(documento: Document, nos: list[Element], modo: str) -> Command
             dy = base - (y + h)
         if dx or dy:
             deslocamentos.append((no, dx, dy))
-    return _move_each(documento, deslocamentos, "Alinhar")
+    return _move_each(documento, deslocamentos, N_("Alinhar"))
 
 
 def _shapes(no: NodeFigure) -> list[Element]:
@@ -459,7 +460,7 @@ def resize_command(
         for nome, valor in (("x", px), ("y", py)):
             comandos.append(SetAttr(documento, no, texto, nome, format_number(valor)))
     comandos.extend(_reroute(documento, {id(no)}, {id(no): (x, y, w, h)}))
-    return Composite(comandos, "Redimensionar")
+    return Composite(comandos, N_("Redimensionar"))
 
 
 class SetOrder(Command):
@@ -487,7 +488,7 @@ def bring_to_front_command(documento: Document, figuras: list[Element]) -> Comma
     resto = [f for f in documento.figures if id(f) not in escolhidas]
     topo = [f for f in documento.figures if id(f) in escolhidas]
     comando = SetOrder(documento, resto + topo)
-    comando.label = "Trazer para a frente"
+    comando.label = N_("Trazer para a frente")
     return comando
 
 
@@ -497,7 +498,7 @@ def send_to_back_command(documento: Document, figuras: list[Element]) -> Command
     resto = [f for f in documento.figures if id(f) not in escolhidas]
     fundo = [f for f in documento.figures if id(f) in escolhidas]
     comando = SetOrder(documento, fundo + resto)
-    comando.label = "Enviar para trás"
+    comando.label = N_("Enviar para trás")
     return comando
 
 
@@ -539,7 +540,7 @@ def rename_command(
     comandos.append(SetAttr(documento, no, texto, "x", format_number(px)))
     comandos.append(SetAttr(documento, no, texto, "y", format_number(py)))
     comandos.extend(_reroute(documento, {id(no)}, {id(no): (x, y, nova_largura, h)}))
-    return Composite(comandos, "Renomear")
+    return Composite(comandos, N_("Renomear"))
 
 
 def set_attribute_type_command(documento: Document, no: NodeFigure, tipo: str) -> Command:
@@ -549,7 +550,7 @@ def set_attribute_type_command(documento: Document, no: NodeFigure, tipo: str) -
     if no.attribute_type is None:
         raise ValueError("este elemento não tem tipo")
     comando = SetAttr(documento, no, no, "attributeType", tipo)
-    comando.label = "Mudar tipo"
+    comando.label = N_("Mudar tipo")
     return comando
 
 
@@ -557,7 +558,7 @@ def set_nullable_command(documento: Document, no: NodeFigure, anulavel: bool) ->
     if no.nullable is None:
         raise ValueError("este elemento não tem anulabilidade")
     comando = SetAttr(documento, no, no, "nullable", "true" if anulavel else "false")
-    comando.label = "Mudar anulabilidade"
+    comando.label = N_("Mudar anulabilidade")
     return comando
 
 
@@ -592,14 +593,18 @@ def change_connection_type_command(
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
     comandos: list[Command] = []
     if tag == conexao.tag:
-        return Composite(comandos, "Mudar tipo de conexão")
+        return Composite(comandos, N_("Mudar tipo de conexão"))
     comandos.append(SetTag(documento, conexao, tag))
 
     tem_rotulo = conexao.generalization_label is not None
     if tag in LABELED_GENERALIZATIONS and not tem_rotulo:
         comandos.append(
             SetAttr(
-                documento, conexao, conexao, "labelGeneralizacaoText", DEFAULT_GENERALIZATION_LABEL
+                documento,
+                conexao,
+                conexao,
+                "labelGeneralizacaoText",
+                _(DEFAULT_GENERALIZATION_LABEL),
             )
         )
     elif tag not in LABELED_GENERALIZATIONS and tem_rotulo:
@@ -626,7 +631,7 @@ def change_connection_type_command(
         and fim.tag in ATTRIBUTE_TAGS
     ):
         comandos.extend(_swap_ends(documento, conexao))
-    return Composite(comandos, "Mudar tipo de conexão")
+    return Composite(comandos, N_("Mudar tipo de conexão"))
 
 
 def _swap_ends(documento: Document, conexao: ConnectionFigure) -> list[Command]:
@@ -648,7 +653,7 @@ def set_generalization_label_command(
     if conexao.generalization_label is None:
         raise ValueError("esta conexão não tem rótulo")
     comando = SetAttr(documento, conexao, conexao, "labelGeneralizacaoText", texto)
-    comando.label = "Mudar rótulo"
+    comando.label = N_("Mudar rótulo")
     return comando
 
 
@@ -698,7 +703,7 @@ def add_bend_command(
     if not 0 <= trecho <= len(dobras):
         raise ValueError(f"trecho inexistente: {trecho}")
     return _path_command(
-        documento, conexao, [*dobras[:trecho], ponto, *dobras[trecho:]], "Adicionar vértice"
+        documento, conexao, [*dobras[:trecho], ponto, *dobras[trecho:]], N_("Adicionar vértice")
     )
 
 
@@ -710,7 +715,7 @@ def move_bend_command(
     if not 0 <= indice < len(dobras):
         raise ValueError(f"vértice inexistente: {indice}")
     dobras[indice] = ponto
-    return _path_command(documento, conexao, dobras, "Mover vértice")
+    return _path_command(documento, conexao, dobras, N_("Mover vértice"))
 
 
 def remove_bend_command(documento: Document, conexao: ConnectionFigure, indice: int) -> Command:
@@ -718,12 +723,12 @@ def remove_bend_command(documento: Document, conexao: ConnectionFigure, indice: 
     if not 0 <= indice < len(dobras):
         raise ValueError(f"vértice inexistente: {indice}")
     del dobras[indice]
-    return _path_command(documento, conexao, dobras, "Remover vértice")
+    return _path_command(documento, conexao, dobras, N_("Remover vértice"))
 
 
 def straighten_command(documento: Document, conexao: ConnectionFigure) -> Command:
     """Tira todas as dobras: a linha volta a ir de centro a centro."""
-    return _path_command(documento, conexao, [], "Endireitar linha")
+    return _path_command(documento, conexao, [], N_("Endireitar linha"))
 
 
 def reconnect_command(
@@ -743,7 +748,7 @@ def reconnect_command(
     comandos: list[Command] = [SetChildren(documento, conexao, envoltorio, [conector])]
     inicio, fim = (no, conexao.end) if ponta == "start" else (conexao.start, no)
     comandos.append(_path_command(documento, conexao, _bends(conexao), "", inicio, fim))
-    return Composite(comandos, "Reconectar")
+    return Composite(comandos, N_("Reconectar"))
 
 
 # ---------------------------------------------------------------- tipo de atributo inválido
@@ -770,7 +775,7 @@ def fix_attribute_types_command(documento: Document) -> Command:
         tipado = KINDS[no.tag].typed
         padrao = tipado[1] if tipado is not None else "VARCHAR2(128)"
         comandos.append(SetAttr(documento, no, no, "attributeType", padrao))
-    return Composite(comandos, "Corrigir tipos de atributo")
+    return Composite(comandos, N_("Corrigir tipos de atributo"))
 
 
 # ---------------------------------------------------------------- agrupar e desagrupar
@@ -795,7 +800,7 @@ def group_command(documento: Document, figuras: list[Element]) -> tuple[Command,
     grupo = SupportFigure("g", children=[Element("children", children=membros)], has_id=True)
     comandos: list[Command] = [RemoveFigure(documento, f) for f in reversed(membros)]
     comandos.append(InsertFigure(documento, grupo))
-    return Composite(comandos, "Agrupar"), grupo
+    return Composite(comandos, N_("Agrupar")), grupo
 
 
 def ungroup_command(documento: Document, grupo: Element) -> tuple[Command, list[Element]]:
@@ -806,4 +811,4 @@ def ungroup_command(documento: Document, grupo: Element) -> tuple[Command, list[
     membros = list(filhos.children) if filhos is not None else []
     comandos: list[Command] = [RemoveFigure(documento, grupo)]
     comandos += [InsertFigure(documento, f) for f in membros]
-    return Composite(comandos, "Desagrupar"), membros
+    return Composite(comandos, N_("Desagrupar")), membros
