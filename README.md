@@ -105,7 +105,10 @@ git push origin v1.1.2
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
-(`packaging/HaradaER.spec`) e publica a versão em Releases. Se algum teste falhar, nada é
+(`packaging/HaradaER.spec`), roda neles o autoteste (`HaradaER --autoteste SAIDA.txt`: janela,
+módulos fora do pacote e conexão segura com o GitHub; no Linux, também no Fedora e no Arch) e
+publica a versão em Releases. Para gerar e testar os pacotes sem publicar, use **Run workflow**
+na aba Actions (ou `gh workflow run versao.yml`). Se algum teste falhar, nada é
 publicado. O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento, sem tirar a versão final de
 Releases. Cada versão final substitui as anteriores em Releases (as etiquetas antigas continuam
 no git). A cada envio ao

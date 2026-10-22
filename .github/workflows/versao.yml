@@ -12,6 +12,7 @@ name: Versão
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:  # gera e testa os pacotes sem publicar nada (para conferir o workflow)
 
 jobs:
   executaveis:
@@ -54,6 +55,36 @@ jobs:
         run: python packaging/gerar_icones.py
       - name: Gerar o executável
         run: pyinstaller --noconfirm packaging/HaradaER.spec
+      # Autoteste do executável pronto: abre uma janela, confere que o teclado virtual e os outros
+      # módulos de fora não voltaram e que a conexão segura com o GitHub funciona com o OpenSSL
+      # empacotado (src/haradaer/selftest.py).
+      - name: Autoteste do executável (Linux)
+        if: matrix.sistema == 'linux'
+        run: |
+          ./dist/HaradaER --autoteste autoteste.txt; codigo=$?
+          cat autoteste.txt; exit $codigo
+      - name: Autoteste do executável em outras distribuições (Linux)
+        if: matrix.sistema == 'linux'
+        # O executável é gerado no Ubuntu: a conexão segura falhou no Arch na 1.1.1.
+        run: |
+          testar() {
+            docker run --rm -e QT_QPA_PLATFORM=offscreen -v "$PWD/dist:/haradaer" "$1" \
+              sh -c "$2 >/dev/null && /haradaer/HaradaER --autoteste /tmp/a.txt; c=\$?; cat /tmp/a.txt; exit \$c"
+          }
+          echo "== Fedora"; testar fedora:41 "dnf -q -y install fontconfig libglvnd-egl libglvnd-opengl"
+          echo "== Arch"; testar archlinux:latest "pacman -Sy --noconfirm --quiet fontconfig libglvnd"
+      - name: Autoteste do executável (macOS)
+        if: matrix.sistema == 'macos'
+        run: |
+          dist/HaradaER.app/Contents/MacOS/HaradaER --autoteste autoteste.txt; codigo=$?
+          cat autoteste.txt; exit $codigo
+      - name: Autoteste do executável (Windows)
+        if: matrix.sistema == 'windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process dist/HaradaER.exe -ArgumentList '--autoteste','autoteste.txt' -Wait -PassThru
+          Get-Content autoteste.txt
+          exit $p.ExitCode
       - name: Empacotar (Linux)
         if: matrix.sistema == 'linux'
         run: |
@@ -89,6 +120,7 @@ jobs:
           if-no-files-found: error
 
   publicar:
+    if: startsWith(github.ref, 'refs/tags/')  # pelo disparo manual, só gera e testa
     needs: executaveis
     runs-on: ubuntu-24.04
     permissions:

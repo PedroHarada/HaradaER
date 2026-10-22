@@ -323,7 +323,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 
 ## 10. Estado da v1 (revisão de 2026-10-20)
 
-Conferência de cada requisito com o programa e os testes (794 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
+Conferência de cada requisito com o programa e os testes (800 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
 
 **Requisitos funcionais**
 
@@ -366,7 +366,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois da v1 (decisão do autor em 2026-10-22, depois de ver uma maquete): a paleta como opção, sem substituir a faixa. Exibir › Paleta escolhe entre **No alto** (a faixa de hoje) e **À esquerda** (painel acoplado em duas colunas, com Elementos e Conexões). As duas usam as mesmas ações; o destaque das conexões aceitas (RF-10) vale nas duas; o painel não fecha nem solta, para nunca ficar sem ferramentas |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
-| RNF-12 | Pronto | 794 testes, sem tela |
+| RNF-12 | Pronto | 800 testes, sem tela |
 | RNF-13 | Pronto | Nada copiado do `.jar` |
 | RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
 
