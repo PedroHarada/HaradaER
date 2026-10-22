@@ -313,6 +313,7 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 - `gui/updates.py` (`UpdateChecker`) consulta numa linha de execução à parte e devolve o resultado por sinal do Qt: a janela nunca espera pela rede (limite de 5 s).
 - Ao abrir, no máximo uma vez por dia (`atualizacoes/ultima-verificacao`), e só se Ajuda › Verificar ao abrir estiver ligado (padrão). Sem novidade ou sem rede, fica quieto. Ajuda › Verificar atualizações sempre responde.
 - Só avisa: **Baixar** abre a página Releases. O programa não baixa nem troca a si mesmo (decisão do autor, 2026-10-22). A única coisa que sai do computador é essa consulta, sem nada pessoal.
+- A conexão usa o contexto TLS padrão mais o arquivo de certificados do sistema (`SYSTEM_CA_FILES`): o executável do Linux leva o OpenSSL do Ubuntu, que os procura em `/usr/lib/ssl`, e falhava no Arch (corrigido na 1.1.2).
 - Os testes nunca usam a rede: o `tests/conftest.py` troca a consulta por uma falha.
 
 ## 6. Fluxos principais

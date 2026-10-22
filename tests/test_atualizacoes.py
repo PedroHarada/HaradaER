@@ -41,3 +41,21 @@ def test_uma_vez_por_dia():
     assert updates.due_today(None, hoje)
     assert updates.due_today("2026-10-21", hoje)
     assert not updates.due_today("2026-10-22", hoje)
+
+
+def test_contexto_carrega_os_certificados_do_sistema(tmp_path, monkeypatch):
+    carregados = []
+    monkeypatch.setattr(
+        updates.ssl.SSLContext,
+        "load_verify_locations",
+        lambda self, cafile: carregados.append(cafile),
+    )
+    existe = tmp_path / "ca.pem"
+    existe.write_text("x")
+    updates.ssl_context((str(tmp_path / "nao-existe.pem"), str(existe), str(existe)))
+    assert carregados == [str(existe)]  # só o primeiro que existe
+
+
+def test_contexto_sem_arquivo_do_sistema_fica_o_padrao(tmp_path):
+    contexto = updates.ssl_context((str(tmp_path / "nao-existe.pem"),))
+    assert contexto.verify_mode == updates.ssl.CERT_REQUIRED

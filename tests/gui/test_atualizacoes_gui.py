@@ -84,6 +84,7 @@ def test_pedido_manual_sem_rede_avisa(qtbot, janela, avisos):
     janela.check_updates_action.trigger()  # o conftest deixa os testes sem rede
     _espera(qtbot, janela)
     assert len(avisos) == 1 and "GitHub" in avisos[0]
+    assert "testes sem rede" in avisos[0]  # o motivo técnico vai junto
 
 
 def test_ao_abrir_sem_rede_fica_quieto(qtbot, janela, avisos, caixa):

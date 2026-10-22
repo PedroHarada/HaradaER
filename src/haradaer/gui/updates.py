@@ -21,7 +21,7 @@ class UpdateChecker(QObject):
     """Uma consulta por vez. `manual` diz se a pessoa pediu (Ajuda › Verificar atualizações):
     só então "já é a mais recente" e "não foi possível verificar" aparecem."""
 
-    _done = Signal(object, bool)  # versão mais recente (ou None se falhou), manual
+    _done = Signal(object, bool, str)  # versão mais recente (ou None se falhou), manual, erro
 
     def __init__(self, parent_widget: QWidget | None = None) -> None:
         super().__init__()
@@ -45,13 +45,14 @@ class UpdateChecker(QObject):
         return self.check(manual=False)
 
     def _fetch(self, manual: bool) -> None:
+        erro = ""
         try:
             versao = updates.fetch_latest()
-        except OSError:
-            versao = None
-        self._done.emit(versao, manual)
+        except OSError as falha:
+            versao, erro = None, str(falha)
+        self._done.emit(versao, manual, erro)
 
-    def _show(self, versao: str | None, manual: bool) -> None:
+    def _show(self, versao: str | None, manual: bool, erro: str = "") -> None:
         self._running = False
         atual = haradaer.__version__
         pai = self.parent_widget
@@ -81,5 +82,6 @@ class UpdateChecker(QObject):
             QMessageBox.information(
                 pai,
                 _("Atualizações"),
-                _("Não foi possível verificar agora (sem internet ou o GitHub não respondeu)."),
+                _("Não foi possível verificar agora (sem internet ou o GitHub não respondeu).")
+                + (f"\n\n{erro}" if erro else ""),  # o motivo técnico ajuda a diagnosticar
             )

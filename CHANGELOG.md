@@ -4,6 +4,14 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.1.2 — 2026-10-22
+
+### Corrigido
+
+- O aviso de versão nova não funcionava no executável do Linux fora do Ubuntu (Arch, Fedora) e,
+  provavelmente, no macOS: a conexão segura com o GitHub não achava os certificados do sistema.
+- Quando a verificação pedida em Ajuda falha, a mensagem mostra também o motivo técnico.
+
 ## 1.1.1 — 2026-10-22
 
 ### Corrigido
