@@ -100,8 +100,8 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 ## Lançar uma versão
 
 ```
-git tag v1.1.0
-git push origin v1.1.0
+git tag v1.1.1
+git push origin v1.1.1
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
@@ -120,3 +120,10 @@ Releases (as etiquetas antigas continuam no git). A cada envio ao
 O `TerraER3.14.jar`, os gabaritos gravados por ele e os programas que o usam para conferir a
 compatibilidade não fazem parte deste repositório; ficam só na máquina do autor. Sem eles, os
 testes que dependem dos gabaritos são pulados, e o resto da suíte roda normalmente.
+
+## Licença
+
+O HaradaER é software livre, distribuído sob a [GNU General Public License, versão 3](LICENSE)
+(GPLv3): pode ser usado, estudado, modificado e redistribuído, desde que as versões
+modificadas também saiam sob a GPLv3, com o código-fonte. As bibliotecas incluídas nos pacotes
+e as suas licenças estão em [`packaging/AVISOS-DE-LICENCA.txt`](packaging/AVISOS-DE-LICENCA.txt).

@@ -281,7 +281,7 @@ Programa: `harness/Paralelas.java` roda os passos da ferramenta de conexão do T
 | `numberInCorrectSideHandle` | Se a conexão vai de entidade (`ent`, `entfraca`, `entrel`) para relacionamento (`rel`, `relfraco`, `entrel`), inverte o sentido. Por isso o rótulo 1/N fica do lado do relacionamento. Vale para qualquer tipo de conexão |
 | `updateNumbering` | Só nas conexões "N" (`llabelMuitos`, `llabelDoubleMuitos`). Pega as conexões "N" na área do elemento de início (o relacionamento) e dá a elas, em ordem, N, M, P, Q, R, S; da 7ª em diante, N. A letra é gravada no estilo da conexão; na conexão dupla, no mesmo bloco do `innerStrokeWidthFactor` |
 | Dobras no arquivo | `<p colinear="true" x=".." y=".."/>`, sem `c1x`/`c2x` (as pontas continuam com eles) |
-| Ao mover | As dobras ficam onde estão; cada ponta mira a dobra mais próxima dela (`ChopRectangleConnector`) |
+| Ao mover | As dobras ficam onde estão; cada ponta mira a dobra mais próxima dela (`ChopRectangleConnector`). No HaradaER, uma conexão selecionada junto com o elemento leva as dobras junto (decisão do autor, 2026-10-22) |
 | Ao excluir | Não renumera; só a próxima conexão criada renumera todas |
 
 O que o HaradaER faz (decisão do autor: "desvio limpo"):
@@ -289,7 +289,7 @@ O que o HaradaER faz (decisão do autor: "desvio limpo"):
 - Lê e mostra a letra gravada (antes mostrava sempre "N").
 - Inverte entidade → relacionamento, numera N, M, P... e grava a letra igual ao TerraER (conferido: o TerraER relê as letras e regrava os mesmos pontos, `criados-no-haradaer/paralelas.xml`).
 - **Desvio diferente do TerraER, de propósito:** dobras a 1/3 e 2/3 do caminho de centro a centro, deslocadas 70 na perpendicular, alternando de lado e se afastando (70, −70, 140, −140...). A linha fica em forma de colchete, sem cruzar, e as conexões extras nunca se sobrepõem. O arquivo continua compatível: o TerraER só guarda os pontos.
-- Ao mover, as dobras ficam; se as duas pontas andam juntas, a linha inteira acompanha.
+- Ao mover, as dobras ficam; se as duas pontas andam juntas, a linha inteira acompanha. No HaradaER, também acompanha quando a própria conexão está na seleção arrastada (decisão do autor, 2026-10-22).
 
 ## 16. Editar a linha das conexões (vértices e pontas)
 

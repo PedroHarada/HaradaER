@@ -697,7 +697,11 @@ class DiagramView(QGraphicsView):
         self._drag_from = pos
         if dx or dy:
             self._drag_moved = (total_x, total_y)
-            self.editor.move([f for f in self._scene.selected_figures() if can_move(f)], dx, dy)
+            selecionadas = self._scene.selected_figures()
+            # As conexões selecionadas vão junto: as dobras delas acompanham o arraste.
+            self.editor.move(
+                [f for f in selecionadas if can_move(f) or isinstance(f, ConnectionFigure)], dx, dy
+            )
 
     # --- conectar ----------------------------------------------------------------------------
 

@@ -48,6 +48,28 @@ a = Analysis(
     excludes=NAO_USADOS,
     noarchive=False,
 )
+# O PyInstaller traz o teclado virtual do Qt junto com os plugins de entrada, e com ele o Qt
+# Quick e o Qml; o plugin de imagem PDF traz o QtPdf. O HaradaER não usa nenhum deles, e o
+# teclado virtual é só GPLv3 (o resto do Qt é LGPLv3): ficam de fora.
+FORA_DO_PACOTE = (
+    "virtualkeyboard",
+    "qtquick",
+    "qt6quick",
+    "qtqml",
+    "qt6qml",
+    "qtpdf",
+    "qt6pdf",
+    "qpdf",
+)
+
+
+def _usado(entrada):
+    return not any(nome in entrada[0].lower() for nome in FORA_DO_PACOTE)
+
+
+a.binaries = [b for b in a.binaries if _usado(b)]
+a.datas = [d for d in a.datas if _usado(d)]
+
 if sys.platform.startswith("linux"):
     # A biblioteca de fontes vem do sistema: a da máquina que gera o executável (Ubuntu 22.04)
     # não entende a configuração de fontes de distribuições mais novas (Arch, por exemplo).

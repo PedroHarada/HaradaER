@@ -6,6 +6,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QMessageBox
 
 from haradaer.core.commands import connection_path
+from haradaer.core.geometry import node_rect
 from haradaer.gui.window import DocumentWindow
 
 
@@ -150,3 +151,23 @@ def test_rotulo_da_generalizacao_continua_editavel_no_duplo_clique(qtbot):
     )
     assert len(connection_path(conexao)) == 2  # não criou vértice
     assert j.view._inline is not None  # abriu o campo do rótulo
+
+
+def test_arrastar_elemento_com_a_conexao_selecionada_leva_as_dobras(cena):
+    janela, _aluno, cursa, _curso, conexao = cena
+    janela.editor.add_bend(conexao, 0, (300, 220))
+    janela.diagram_scene.select_where(lambda f: f is cursa or f is conexao)
+    x, y, w, h = node_rect(cursa)
+    arrastar(janela, (x + w / 2, y + h / 2), (x + w / 2 + 40, y + h / 2 + 30))
+    assert connection_path(conexao)[1] == pytest.approx((340, 250), abs=1)
+    janela.action_undo.trigger()
+    assert connection_path(conexao)[1] == pytest.approx((300, 220), abs=1)
+
+
+def test_arrastar_so_o_elemento_deixa_as_dobras(cena):
+    janela, _aluno, cursa, _curso, conexao = cena
+    janela.editor.add_bend(conexao, 0, (300, 220))
+    janela.diagram_scene.select_only(cursa)
+    x, y, w, h = node_rect(cursa)
+    arrastar(janela, (x + w / 2, y + h / 2), (x + w / 2 + 40, y + h / 2 + 30))
+    assert connection_path(conexao)[1] == pytest.approx((300, 220), abs=1)

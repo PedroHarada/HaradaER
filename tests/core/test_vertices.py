@@ -11,6 +11,7 @@ from haradaer.core.commands import (
     connect_command,
     connection_path,
     move_bend_command,
+    move_command,
     reconnect_command,
     remove_bend_command,
     straighten_command,
@@ -166,3 +167,32 @@ def test_reconectar_completa_uma_conexao_solta_do_terraer(referencia):
     assert (solta.start, solta.end) == (outra, entidade)
     pontas_certas(solta)
     assert io.loads(io.dumps(doc))
+
+
+def test_conexao_selecionada_leva_as_dobras_ao_mover():
+    """Elemento e conexão selecionados: as dobras andam junto, mesmo com a outra ponta parada."""
+    doc, h, aluno, cursa, _curso, conexao = modelo()
+    h.execute(add_bend_command(doc, conexao, 0, (200, 100)))
+    h.execute(add_bend_command(doc, conexao, 1, (220, 250)))
+    antes = io.dumps(doc)
+    h.execute(move_command(doc, [cursa, conexao], 30, -20))
+    assert connection_path(conexao)[1:-1] == [(230, 80), (250, 230)]
+    pontas_certas(conexao)
+    h.undo()
+    assert io.dumps(doc) == antes
+
+
+def test_conexao_nao_selecionada_mantem_as_dobras():
+    doc, h, _aluno, cursa, _curso, conexao = modelo()
+    h.execute(add_bend_command(doc, conexao, 0, (200, 100)))
+    h.execute(move_command(doc, [cursa], 30, -20))
+    assert connection_path(conexao)[1:-1] == [(200, 100)]  # como no TerraER
+    pontas_certas(conexao)
+
+
+def test_conexao_selecionada_com_as_duas_pontas_movidas_anda_uma_vez():
+    doc, h, aluno, cursa, _curso, conexao = modelo()
+    h.execute(add_bend_command(doc, conexao, 0, (200, 100)))
+    h.execute(move_command(doc, [aluno, cursa, conexao], 10, 10))
+    assert connection_path(conexao)[1:-1] == [(210, 110)]
+    pontas_certas(conexao)

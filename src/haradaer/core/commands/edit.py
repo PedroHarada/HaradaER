@@ -175,15 +175,25 @@ def _reroute(
     nos: set[int],
     previstos: dict[int, Rect],
     deslocamentos: dict[int, tuple[float, float]] | None = None,
+    conexoes_movidas: dict[int, tuple[float, float]] | None = None,
 ) -> list[Command]:
     """Comandos que religam às bordas as conexões ligadas a elementos que mudaram de lugar.
 
-    As dobras ficam onde estão, como no TerraER; só se as duas pontas andarem juntas (mesmo
-    deslocamento) a linha inteira acompanha.
+    As dobras ficam onde estão, como no TerraER; a linha inteira acompanha se as duas pontas
+    andarem juntas (mesmo deslocamento) ou se a própria conexão estiver entre as movidas (a
+    seleção do arraste), como o `moveBy` do JHotDraw.
     """
     deslocamentos = deslocamentos or {}
+    conexoes_movidas = conexoes_movidas or {}
+    conexoes = connections_of(documento, nos)
+    vistas = {id(c) for c in conexoes}
+    conexoes += [
+        f
+        for f in documento.figures
+        if isinstance(f, ConnectionFigure) and id(f) in conexoes_movidas and id(f) not in vistas
+    ]
     comandos: list[Command] = []
-    for conexao in connections_of(documento, nos):
+    for conexao in conexoes:
         origem = _rect_of(conexao.start, previstos)
         destino = _rect_of(conexao.end, previstos)
         pontos = conexao.child("points")
@@ -192,7 +202,9 @@ def _reroute(
         internos = pontos.children[1:-1]
         dx = dy = 0.0
         de_inicio = deslocamentos.get(id(conexao.start))
-        if de_inicio is not None and de_inicio == deslocamentos.get(id(conexao.end)):
+        if id(conexao) in conexoes_movidas:
+            dx, dy = conexoes_movidas[id(conexao)]
+        elif de_inicio is not None and de_inicio == deslocamentos.get(id(conexao.end)):
             dx, dy = de_inicio
         dobras = [(x + dx, y + dy) for x, y in map(_xy, internos)]
         (x1, y1), (x2, y2) = route_ends(origem, destino, dobras)
@@ -365,7 +377,11 @@ def _move_each(
     movidos: set[int] = set()
     previstos: dict[int, Rect] = {}
     deltas: dict[int, tuple[float, float]] = {}
+    linhas: dict[int, tuple[float, float]] = {}  # conexões na seleção: as dobras vão junto
     for figura, dx, dy in deslocamentos:
+        if isinstance(figura, ConnectionFigure):
+            linhas[id(figura)] = (dx, dy)
+            continue
         if not can_move(figura):
             continue
         comandos.extend(_shift(documento, figura, figura, dx, dy))
@@ -375,7 +391,9 @@ def _move_each(
             rect = node_rect(no)
             if rect is not None:
                 previstos[id(no)] = (rect[0] + dx, rect[1] + dy, rect[2], rect[3])
-    comandos.extend(_reroute(documento, movidos, previstos, deltas))
+    if not movidos:
+        linhas = {}  # só conexões, sem elemento: nada anda (o arraste sempre leva um elemento)
+    comandos.extend(_reroute(documento, movidos, previstos, deltas, linhas))
     return Composite(comandos, rotulo)
 
 

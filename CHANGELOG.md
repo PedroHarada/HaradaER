@@ -4,6 +4,17 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.1.1 — 2026-10-22
+
+### Corrigido
+
+- O HaradaER passa a ser distribuído sob a GPLv3 (arquivo `LICENSE`).
+- Os pacotes deixam de levar o teclado virtual do Qt (só GPLv3), o Qt Quick, o Qml e o QtPdf, que
+  o programa não usa; ficam menores.
+- `AVISOS-DE-LICENCA.txt` com todas as bibliotecas incluídas e os textos completos das licenças.
+- Ao arrastar um elemento junto com conexões selecionadas, as dobras dessas conexões acompanham
+  o movimento (antes ficavam paradas e a linha entortava).
+
 ## 1.1.0 — 2026-10-22
 
 ### Adicionado
