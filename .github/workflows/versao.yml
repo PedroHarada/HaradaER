@@ -71,8 +71,8 @@ jobs:
             docker run --rm -e QT_QPA_PLATFORM=offscreen -v "$PWD/dist:/haradaer" "$1" \
               sh -c "$2 >/dev/null && /haradaer/HaradaER --autoteste /tmp/a.txt; c=\$?; cat /tmp/a.txt; exit \$c"
           }
-          echo "== Fedora"; testar fedora:41 "dnf -q -y install fontconfig libglvnd-egl libglvnd-opengl"
-          echo "== Arch"; testar archlinux:latest "pacman -Sy --noconfirm --quiet fontconfig libglvnd"
+          echo "== Fedora"; testar fedora:41 "dnf -q -y install fontconfig libglvnd-egl libglvnd-glx libglvnd-opengl libxkbcommon"
+          echo "== Arch"; testar archlinux:latest "pacman -Sy --noconfirm --quiet fontconfig libglvnd libxkbcommon"
       - name: Autoteste do executável (macOS)
         if: matrix.sistema == 'macos'
         run: |
