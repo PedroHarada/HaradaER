@@ -327,6 +327,6 @@ def test_paineis_comecam_em_abas_com_o_inspetor_a_frente(janela):
         for b in janela.findChildren(QTabBar)
         if b.count() and b.isVisible()
     ]
-    assert abas == [["Propriedades", "Mensagens", "Inspetor de objetos"]]
+    assert abas == [["Propriedades", "Mensagens", "Inspetor de objetos", "Esquema lógico"]]
     assert not janela.inspector_dock.visibleRegion().isEmpty()
     assert janela.messages_dock.visibleRegion().isEmpty()  # atrás, na sua aba

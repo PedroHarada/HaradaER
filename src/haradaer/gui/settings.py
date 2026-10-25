@@ -17,6 +17,7 @@ STRUCTURE_KEY = "verificacao/avisos-de-estrutura"
 LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
+SCHEMA_KEY = "esquema/gravar-ao-salvar"
 
 
 def settings() -> QSettings:
@@ -111,4 +112,15 @@ def last_update_check() -> str | None:
 def set_last_update_check(dia: str) -> None:
     config = settings()
     config.setValue(LAST_CHECK_KEY, dia)
+    config.sync()
+
+
+def schema_file_enabled() -> bool:
+    """Gravar `<modelo>.esquema.md` ao salvar (RF-23); desligado se nunca foi mudado."""
+    return str(settings().value(SCHEMA_KEY, "false")).lower() == "true"
+
+
+def set_schema_file_enabled(ligado: bool) -> None:
+    config = settings()
+    config.setValue(SCHEMA_KEY, "true" if ligado else "false")
     config.sync()

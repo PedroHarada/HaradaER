@@ -45,11 +45,14 @@ from haradaer.gui.palette import CONNECTIONS, ELEMENTS
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.scene.items import WARNING_COLOR
+from haradaer.gui.schema_panel import SchemaPanel, schema_file, write_schema_file
 from haradaer.gui.settings import (
     RecentFiles,
     save_window_layout,
     saved_language,
+    schema_file_enabled,
     set_saved_language,
+    set_schema_file_enabled,
     set_structure_warnings_enabled,
     set_update_check_enabled,
     structure_warnings_enabled,
@@ -174,6 +177,11 @@ class DocumentWindow(QMainWindow):
         arquivo.addSeparator()
         self.action_export = self._action(_("&Exportar desenho..."), "Ctrl+E", self.export)
         arquivo.addAction(self.action_export)
+        self.action_schema_file = QAction(_("Gravar esquema &lógico ao salvar"), self)
+        self.action_schema_file.setCheckable(True)
+        self.action_schema_file.setChecked(schema_file_enabled())
+        self.action_schema_file.toggled.connect(set_schema_file_enabled)
+        arquivo.addAction(self.action_schema_file)
         arquivo.addSeparator()
         arquivo.addActions([self.action_close, self.action_quit])
 
@@ -299,6 +307,7 @@ class DocumentWindow(QMainWindow):
                 self.inspector_dock.toggleViewAction(),
                 self.properties_dock.toggleViewAction(),
                 self.messages_dock.toggleViewAction(),
+                self.schema_dock.toggleViewAction(),
             ]
         )
 
@@ -337,10 +346,17 @@ class DocumentWindow(QMainWindow):
         self.messages_dock.setWidget(self.messages)
         self.messages_dock.setMinimumWidth(DOCK_MIN_WIDTH)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.messages_dock)
-        # Padrão: os três em abas à direita, nesta ordem, com o inspetor à frente. A disposição
+        self.schema = SchemaPanel()
+        self.schema_dock = QDockWidget(_("Esquema lógico"), self)
+        self.schema_dock.setObjectName("esquema")
+        self.schema_dock.setWidget(self.schema)
+        self.schema_dock.setMinimumWidth(DOCK_MIN_WIDTH)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.schema_dock)
+        # Padrão: os quatro em abas à direita, nesta ordem, com o inspetor à frente. A disposição
         # que o usuário escolher depois é lembrada e vale por cima desta.
         self.tabifyDockWidget(self.properties_dock, self.messages_dock)
         self.tabifyDockWidget(self.messages_dock, self.inspector_dock)
+        self.tabifyDockWidget(self.inspector_dock, self.schema_dock)
         self.inspector_dock.raise_()
 
     def _build_toolbar(self) -> None:
@@ -553,7 +569,31 @@ class DocumentWindow(QMainWindow):
         self.recent.add(self.path)
         self._editor.history.mark_clean()
         self.statusBar().showMessage(_("Salvo em {caminho}").format(caminho=caminho), 4000)
+        self._refresh_schema()
+        if self.action_schema_file.isChecked():
+            self._write_schema(self.path)
         return True
+
+    def _write_schema(self, caminho: Path) -> None:
+        """Grava o `.esquema.md` (RF-23). Se falhar, o `.xml` já gravado continua valendo."""
+        try:
+            destino = write_schema_file(self._editor.document, caminho)
+        except OSError as erro:
+            QMessageBox.warning(
+                self,
+                _("Não foi possível gravar o esquema lógico"),
+                f"{schema_file(caminho).name}\n\n{save_error_text(erro)}",
+            )
+            return
+        self.statusBar().showMessage(
+            _("Salvo em {caminho} (e o esquema lógico em {esquema})").format(
+                caminho=caminho.name, esquema=destino.name
+            ),
+            4000,
+        )
+
+    def _refresh_schema(self) -> None:
+        self.schema.show_schema(self._editor.document, self.path)
 
     # --- edição ------------------------------------------------------------------------------
 
@@ -755,6 +795,7 @@ class DocumentWindow(QMainWindow):
         self._update_title()
         self._refresh_issues()
         self.inspector.refresh(self._editor.document)
+        self._refresh_schema()
         self._selection_changed()
 
     def _refresh_issues(self) -> None:

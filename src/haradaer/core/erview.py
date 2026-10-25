@@ -6,6 +6,7 @@ Nada aqui é gravado; é calculado a partir das conexões `lcaf` (ARQUITETURA.md
 from __future__ import annotations
 
 import unicodedata
+from dataclasses import dataclass
 
 from haradaer.core.commands.edit import all_nodes
 from haradaer.core.figures.tags import TYPED_ATTRIBUTE_TAGS
@@ -77,3 +78,136 @@ def find_nodes(documento: Document, texto: str) -> list[NodeFigure]:
     """Elementos cujo nome contém o texto, na ordem do desenho (RF-08)."""
     procurado = normalize(texto.strip())
     return [f for f in all_nodes(documento) if procurado in normalize(f.name or "")]
+
+
+# ------------------------------------------------------------- relacionamentos e generalizações
+
+PARTICIPATION_LINKS = ("llabelUm", "llabelMuitos", "llabelDoubleUm", "llabelDoubleMuitos")
+RELATIONSHIP_TAGS = ("rel", "relfraco", "entrel")
+ENTITY_TAGS = ("ent", "entfraca", "entrel")
+GENERALIZATION_CIRCLES = ("uniao", "disjuncao", "sobreposicao")
+_LADO_SUPERCLASSE = ("llabelGeneralizacao", "llabelDoubleGeneralizacao")
+
+
+@dataclass(frozen=True)
+class Participation:
+    """Uma entidade num relacionamento: razão de cardinalidade ("1" ou "N") e se é total."""
+
+    entity: NodeFigure
+    cardinality: str
+    total: bool
+    connection: ConnectionFigure
+
+
+def participants(documento: Document) -> dict[int, list[Participation]]:
+    """`id(relacionamento)` -> participações, na ordem do desenho.
+
+    A cardinalidade e a participação estão na tag da conexão (`Um`/`Muitos`, `Double` = total).
+    As duas pontas são testadas: arquivos antigos podem vir em qualquer sentido. A entidade
+    associativa é relacionamento das entidades ligadas a ela e entidade dos relacionamentos a
+    que ela se liga. O recursivo aparece duas vezes, uma por papel.
+    """
+    resultado: dict[int, list[Participation]] = {}
+    for figura in documento.figures:
+        if not isinstance(figura, ConnectionFigure) or figura.tag not in PARTICIPATION_LINKS:
+            continue
+        inicio, fim = figura.start, figura.end
+        if not isinstance(inicio, NodeFigure) or not isinstance(fim, NodeFigure):
+            continue
+        relacionamento, entidade = _relationship_and_entity(inicio, fim)
+        if relacionamento is None or entidade is None:
+            continue
+        cardinalidade = "N" if "Muitos" in figura.tag else "1"
+        total = "Double" in figura.tag
+        resultado.setdefault(id(relacionamento), []).append(
+            Participation(entidade, cardinalidade, total, figura)
+        )
+    return resultado
+
+
+def _relationship_and_entity(a: NodeFigure, b: NodeFigure):
+    for rel, ent in ((a, b), (b, a)):
+        if rel.tag in ("rel", "relfraco") and ent.tag in ENTITY_TAGS:
+            return rel, ent
+    for rel, ent in ((a, b), (b, a)):  # associativa como relacionamento das entidades
+        if rel.tag == "entrel" and ent.tag in ("ent", "entfraca"):
+            return rel, ent
+    return None, None
+
+
+@dataclass(frozen=True)
+class Generalization:
+    """Um círculo (ou uma ligação direta) de especialização/generalização.
+
+    `superclasses` tem uma entidade na especialização e as definidoras na união (categoria);
+    `subclasses` tem as subclasses, ou a categoria na união. `assumed` diz que a direção não
+    estava clara no desenho e foi deduzida.
+    """
+
+    circle: Element
+    kind: str  # "disjuncao", "sobreposicao", "uniao" ou "direta"
+    superclasses: tuple[NodeFigure, ...]
+    subclasses: tuple[NodeFigure, ...]
+    total: bool
+    assumed: bool = False
+
+
+def generalizations(documento: Document) -> list[Generalization]:
+    """Especializações do desenho, na ordem do desenho.
+
+    Ligam a superclasse ao círculo as linhas de participação em generalização (opcional ou
+    obrigatória, que diz se a especialização é total); a `generalizacaoLine` liga o círculo à
+    subclasse. Na ligação direta entre duas entidades (uma subclasse só), a origem é a
+    superclasse, como o círculo é a origem nas outras. Se todas as ligações de um círculo forem do
+    mesmo tipo, a superclasse é a única entidade com atributo chave; sem isso, fica de fora.
+    """
+    lados: dict[int, list[tuple[str, NodeFigure]]] = {}
+    circulos: dict[int, Element] = {}
+    diretas: list[Generalization] = []
+    for figura in documento.figures:
+        if not isinstance(figura, ConnectionFigure):
+            continue
+        inicio, fim = figura.start, figura.end
+        if not isinstance(inicio, NodeFigure) or not isinstance(fim, NodeFigure):
+            continue
+        if (
+            figura.tag == "generalizacaoLine"
+            and inicio.tag in ENTITY_TAGS
+            and fim.tag in ENTITY_TAGS
+        ):
+            diretas.append(Generalization(figura, "direta", (inicio,), (fim,), False, True))
+            continue
+        if figura.tag not in ("generalizacaoLine", *_LADO_SUPERCLASSE):
+            continue
+        for circulo, entidade in ((inicio, fim), (fim, inicio)):
+            if circulo.tag in GENERALIZATION_CIRCLES and entidade.tag in ENTITY_TAGS:
+                circulos[id(circulo)] = circulo
+                lados.setdefault(id(circulo), []).append((figura.tag, entidade))
+                break
+    chaves = {id(dono) for no, dono in _key_owners(documento)}
+    resultado: list[Generalization] = []
+    for chave, circulo in circulos.items():
+        ligacoes = lados[chave]
+        de_cima = [e for t, e in ligacoes if t in _LADO_SUPERCLASSE]
+        de_baixo = [e for t, e in ligacoes if t == "generalizacaoLine"]
+        total = any(t == "llabelDoubleGeneralizacao" for t, _e in ligacoes)
+        assumida = False
+        if not de_cima or not de_baixo:  # todas do mesmo tipo: a superclasse é quem tem chave
+            todas = de_cima or de_baixo
+            com_chave = [e for e in todas if id(e) in chaves]
+            if len(com_chave) != 1 or len(todas) < 2:
+                continue
+            de_cima = com_chave
+            de_baixo = [e for e in todas if e is not com_chave[0]]
+            assumida = True
+        resultado.append(
+            Generalization(circulo, circulo.tag, tuple(de_cima), tuple(de_baixo), total, assumida)
+        )
+    return resultado + diretas
+
+
+def _key_owners(documento: Document):
+    donos = attribute_owners(documento)
+    for no in all_nodes(documento):
+        if no.tag in _CHAVES and id(no) in donos:
+            yield no, donos[id(no)]

@@ -57,7 +57,8 @@ HaradaER/
 │   │   ├── figures/      # tags (tabelas), types (NodeFigure...), validation
 │   │   ├── commands/     # Command, History, comandos de edição, copiar e colar
 │   │   ├── rules/        # matriz de validação, recomendação de conexão, avisos de estrutura
-│   │   ├── erview.py     # dono de cada atributo (inspetor)
+│   │   ├── erview.py     # dono de cada atributo, participações e generalizações
+│   │   ├── relational/   # esquema lógico relacional e o Markdown dele (RF-23)
 │   │   └── geometry.py   # pontos, retângulos, conectores (interseção com a borda)
 │   ├── gui/
 │   │   ├── app.py        # QApplication, lista de janelas, arquivos recentes
@@ -192,9 +193,12 @@ A interface só converte as operações em pintura; todo o conhecimento do Terra
 - `recommend_connections(origem, destino)` devolve os tipos de conexão válidos para o par, sem a conexão livre; `recommend_elements(conexao)` devolve os pares (origem, destino) em que o tipo vale. Os dois usam a mesma tabela da validação (`INVESTIGACOES.md` seção 12).
 - **Teste de regressão contra o TerraER.** A tabela (`rules/tables.py`) é conferida par a par contra `matriz-validacao.txt`, e cada conexão dos arquivos de referência é conferida contra o que o próprio TerraER pinta de vermelho (`validacao-por-arquivo.txt`, gerado por `harness/ValidaArquivo.java`; JDK só para regenerar).
 
-### 4.4 DDL (`ddl`) — fora da v1
+### 4.4 Esquema lógico (`relational`) e DDL
 
-O DDL foi adiado (RF-13). O desenho abaixo fica reservado para quando voltar ao escopo; a pasta `core/ddl/` não é criada na v1.
+O passo 2 do desenho abaixo, o esquema relacional, está feito desde a 1.2.0 (RF-23): `core/relational/` calcula o esquema do diagrama (`map_schema`), seguindo o mapeamento de Elmasri e Navathe (regras em `CONCEITOS.md`, seção 3), e o escreve em Markdown (`schema_markdown`). O passo 3, o texto SQL, continua adiado (RF-13); quando vier, é só uma outra forma de escrever o mesmo `Schema`.
+
+- `core/erview.py` ganhou `participants` (cardinalidade e participação de cada entidade em cada relacionamento) e `generalizations` (superclasse, subclasses, total).
+- O esquema nunca vai para o `.xml` (RNF-01). Os avisos saem como códigos (`SCHEMA_CODES`), e `gui/schema_panel.py` os põe em palavras (D-09); os títulos do Markdown usam `_()`, como os nomes padrão.
 
 Pipeline em três passos, para que as regras ainda desconhecidas (QA-04) entrem sem mexer no resto:
 
@@ -283,7 +287,7 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 
 ### 5.5 Painéis
 
-`QDockWidget`s, como no Octave (RNF-09): paleta de elementos, inspetor de objetos (RF-16) e mensagens da verificação (RF-09). Disposição e visibilidade salvas com `QSettings` (`saveState`/`restoreState`).
+`QDockWidget`s, como no Octave (RNF-09): paleta de elementos, inspetor de objetos (RF-16), mensagens da verificação (RF-09) e esquema lógico (RF-23, `gui/schema_panel.py`, refeito em cada `_history_changed`; com Arquivo › Gravar esquema lógico ao salvar, `write_schema_file` grava `<modelo>.esquema.md` depois do `.xml`, e uma falha nele não desfaz o `.xml`). Disposição e visibilidade salvas com `QSettings` (`saveState`/`restoreState`).
 
 ### 5.6 Exportação e área de transferência (RF-11)
 

@@ -126,6 +126,10 @@ para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
 atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
 
+O painel **Esquema lógico** mostra as tabelas que o diagrama gera (esquema relacional); com
+**Arquivo › Gravar esquema lógico ao salvar**, elas vão também para um `.esquema.md` ao lado
+do modelo.
+
 Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
 melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
 

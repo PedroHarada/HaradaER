@@ -124,6 +124,9 @@ English); to change it, use **View › Language** and open the program again. To
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
 without a key attribute. You can turn them off in **View › Structure warnings**.
 
+The **Logical schema** panel shows the tables the diagram produces (relational schema); with
+**File › Save logical schema on save**, they also go to an `.esquema.md` next to the model.
+
 Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
 improvement** open the GitHub page already filled in (a GitHub account is needed).
 

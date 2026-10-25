@@ -88,6 +88,8 @@ está em `docs/REQUISITOS.md` (seção 10).
 - [Requisitos](docs/REQUISITOS.md)
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)
+- [Conceitos](docs/CONCEITOS.md): a base teórica (Elmasri e Navathe) e o esquema lógico
+- [Revisão teórica](docs/REVISAO-TEORICA.md): onde o HaradaER ainda não segue o livro
 
 ## Baixar sem instalar
 
@@ -100,8 +102,8 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 ## Lançar uma versão
 
 ```
-git tag v1.1.2
-git push origin v1.1.2
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
