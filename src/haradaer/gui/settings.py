@@ -14,6 +14,7 @@ RECENT_KEY = "arquivos/recentes"
 STATE_KEY = "janela/estado"
 GEOMETRY_KEY = "janela/geometria"
 STRUCTURE_KEY = "verificacao/avisos-de-estrutura"
+QUICK_EDIT_KEY = "edicao/edicao-rapida"
 LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
@@ -77,6 +78,17 @@ def structure_warnings_enabled() -> bool:
 def set_structure_warnings_enabled(ligado: bool) -> None:
     config = settings()
     config.setValue(STRUCTURE_KEY, "true" if ligado else "false")
+    config.sync()
+
+
+def quick_edit_enabled() -> bool:
+    """A Edição rápida (Editar › Edição rápida) começa desligada."""
+    return str(settings().value(QUICK_EDIT_KEY, "false")).lower() == "true"
+
+
+def set_quick_edit_enabled(ligado: bool) -> None:
+    config = settings()
+    config.setValue(QUICK_EDIT_KEY, "true" if ligado else "false")
     config.sync()
 
 

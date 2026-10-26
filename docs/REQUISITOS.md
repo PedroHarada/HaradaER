@@ -44,7 +44,7 @@ Os arquivos em `docs/referencia-terraer/` são a saída real do TerraER e servem
 - Compatibilidade da área de transferência com a do TerraER (copiar e colar de elementos entre os dois programas): **descartada** (QA-13).
 - Exportação para GIF: **descartada** (QA-14).
 - Geração de DDL SQL (RF-13): adiada para depois da v1; o levantamento do TerraER já está feito (`INVESTIGACOES.md` seção 6).
-- Edição da instrução SQL do atributo derivado e Modo de Edição Rápida (RF-20): adiados. A instrução SQL já gravada num arquivo continua sendo lida e regravada.
+- Edição da instrução SQL do atributo derivado (RF-20): adiada. A instrução SQL já gravada num arquivo continua sendo lida e regravada. O Modo de Edição Rápida entrou na 1.2.0 (RF-24), num desenho próprio.
 - Impressão (RF-14): **descartada**; o PDF de Exportar desenho cobre a necessidade.
 
 ## 3. Elementos do modelo
@@ -255,6 +255,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-20 | **Instrução SQL do atributo derivado:** ler e gravar o atributo `sql` de `atrderivado` sem perdê-lo (RNF-01). **Fora da v1:** editar essa instrução na interface e o Modo de Edição Rápida (`INVESTIGACOES.md` seções 7 e 8). |
 | RF-21 | **Relatar e sugerir:** Ajuda › Relatar um problema e Ajuda › Sugerir uma melhoria abrem no navegador a página de nova issue do repositório no GitHub, já com a versão, o sistema e o idioma preenchidos. O programa não envia nada sozinho (decisão do autor, 2026-10-22). |
 | RF-22 | **Aviso de versão nova:** ao abrir, no máximo uma vez por dia, o programa consulta no GitHub a versão mais recente e, se for maior, avisa com um botão que abre a página Releases. Ajuda › Verificar atualizações consulta na hora; Ajuda › Verificar ao abrir desliga a consulta automática. O programa não baixa nem instala nada sozinho (decisão do autor, 2026-10-22). |
+| RF-24 | **Edição rápida e troca de tipo:** com Editar › Edição rápida ligada (Ctrl+Shift+E ou o botão na barra de status), uma tecla escolhe a ferramenta, uma letra por família, e repetir a letra passa ao próximo tipo; a ferramenta continua ativa depois de criar; Espaço cria no cursor; a tecla de uma conexão liga os dois elementos selecionados; A cria um atributo ligado ao elemento selecionado; a letra da família troca o tipo do elemento selecionado. Clique direito › Trocar tipo troca o tipo dentro da família sem mudar o lugar, o nome e as conexões. Ajuda › Atalhos do teclado (F1) lista todos os atalhos, e os manuais trazem a mesma lista. Nada novo no `.xml` (RNF-01). Em avaliação na linha 1.2.x (decisão do autor, 2026-10-25). O RF-23 fica reservado para o esquema lógico relacional (branch `esquema-logico-relacional`). |
 
 ### 6.2 Requisitos não funcionais
 
@@ -348,9 +349,10 @@ Conferência de cada requisito com o programa e os testes (800 testes automátic
 | RF-17 | Pronto | Pergunta ao fechar; mensagens claras ao não conseguir gravar (M4, M5a) |
 | RF-18 | Pronto | Campo de nome sobre o elemento (M4) |
 | RF-19 | Pronto | Uma janela por documento |
-| RF-20 | Pronto (parte da v1) | `sql` lido e regravado; edição fora da v1 |
+| RF-20 | Pronto (parte da v1) | `sql` lido e regravado; edição fora da v1; Edição rápida no RF-24 |
 | RF-21 | Pronto (1.1.0) | Menu Ajuda; formulários em `.github/ISSUE_TEMPLATE/` (`ARQUITETURA.md` seção 5.8) |
 | RF-22 | Pronto (1.1.0) | `updates.py` e `gui/updates.py` (`ARQUITETURA.md` seção 5.9) |
+| RF-24 | Pronto (1.2.0), em avaliação | `gui/shortcuts.py`, `gui/shortcuts_dialog.py`, `change_node_type_command` em `core/commands/edit.py`; pode mudar nas 1.2.x |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 

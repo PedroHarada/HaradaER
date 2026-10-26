@@ -306,4 +306,53 @@ EN: dict[str, str] = {
     "Não foi possível verificar agora (sem internet ou o GitHub não respondeu).": (
         "Couldn't check right now (no internet, or GitHub didn't respond)."
     ),
+    # Edição rápida
+    "Edição rápid&a": "Quick edit&ing",
+    "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (
+        "One-key shortcuts for the tools (E, R, A, G, 1, N, L, H, C, V)"
+    ),
+    "Espaço cria um elemento: escolha antes um elemento.": (
+        "Space creates an element: choose an element first."
+    ),
+    "Ponha o mouse sobre o desenho.": "Put the mouse over the drawing.",
+    "{conexao} não liga {a} e {b}.": "{conexao} doesn't connect {a} and {b}.",
+    # Atalhos do teclado
+    "Atalhos do &teclado…": "&Keyboard shortcuts…",
+    "Atalhos do teclado": "Keyboard shortcuts",
+    "Buscar atalho…": "Search shortcuts…",
+    "Edição rápida (Editar › Edição rápida)": "Quick editing (Edit › Quick editing)",
+    "Ação": "Action",
+    "Trocar o tipo do elemento selecionado (com Selecionar)": (
+        "Change the selected element's type (with Select)"
+    ),
+    "Letra da família": "Family letter",
+    "Atalho": "Shortcut",
+    "Mouse e gestos": "Mouse and gestures",
+    "Voltar uma posição no ciclo": "Go back one step in the cycle",
+    "Shift + letra": "Shift + letter",
+    "Criar onde está o mouse": "Create where the mouse is",
+    "Espaço": "Space",
+    "Voltar para Selecionar": "Back to Select",
+    "Zoom": "Zoom",
+    "Pinça, ou Ctrl + roda do mouse": "Pinch, or Ctrl + mouse wheel",
+    "Rolar o desenho": "Scroll the drawing",
+    "Dois dedos, ou a roda do mouse": "Two fingers, or the mouse wheel",
+    "Mover o desenho": "Pan the drawing",
+    "Botão do meio e arrastar": "Middle button and drag",
+    "Manter a ferramenta depois de criar": "Keep the tool after creating",
+    "Shift + clique": "Shift + click",
+    "Editar o nome": "Edit the name",
+    "Duplo clique no elemento": "Double-click the element",
+    "Novo vértice na conexão": "New bend on the connection",
+    "Duplo clique na linha": "Double-click the line",
+    "Tirar um vértice": "Remove a bend",
+    "Duplo clique no vértice": "Double-click the bend",
+    # Trocar tipo
+    "Trocar tipo": "Change type",
+    "Trocar &tipo": "Change &type",
+    "Ao virar {tipo}, o elemento perde {perdas}. Trocar mesmo assim?": (
+        "As {tipo}, the element loses {perdas}. Change anyway?"
+    ),
+    "a instrução SQL do atributo derivado": "the derived attribute's SQL statement",
+    "o tipo SQL e a anulabilidade do atributo": "the attribute's SQL type and nullability",
 }
