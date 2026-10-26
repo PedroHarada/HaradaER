@@ -2,6 +2,7 @@
 
 import pytest
 from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import QKeySequence
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QLineEdit, QMessageBox
 
@@ -166,7 +167,8 @@ def test_atalhos_do_teclado_lista_menus_edicao_rapida_e_busca(janela):
     dialogo = janela.show_shortcuts()
     linhas = dialogo.visible_rows()
     textos = [a for a, _ in linhas]
-    assert ("Edição rápida", "Ctrl+Shift+E") in linhas
+    nativo = QKeySequence("Ctrl+Shift+E").toString(QKeySequence.SequenceFormat.NativeText)
+    assert ("Edição rápida", nativo) in linhas  # ⇧⌘E no Mac
     assert any(t == "E" for _, t in linhas)
     assert "Mouse e gestos" in textos
     dialogo.search.setText("duplicar")
