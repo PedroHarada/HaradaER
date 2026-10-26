@@ -133,3 +133,100 @@ Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e av
 baixado sozinho. Para desligar, desmarque **Ajuda › Verificar ao abrir**.
 
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
+
+---
+
+## Atalhos do teclado
+
+A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Os atalhos de uma tecla
+valem com **Editar › Edição rápida** ligada (Ctrl+Shift+E, ou o botão na barra de status).
+Com Selecionar ativo e um elemento selecionado, a letra da família dele troca o tipo (por
+exemplo, A num atributo o faz virar chave).
+
+<!-- atalhos: início (gerado por python -m haradaer.gui.shortcuts_dialog) -->
+
+**Arquivo**
+
+| Ação | Atalho |
+|---|---|
+| Novo | `Ctrl+N` |
+| Abrir | `Ctrl+O` |
+| Salvar | `Ctrl+S` |
+| Salvar como | `Ctrl+Shift+S` |
+| Exportar desenho | `Ctrl+E` |
+| Fechar | `Ctrl+F4` |
+
+**Editar**
+
+| Ação | Atalho |
+|---|---|
+| Desfazer | `Ctrl+Z` |
+| Refazer | `Ctrl+Y` |
+| Recortar | `Ctrl+X` |
+| Copiar | `Ctrl+C` |
+| Colar | `Ctrl+V` |
+| Duplicar | `Ctrl+D` |
+| Excluir | `Del` |
+| Selecionar tudo | `Ctrl+A` |
+| Selecionar do mesmo tipo | `Ctrl+Shift+A` |
+| Localizar | `Ctrl+F` |
+| Copiar como imagem | `Ctrl+Shift+C` |
+| Edição rápida | `Ctrl+Shift+E` |
+
+**Organizar**
+
+| Ação | Atalho |
+|---|---|
+| Trazer para a frente | `Ctrl+]` |
+| Enviar para trás | `Ctrl+[` |
+| Agrupar | `Ctrl+G` |
+| Desagrupar | `Ctrl+Shift+G` |
+
+**Exibir**
+
+| Ação | Atalho |
+|---|---|
+| Ampliar | `Ctrl++` |
+| Reduzir | `Ctrl+-` |
+| Tamanho real | `Ctrl+0` |
+| Ajustar à janela | `Ctrl+9` |
+| Grade | `Ctrl+'` |
+
+**Ajuda**
+
+| Ação | Atalho |
+|---|---|
+| Atalhos do teclado | `F1` |
+
+**Edição rápida (Editar › Edição rápida)**
+
+| Ação | Atalho |
+|---|---|
+| Selecionar | `V` |
+| Entidade → Entidade fraca → Entidade associativa | `E` |
+| Relacionamento → Relacionamento fraco | `R` |
+| Atributo → Atributo chave → Atributo chave parcial → Atributo multivalorado → Atributo derivado | `A` |
+| Disjunção → Sobreposição → União | `G` |
+| Participação, lado "1" → Participação total, lado "1" | `1` |
+| Participação, lado "N" → Participação total, lado "N" | `N` |
+| Ligação de atributo | `L` |
+| Generalização simples → Participação opcional em generalização → Participação obrigatória em generalização | `H` |
+| Conexão livre | `C` |
+| Voltar uma posição no ciclo | `Shift + letra` |
+| Trocar o tipo do elemento selecionado (com Selecionar) | `Letra da família` |
+| Criar onde está o mouse | `Espaço` |
+| Voltar para Selecionar | `Esc` |
+
+**Mouse e gestos**
+
+| Ação | Atalho |
+|---|---|
+| Zoom | `Pinça` `ou Ctrl + roda do mouse` |
+| Rolar o desenho | `Dois dedos` `ou a roda do mouse` |
+| Mover o desenho | `Botão do meio e arrastar` |
+| Manter a ferramenta depois de criar | `Shift + clique` |
+| Editar o nome | `Duplo clique no elemento` |
+| Novo vértice na conexão | `Duplo clique na linha` |
+| Tirar um vértice | `Duplo clique no vértice` |
+
+<!-- atalhos: fim -->

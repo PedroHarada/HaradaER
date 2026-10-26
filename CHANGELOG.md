@@ -4,6 +4,31 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.2.0 — 2026-10-25
+
+Versão em avaliação: a Edição rápida e a troca de tipo podem mudar nas versões 1.2.x, conforme o
+uso mostrar o que manter, ajustar ou tirar.
+
+### Adicionado
+
+- Editar › Edição rápida (Ctrl+Shift+E, ou o botão na barra de status): atalhos de uma tecla para
+  as ferramentas, uma letra por família (E entidade, R relacionamento, A atributo, G
+  generalização, 1 e N participação, L ligação de atributo, H herança, C conexão, V selecionar).
+  Repetir a letra passa ao próximo tipo da família, e Shift + a letra volta. O programa lembra se
+  o modo estava ligado.
+- Com a Edição rápida ligada:
+  - a ferramenta continua ativa depois de criar (Shift + clique inverte);
+  - Espaço cria o elemento da ferramenta onde está o mouse;
+  - com dois elementos selecionados, a tecla de uma conexão liga os dois na hora, ou a barra de
+    status diz por que o par não aceita;
+  - A com uma entidade ou um relacionamento selecionado cria um atributo já ligado a ele;
+  - com Selecionar ativo, a letra da família do elemento selecionado troca o tipo dele (A num
+    atributo o faz virar chave).
+- Clique direito num elemento › Trocar tipo: troca o tipo dentro da família (atributo, entidade,
+  relacionamento, generalização), com qualquer ferramenta ativa. Ficam o lugar, o nome e as
+  conexões; quando o tipo novo perde o tipo SQL ou a instrução SQL, o programa pergunta antes.
+- Ajuda › Atalhos do teclado (F1): todos os atalhos, com busca. A mesma lista está nos manuais.
+
 ## 1.1.2 — 2026-10-22
 
 ### Corrigido

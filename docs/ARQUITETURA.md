@@ -480,6 +480,7 @@ Regras:
 - Pré-versões levam hífen (`1.1.0-rc1`) e saem como pré-lançamento.
 - Uma versão publicada não muda: se sair com erro, a correção é a versão seguinte (a 1.0.0 virou a 1.0.1).
 - Mudança só na documentação do repositório, que não altera os pacotes, não gera versão; entra na próxima.
+- Uma funcionalidade nova pode sair como versão **em avaliação**: o `CHANGELOG` diz isso, e as melhorias e alterações que o uso pedir saem como `z` da mesma linha, mesmo que mudem o comportamento dela. Foi o caso da Edição rápida e da troca de tipo na 1.2.0 (decisão do autor, 2026-10-25): ajustes nas 1.2.x. Uma versão só vira a `y` nova quando a branch dela entra na `main`; a branch `atalhos-novos` virou a 1.2.0 ao entrar na `main`.
 
 Exemplos de `z`:
 

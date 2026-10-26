@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QToolBar,
+    QToolButton,
 )
 
 import haradaer
@@ -24,8 +25,10 @@ from haradaer.core.commands import (
     PASTE_OFFSET,
     fix_attribute_types_command,
     invalid_attribute_types,
+    node_type_family,
 )
 from haradaer.core.errors import ArquivoInvalidoError
+from haradaer.core.figures.factory import KINDS
 from haradaer.core.figures.types import NodeFigure
 from haradaer.core.model.document import Document
 from haradaer.core.rules import (
@@ -47,8 +50,10 @@ from haradaer.gui.scene import DiagramScene
 from haradaer.gui.scene.items import WARNING_COLOR
 from haradaer.gui.settings import (
     RecentFiles,
+    quick_edit_enabled,
     save_window_layout,
     saved_language,
+    set_quick_edit_enabled,
     set_saved_language,
     set_structure_warnings_enabled,
     set_update_check_enabled,
@@ -56,6 +61,8 @@ from haradaer.gui.settings import (
     update_check_enabled,
     window_layout,
 )
+from haradaer.gui.shortcuts import key_of, next_tool, position
+from haradaer.gui.shortcuts_dialog import ShortcutsDialog
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
@@ -135,11 +142,17 @@ class DocumentWindow(QMainWindow):
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
         self.view.tool_changed.connect(self._tool_changed)
+        self.view.shortcut_key.connect(self._shortcut_key)
         self.diagram_scene.selectionChanged.connect(self._selection_changed)
         self._build_docks()
         self.update_checker = UpdateChecker(self)  # aviso de versão nova (RF-22)
         self._build_menus()
         self._build_toolbar()
+        self._quick_edit_button = QToolButton()  # indicador clicável na barra de status
+        self._quick_edit_button.setDefaultAction(self.action_quick_edit)
+        self._quick_edit_button.setAutoRaise(True)
+        self.statusBar().insertPermanentWidget(0, self._quick_edit_button)
+        self._quick_edit_toggled(self.action_quick_edit.isChecked())
         self._restore_layout()
         self._attach(Document.new(), None)
 
@@ -211,6 +224,15 @@ class DocumentWindow(QMainWindow):
             _("Copiar como &imagem"), "Ctrl+Shift+C", self.copy_image
         )
         editar.addAction(self.action_copy_image)
+        editar.addSeparator()
+        self.action_quick_edit = self._action(_("Edição rápid&a"), "Ctrl+Shift+E", lambda: None)
+        self.action_quick_edit.setCheckable(True)
+        self.action_quick_edit.setChecked(quick_edit_enabled())
+        self.action_quick_edit.setStatusTip(
+            _("Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)")
+        )
+        self.action_quick_edit.toggled.connect(self._quick_edit_toggled)
+        editar.addAction(self.action_quick_edit)
 
         organizar = self.menuBar().addMenu(_("&Organizar"))
         self.action_front = self._action(_("&Trazer para a frente"), "Ctrl+]", self._bring_to_front)
@@ -303,6 +325,11 @@ class DocumentWindow(QMainWindow):
         )
 
         ajuda = self.menuBar().addMenu(_("Aj&uda"))
+        self.shortcuts_action = self._action(
+            _("Atalhos do &teclado…"), QKeySequence.StandardKey.HelpContents, self.show_shortcuts
+        )
+        ajuda.addAction(self.shortcuts_action)
+        ajuda.addSeparator()
         self.report_action = ajuda.addAction(_("&Relatar um problema…"))
         self.report_action.triggered.connect(lambda: self._open_issue("bug"))
         self.suggest_action = ajuda.addAction(_("&Sugerir uma melhoria…"))
@@ -795,6 +822,73 @@ class DocumentWindow(QMainWindow):
                 _("Abrir no navegador"),
                 _("Não foi possível abrir o navegador. Copie este endereço:") + f"\n\n{url}",
             )
+
+    def show_shortcuts(self) -> ShortcutsDialog:
+        dialogo = ShortcutsDialog(self, self.menuBar(), lambda t: self._tool_actions[t].statusTip())
+        dialogo.show()
+        return dialogo
+
+    # --- Edição rápida ------------------------------------------------------------------------
+
+    def _quick_edit_toggled(self, ligado: bool) -> None:
+        set_quick_edit_enabled(ligado)  # lembrado para as próximas janelas e sessões
+        self.view.quick_edit = ligado
+        for tool, acao in self._tool_actions.items():
+            tecla = key_of(tool)
+            dica = acao.statusTip()
+            acao.setToolTip(f"{dica} ({tecla})" if ligado and tecla else dica)
+
+    def _shortcut_key(self, tecla: str, voltar: bool) -> None:
+        """Uma letra da Edição rápida: escolhe a ferramenta, ou age sobre a seleção."""
+        atual = self.view.tool
+        figuras = self.diagram_scene.selected_figures()
+        if atual == SELECT and len(figuras) == 1 and isinstance(figuras[0], NodeFigure):
+            no = figuras[0]
+            familia = node_type_family(no.tag)
+            if len(familia) > 1 and key_of(Tool("create", no.tag)) == tecla.upper():
+                passo = -1 if voltar else 1  # a letra da família troca o tipo do selecionado
+                tag = familia[(familia.index(no.tag) + passo) % len(familia)]
+                self.view.change_type(no, tag)
+                if no.tag == tag:
+                    indice = familia.index(tag) + 1
+                    self.statusBar().showMessage(
+                        f"{_(KINDS[tag].label)}  ({tecla.upper()}: {indice}/{len(familia)})", 4000
+                    )
+                return
+        tool = next_tool(tecla, atual, voltar=voltar)
+        if tool is None:
+            return
+        nova_familia = key_of(atual) != tecla.upper()
+        par = self._selected_pair()
+        if tool.kind == "connect" and nova_familia and par is not None:
+            if tool.tag in self._valid_for(*par):
+                self._tool_clicked(tool)  # liga os dois na hora
+                return
+            self.view.set_tool(tool)
+            a, b = (name_of(f.tag) for f in par)
+            self.statusBar().showMessage(
+                _("{conexao} não liga {a} e {b}.").format(
+                    conexao=self._tool_actions[tool].statusTip(), a=a, b=b
+                ),
+                5000,
+            )
+            return
+        if (
+            tecla.upper() == "A"
+            and nova_familia
+            and len(figuras) == 1
+            and isinstance(figuras[0], NodeFigure)
+            and not figuras[0].tag.startswith("atr")
+            and is_valid_connection("lcaf", "atr", figuras[0].tag)
+        ):
+            self.view.create_attached("atr", figuras[0])
+            return
+        self.view.set_tool(tool)
+        indice, total = position(tool)
+        texto = self._tool_actions[tool].statusTip()
+        if total > 1:
+            texto += f"  ({tecla.upper()}: {indice}/{total})"
+        self.statusBar().showMessage(texto, 4000)
 
     def _structure_toggled(self, ligado: bool) -> None:
         set_structure_warnings_enabled(ligado)  # lembrado para as próximas janelas e sessões

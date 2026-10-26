@@ -40,8 +40,8 @@ def test_manuais_com_as_mesmas_secoes():
         ]
         for idioma, config in modulo.IDIOMAS.items()
     }
-    assert secoes["pt"] == ["Linux", "Windows", "macOS", "Depois de abrir"]
-    assert secoes["en"] == ["Linux", "Windows", "macOS", "After opening"]
+    assert secoes["pt"] == ["Linux", "Windows", "macOS", "Depois de abrir", "Atalhos do teclado"]
+    assert secoes["en"] == ["Linux", "Windows", "macOS", "After opening", "Keyboard shortcuts"]
 
 
 def test_grava_o_manual_em_ingles(tmp_path):

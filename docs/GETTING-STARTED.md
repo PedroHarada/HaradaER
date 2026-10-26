@@ -131,3 +131,100 @@ Once a day, when opening, HaradaER checks GitHub for a new version and lets you 
 is downloaded by itself. To turn it off, uncheck **Help › Check when opening**.
 
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).
+
+---
+
+## Keyboard shortcuts
+
+The same list is in **Help › Keyboard shortcuts** (F1), with search. The one-key shortcuts work
+with **Edit › Quick editing** on (Ctrl+Shift+E, or the button on the status bar). With Select
+active and one element selected, its family letter changes its type (for example, A on an
+attribute makes it a key).
+
+<!-- atalhos: início (gerado por python -m haradaer.gui.shortcuts_dialog) -->
+
+**File**
+
+| Action | Shortcut |
+|---|---|
+| New | `Ctrl+N` |
+| Open | `Ctrl+O` |
+| Save | `Ctrl+S` |
+| Save as | `Ctrl+Shift+S` |
+| Export drawing | `Ctrl+E` |
+| Close | `Ctrl+F4` |
+
+**Edit**
+
+| Action | Shortcut |
+|---|---|
+| Undo | `Ctrl+Z` |
+| Redo | `Ctrl+Y` |
+| Cut | `Ctrl+X` |
+| Copy | `Ctrl+C` |
+| Paste | `Ctrl+V` |
+| Duplicate | `Ctrl+D` |
+| Delete | `Del` |
+| Select all | `Ctrl+A` |
+| Select same kind | `Ctrl+Shift+A` |
+| Find | `Ctrl+F` |
+| Copy as image | `Ctrl+Shift+C` |
+| Quick editing | `Ctrl+Shift+E` |
+
+**Arrange**
+
+| Action | Shortcut |
+|---|---|
+| Bring to front | `Ctrl+]` |
+| Send to back | `Ctrl+[` |
+| Group | `Ctrl+G` |
+| Ungroup | `Ctrl+Shift+G` |
+
+**View**
+
+| Action | Shortcut |
+|---|---|
+| Zoom in | `Ctrl++` |
+| Zoom out | `Ctrl+-` |
+| Actual size | `Ctrl+0` |
+| Fit to window | `Ctrl+9` |
+| Grid | `Ctrl+'` |
+
+**Help**
+
+| Action | Shortcut |
+|---|---|
+| Keyboard shortcuts | `F1` |
+
+**Quick editing (Edit › Quick editing)**
+
+| Action | Shortcut |
+|---|---|
+| Select | `V` |
+| Entity → Weak entity → Associative entity | `E` |
+| Relationship → Weak relationship | `R` |
+| Attribute → Key attribute → Partial key attribute → Multivalued attribute → Derived attribute | `A` |
+| Disjunction → Overlap → Union | `G` |
+| Participation, side "1" → Total participation, side "1" | `1` |
+| Participation, side "N" → Total participation, side "N" | `N` |
+| Attribute link | `L` |
+| Simple generalization → Optional participation in generalization → Mandatory participation in generalization | `H` |
+| Free connection | `C` |
+| Go back one step in the cycle | `Shift + letter` |
+| Change the selected element's type (with Select) | `Family letter` |
+| Create where the mouse is | `Space` |
+| Back to Select | `Esc` |
+
+**Mouse and gestures**
+
+| Action | Shortcut |
+|---|---|
+| Zoom | `Pinch` `or Ctrl + mouse wheel` |
+| Scroll the drawing | `Two fingers` `or the mouse wheel` |
+| Pan the drawing | `Middle button and drag` |
+| Keep the tool after creating | `Shift + click` |
+| Edit the name | `Double-click the element` |
+| New bend on the connection | `Double-click the line` |
+| Remove a bend | `Double-click the bend` |
+
+<!-- atalhos: fim -->
