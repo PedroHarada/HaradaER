@@ -195,7 +195,7 @@ A interface só converte as operações em pintura; todo o conhecimento do Terra
 
 ### 4.4 Esquema lógico (`relational`) e DDL
 
-O passo 2 do desenho abaixo, o esquema relacional, está feito desde a 1.2.0 (RF-23): `core/relational/` calcula o esquema do diagrama (`map_schema`), seguindo o mapeamento de Elmasri e Navathe (regras em `CONCEITOS.md`, seção 3), e o escreve em Markdown (`schema_markdown`). O passo 3, o texto SQL, continua adiado (RF-13); quando vier, é só uma outra forma de escrever o mesmo `Schema`.
+O passo 2 do desenho abaixo, o esquema relacional, está feito desde a 1.3.0 (RF-23): `core/relational/` calcula o esquema do diagrama (`map_schema`), seguindo o mapeamento de Elmasri e Navathe (regras em `CONCEITOS.md`, seção 3), e o escreve em Markdown (`schema_markdown`). O passo 3, o texto SQL, continua adiado (RF-13); quando vier, é só uma outra forma de escrever o mesmo `Schema`.
 
 - `core/erview.py` ganhou `participants` (cardinalidade e participação de cada entidade em cada relacionamento) e `generalizations` (superclasse, subclasses, total).
 - O esquema nunca vai para o `.xml` (RNF-01). Os avisos saem como códigos (`SCHEMA_CODES`), e `gui/schema_panel.py` os põe em palavras (D-09); os títulos do Markdown usam `_()`, como os nomes padrão.
@@ -484,6 +484,7 @@ Regras:
 - Pré-versões levam hífen (`1.1.0-rc1`) e saem como pré-lançamento.
 - Uma versão publicada não muda: se sair com erro, a correção é a versão seguinte (a 1.0.0 virou a 1.0.1).
 - Mudança só na documentação do repositório, que não altera os pacotes, não gera versão; entra na próxima.
+- Uma funcionalidade nova pode sair como versão **em avaliação**: o `CHANGELOG` diz isso, e as melhorias e alterações que o uso pedir saem como `z` da mesma linha, mesmo que mudem o comportamento dela. Foi o caso da Edição rápida e da troca de tipo na 1.2.0 (decisão do autor, 2026-10-25): ajustes nas 1.2.x. Uma versão só vira a `y` nova quando a branch dela entra na `main`; a branch `atalhos-novos` virou a 1.2.0 ao entrar na `main`, e a `esquema-logico-relacional` vira a 1.3.0.
 
 Exemplos de `z`:
 

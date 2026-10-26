@@ -14,6 +14,7 @@ from haradaer.core.commands import (
     bring_to_front_command,
     can_group,
     change_connection_type_command,
+    change_node_type_command,
     connect_command,
     copy_text,
     duplicate_command,
@@ -113,6 +114,11 @@ class Editor:
     def set_nullable(self, no: NodeFigure, anulavel: bool) -> None:
         if anulavel != no.nullable:
             self.history.execute(set_nullable_command(self.document, no, anulavel))
+
+    def change_node_type(self, no: NodeFigure, tag: str) -> None:
+        comando = change_node_type_command(self.document, no, tag, self.measurer)
+        if comando.commands:
+            self.history.execute(comando)
 
     def change_connection_type(self, conexao: ConnectionFigure, tag: str) -> None:
         comando = change_connection_type_command(self.document, conexao, tag)

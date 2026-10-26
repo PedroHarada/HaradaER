@@ -17,8 +17,10 @@ from typing import NamedTuple
 import shiboken6
 from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import (
+    QActionGroup,
     QColor,
     QContextMenuEvent,
+    QCursor,
     QKeyEvent,
     QMouseEvent,
     QNativeGestureEvent,
@@ -33,11 +35,19 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
     QMenu,
+    QMessageBox,
 )
 
 from haradaer.core.appearance import FontSpec, TextOp
 from haradaer.core.appearance.describe import font_of
-from haradaer.core.commands import can_move, connection_path, nested_nodes
+from haradaer.core.commands import (
+    can_move,
+    connection_path,
+    lost_on_type_change,
+    nested_nodes,
+    node_type_family,
+)
+from haradaer.core.figures.factory import KINDS
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.geometry import nearest_segment, node_rect
 from haradaer.core.rules import is_valid_connection
@@ -121,12 +131,15 @@ class DiagramView(QGraphicsView):
     zoom_changed = Signal(float)
     tool_changed = Signal(object)
     message = Signal(str)
+    shortcut_key = Signal(str, bool)  # letra da Edição rápida e se o Shift estava apertado
 
     def __init__(self, scene: QGraphicsScene) -> None:
         super().__init__(scene)
         self._scene = scene  # o Qt não é dono da cena; sem isto ela pode ser coletada
         self.editor: Editor | None = None
         self.tool = SELECT
+        self.quick_edit = False  # Edição rápida: atalhos de uma tecla e a ferramenta fica
+        self._attached_owner: NodeFigure | None = None  # volta a ser selecionado depois do nome
         self._inline: InlineEdit | None = None
         self._drag_from: QPointF | None = None  # cena: onde o arrasto de elementos começou
         self._drag_origin_px: QPointF | None = None
@@ -428,7 +441,60 @@ class DiagramView(QGraphicsView):
         endireitar.setEnabled(len(conexao.points) > 2)
         return menu
 
+    def node_menu(self, no: NodeFigure) -> QMenu | None:
+        """Menu do botão direito sobre um elemento: trocar o tipo dentro da família."""
+        from haradaer.gui.shortcuts import key_of  # o módulo dos atalhos importa este
+
+        familia = node_type_family(no.tag)
+        if self.editor is None or len(familia) < 2:
+            return None
+        menu = QMenu(self)
+        trocar = menu.addMenu(_("Trocar &tipo"))
+        grupo = QActionGroup(trocar)
+        for tag in familia:
+            texto = _(KINDS[tag].label)
+            tecla = key_of(Tool("create", tag))
+            if self.quick_edit and tecla:
+                texto += f"\t{tecla}"  # depois do tab, o Qt mostra na coluna dos atalhos
+            acao = trocar.addAction(texto)
+            acao.setCheckable(True)
+            acao.setChecked(tag == no.tag)
+            grupo.addAction(acao)
+            acao.triggered.connect(lambda _x=False, t=tag: self.change_type(no, t))
+        return menu
+
+    def change_type(self, no: NodeFigure, tag: str) -> None:
+        """Troca o tipo; pergunta antes se o tipo novo perde a instrução SQL ou o tipo SQL."""
+        assert self.editor is not None
+        perdas = lost_on_type_change(no, tag)
+        if perdas:
+            textos = {
+                "sql": _("a instrução SQL do atributo derivado"),
+                "tipo": _("o tipo SQL e a anulabilidade do atributo"),
+            }
+            resposta = QMessageBox.question(
+                self,
+                _("Trocar tipo"),
+                _("Ao virar {tipo}, o elemento perde {perdas}. Trocar mesmo assim?").format(
+                    tipo=_(KINDS[tag].label).lower(),
+                    perdas=_(" e ").join(textos[p] for p in perdas),
+                ),
+            )
+            if resposta != QMessageBox.StandardButton.Yes:
+                return
+        self.editor.change_node_type(no, tag)
+        self._scene.select_only(no)
+
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
+        if self.editor is not None and self._inline is None:
+            no = self._node_at(self.mapToScene(event.pos()))
+            menu = self.node_menu(no) if no is not None else None
+            if menu is not None:
+                self._cancel_interaction()
+                self._scene.select_only(no)
+                menu.exec(event.globalPos())
+                menu.deleteLater()
+                return
         if self.tool.kind != "select" or self.editor is None:
             super().contextMenuEvent(event)
             return
@@ -528,9 +594,7 @@ class DiagramView(QGraphicsView):
                 self._begin_line_edit(alca_linha, pos)
                 return
             if self.tool.kind == "create":
-                self._create(
-                    pos, keep_tool=bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
-                )
+                self._create(pos, keep_tool=self._keep_tool(event))
                 return
             if self.tool.kind == "connect":
                 self._begin_connection(pos)
@@ -599,7 +663,7 @@ class DiagramView(QGraphicsView):
         if self._connect_from is not None and event.button() == Qt.MouseButton.LeftButton:
             self._finish_connection(
                 self._scene_pos(event),
-                keep_tool=bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier),
+                keep_tool=self._keep_tool(event),
             )
             return
         if self._resizing is not None and event.button() == Qt.MouseButton.LeftButton:
@@ -642,6 +706,12 @@ class DiagramView(QGraphicsView):
                 return
         super().mouseDoubleClickEvent(event)
 
+    def _keep_tool(self, event: QMouseEvent) -> bool:
+        """Fica na ferramenta depois de criar: com a Edição rápida ligada, ou com o Shift; com
+        as duas coisas, o Shift inverte e volta para a seleção."""
+        shift = bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier)
+        return shift != self.quick_edit
+
     def keyPressEvent(self, event: QKeyEvent) -> None:
         if event.key() in (Qt.Key.Key_Delete, Qt.Key.Key_Backspace) and self.editor is not None:
             self.editor.delete(self._scene.selected_figures())
@@ -649,7 +719,70 @@ class DiagramView(QGraphicsView):
         if event.key() == Qt.Key.Key_Escape:
             self.set_tool(SELECT)
             return
+        if self.quick_edit and self._quick_key(event):
+            return
         super().keyPressEvent(event)
+
+    def _quick_key(self, event: QKeyEvent) -> bool:
+        """Os atalhos de uma tecla. Só com Shift ou sem modificador: Ctrl e Alt ficam para os
+        menus."""
+        modificadores = event.modifiers() & ~Qt.KeyboardModifier.KeypadModifier
+        shift = bool(modificadores & Qt.KeyboardModifier.ShiftModifier)
+        if modificadores & ~Qt.KeyboardModifier.ShiftModifier:
+            return False
+        if event.key() == Qt.Key.Key_Space:
+            self.create_at_cursor()
+            return True
+        tecla = event.key()
+        if tecla == Qt.Key.Key_Exclam:  # Shift+1 no teclado americano e no ABNT
+            tecla = Qt.Key.Key_1
+        if Qt.Key.Key_A <= tecla <= Qt.Key.Key_Z or Qt.Key.Key_0 <= tecla <= Qt.Key.Key_9:
+            self.shortcut_key.emit(chr(tecla), shift)
+            return True
+        return False
+
+    def create_at_cursor(self) -> None:
+        """Espaço: cria a ferramenta ativa onde está o mouse."""
+        if self.editor is None or self.tool.kind != "create":
+            self.message.emit(_("Espaço cria um elemento: escolha antes um elemento."))
+            return
+        ponto = self.viewport().mapFromGlobal(QCursor.pos())
+        if not self.viewport().rect().contains(ponto):
+            self.message.emit(_("Ponha o mouse sobre o desenho."))
+            return
+        self._create(self.mapToScene(ponto), keep_tool=True)
+
+    def create_attached(self, tag: str, dono: NodeFigure) -> None:
+        """Cria um atributo ao lado do dono, já ligado a ele, com o nome em edição."""
+        assert self.editor is not None
+        rect = node_rect(dono)
+        if rect is None:
+            return
+        x, y = self._free_spot(rect)
+        self.editor.history.begin_macro(N_("Criar"))
+        self._creating = True
+        no = self.editor.create(tag, self.snap(x), self.snap(y))
+        self.editor.connect("lcaf", no, dono)
+        self._scene.select_only(no)
+        self._attached_owner = dono
+        self._edit_text(no)
+        if self._inline is None:
+            self._inline_closed()
+
+    def _free_spot(self, rect) -> tuple[float, float]:
+        """Um lugar em volta do dono sem outro elemento por cima: acima primeiro, depois em
+        volta, no sentido horário."""
+        cx, cy = rect[0] + rect[2] / 2, rect[1] + rect[3] / 2
+        raio_x, raio_y = rect[2] / 2 + 80, rect[3] / 2 + 50
+        for volta in range(3):
+            for angulo in range(-90, 270, 30):
+                rad = math.radians(angulo + volta * 15)
+                x = cx + math.cos(rad) * raio_x * (1 + volta * 0.6)
+                y = cy + math.sin(rad) * raio_y * (1 + volta * 0.6)
+                area = QRectF(x - 50, y - 20, 100, 40)
+                if not any(isinstance(i, FigureItem) for i in self._scene.items(area)):
+                    return x, y
+        return cx, cy - raio_y
 
     # --- criar -------------------------------------------------------------------------------
 
@@ -801,4 +934,7 @@ class DiagramView(QGraphicsView):
     def _inline_closed(self) -> None:
         self._inline = None
         self._finish_creation()
+        if self._attached_owner is not None:  # o próximo A cria outro atributo do mesmo dono
+            self._scene.select_only(self._attached_owner)
+            self._attached_owner = None
         self.setFocus()

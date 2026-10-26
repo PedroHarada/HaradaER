@@ -102,8 +102,8 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 ## Lançar uma versão
 
 ```
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis

@@ -9,6 +9,7 @@ from haradaer.core.commands.clipboard import (
 )
 from haradaer.core.commands.edit import (
     ALIGNMENTS,
+    NODE_TYPE_FAMILIES,
     add_bend_command,
     add_node_command,
     align_command,
@@ -17,18 +18,21 @@ from haradaer.core.commands.edit import (
     can_group,
     can_move,
     change_connection_type_command,
+    change_node_type_command,
     connect_command,
     connection_path,
     connections_of,
     fix_attribute_types_command,
     group_command,
     invalid_attribute_types,
+    lost_on_type_change,
     min_node_size,
     move_bend_command,
     move_command,
     name_string,
     nested_nodes,
     new_node,
+    node_type_family,
     reconnect_command,
     remove_bend_command,
     remove_command,
@@ -44,6 +48,10 @@ from haradaer.core.commands.edit import (
 from haradaer.core.commands.history import Command, Composite, History
 
 __all__ = [
+    "NODE_TYPE_FAMILIES",
+    "change_node_type_command",
+    "lost_on_type_change",
+    "node_type_family",
     "paste_command",
     "duplicate_command",
     "copy_text",

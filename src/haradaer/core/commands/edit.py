@@ -830,3 +830,74 @@ def ungroup_command(documento: Document, grupo: Element) -> tuple[Command, list[
     comandos: list[Command] = [RemoveFigure(documento, grupo)]
     comandos += [InsertFigure(documento, f) for f in membros]
     return Composite(comandos, N_("Desagrupar")), membros
+
+
+# Os tipos entre os quais um elemento pode trocar: os mesmos grupos dos atalhos da Edição rápida.
+NODE_TYPE_FAMILIES: tuple[tuple[str, ...], ...] = (
+    ("ent", "entfraca", "entrel"),
+    ("rel", "relfraco"),
+    ("atr", "atrchave", "atrchaveparcial", "atrmulti", "atrderivado"),
+    ("disjuncao", "sobreposicao", "uniao"),
+)
+GENERALIZATION_CIRCLES = ("disjuncao", "sobreposicao", "uniao")
+
+# O que se perde ao trocar o tipo (a interface pergunta antes).
+LOSES_SQL = "sql"
+LOSES_TYPE = "tipo"
+
+
+def node_type_family(tag: str) -> tuple[str, ...]:
+    """Os tipos para os quais o elemento pode trocar, ele incluído; vazio se não pode."""
+    return next((f for f in NODE_TYPE_FAMILIES if tag in f), ())
+
+
+def lost_on_type_change(no: NodeFigure, tag: str) -> list[str]:
+    """O que o elemento perde virando `tag`: a instrução SQL do derivado, ou o tipo SQL e a
+    anulabilidade de um atributo que vira derivado (este não tem tipo)."""
+    perdas = []
+    if no.sql and tag != "atrderivado":
+        perdas.append(LOSES_SQL)
+    if no.attribute_type is not None and tag not in TYPED_ATTRIBUTE_TAGS:
+        perdas.append(LOSES_TYPE)
+    return perdas
+
+
+def change_node_type_command(
+    documento: Document, no: NodeFigure, tag: str, medidor: TextMeasurer
+) -> Command:
+    """Troca o tipo de um elemento dentro da família, mantendo o lugar, o tamanho, o nome e as
+    ligações (o mesmo elemento, com o mesmo id, só muda por dentro).
+
+    As partes são as de um elemento novo do tipo pedido, como o TerraER as grava ao criar. O
+    tipo SQL e a anulabilidade ficam, se os dois tipos os tiverem. O círculo da generalização
+    fica com a letra do tipo novo.
+    """
+    if tag == no.tag:
+        return Composite([], N_("Trocar tipo"))
+    if tag not in node_type_family(no.tag):
+        raise ValueError(f"{no.tag} não pode virar {tag}")
+    rect = node_rect(no)
+    if rect is None:
+        raise ValueError("elemento sem forma")
+    circulo = tag in GENERALIZATION_CIRCLES
+    novo = create_node(tag, rect[0], rect[1], medidor, nome=None if circulo else no.name)
+    rascunho = Document.new()  # só para montar as partes do tipo novo no tamanho do antigo
+    rascunho.figures.append(novo)
+    resize_command(rascunho, novo, rect, medidor).apply()
+    final = node_rect(novo)
+    assert final is not None
+
+    atributos = dict(novo.attrs)
+    if tag in TYPED_ATTRIBUTE_TAGS and no.attribute_type is not None:
+        atributos["attributeType"] = no.attribute_type
+        atributos["nullable"] = no.attrs.get("nullable", atributos.get("nullable", "false"))
+    comandos: list[Command] = [
+        SetTag(documento, no, tag),
+        SetChildren(documento, no, no, list(novo.children)),
+    ]
+    # Na ordem do elemento novo, como o TerraER grava (`nullable` antes de `attributeType`).
+    for nome in [*atributos, *(n for n in no.attrs if n not in atributos)]:
+        if no.attrs.get(nome) != atributos.get(nome):
+            comandos.append(SetAttr(documento, no, no, nome, atributos.get(nome)))
+    comandos.extend(_reroute(documento, {id(no)}, {id(no): final}))
+    return Composite(comandos, N_("Trocar tipo"))

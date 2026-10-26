@@ -44,7 +44,7 @@ Os arquivos em `docs/referencia-terraer/` são a saída real do TerraER e servem
 - Compatibilidade da área de transferência com a do TerraER (copiar e colar de elementos entre os dois programas): **descartada** (QA-13).
 - Exportação para GIF: **descartada** (QA-14).
 - Geração de DDL SQL (RF-13): adiada para depois da v1; o levantamento do TerraER já está feito (`INVESTIGACOES.md` seção 6).
-- Edição da instrução SQL do atributo derivado e Modo de Edição Rápida (RF-20): adiados. A instrução SQL já gravada num arquivo continua sendo lida e regravada.
+- Edição da instrução SQL do atributo derivado (RF-20): adiada. A instrução SQL já gravada num arquivo continua sendo lida e regravada. O Modo de Edição Rápida entrou na 1.2.0 (RF-24), num desenho próprio.
 - Impressão (RF-14): **descartada**; o PDF de Exportar desenho cobre a necessidade.
 
 ## 3. Elementos do modelo
@@ -256,6 +256,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-21 | **Relatar e sugerir:** Ajuda › Relatar um problema e Ajuda › Sugerir uma melhoria abrem no navegador a página de nova issue do repositório no GitHub, já com a versão, o sistema e o idioma preenchidos. O programa não envia nada sozinho (decisão do autor, 2026-10-22). |
 | RF-22 | **Aviso de versão nova:** ao abrir, no máximo uma vez por dia, o programa consulta no GitHub a versão mais recente e, se for maior, avisa com um botão que abre a página Releases. Ajuda › Verificar atualizações consulta na hora; Ajuda › Verificar ao abrir desliga a consulta automática. O programa não baixa nem instala nada sozinho (decisão do autor, 2026-10-22). |
 | RF-23 | **Esquema lógico relacional:** o painel Esquema lógico mostra o esquema relacional calculado do diagrama, na notação de Elmasri e Navathe (`RELACAO (chave, ...)`, com as chaves estrangeiras), atualizado a cada mudança. Com Arquivo › Gravar esquema lógico ao salvar (desligado por padrão), o mesmo texto vai para `<modelo>.esquema.md`, em Markdown básico. Nada vai para o `.xml` (decisão do autor, 2026-10-24). |
+| RF-24 | **Edição rápida e troca de tipo:** com Editar › Edição rápida ligada (Ctrl+Shift+E ou o botão na barra de status), uma tecla escolhe a ferramenta, uma letra por família, e repetir a letra passa ao próximo tipo; a ferramenta continua ativa depois de criar; Espaço cria no cursor; a tecla de uma conexão liga os dois elementos selecionados; A cria um atributo ligado ao elemento selecionado; a letra da família troca o tipo do elemento selecionado. Clique direito › Trocar tipo troca o tipo dentro da família sem mudar o lugar, o nome e as conexões. Ajuda › Atalhos do teclado (F1) lista todos os atalhos, e os manuais trazem a mesma lista. Nada novo no `.xml` (RNF-01). Em avaliação na linha 1.2.x (decisão do autor, 2026-10-25). |
 
 ### 6.2 Requisitos não funcionais
 
@@ -324,7 +325,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 
 ## 10. Estado da v1 (revisão de 2026-10-20)
 
-Conferência de cada requisito com o programa e os testes (850 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
+Conferência de cada requisito com o programa e os testes (914 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
 
 **Requisitos funcionais**
 
@@ -349,10 +350,11 @@ Conferência de cada requisito com o programa e os testes (850 testes automátic
 | RF-17 | Pronto | Pergunta ao fechar; mensagens claras ao não conseguir gravar (M4, M5a) |
 | RF-18 | Pronto | Campo de nome sobre o elemento (M4) |
 | RF-19 | Pronto | Uma janela por documento |
-| RF-20 | Pronto (parte da v1) | `sql` lido e regravado; edição fora da v1 |
+| RF-20 | Pronto (parte da v1) | `sql` lido e regravado; edição fora da v1; Edição rápida no RF-24 |
 | RF-21 | Pronto (1.1.0) | Menu Ajuda; formulários em `.github/ISSUE_TEMPLATE/` (`ARQUITETURA.md` seção 5.8) |
 | RF-22 | Pronto (1.1.0) | `updates.py` e `gui/updates.py` (`ARQUITETURA.md` seção 5.9) |
-| RF-23 | Pronto (1.2.0) | `core/relational/` e `gui/schema_panel.py`; regras em `CONCEITOS.md` |
+| RF-23 | Pronto (1.3.0) | `core/relational/` e `gui/schema_panel.py`; regras em `CONCEITOS.md` |
+| RF-24 | Pronto (1.2.0), em avaliação | `gui/shortcuts.py`, `gui/shortcuts_dialog.py`, `change_node_type_command` em `core/commands/edit.py`; pode mudar nas 1.2.x |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 
@@ -368,7 +370,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois da v1 (decisão do autor em 2026-10-22, depois de ver uma maquete): a paleta como opção, sem substituir a faixa. Exibir › Paleta escolhe entre **No alto** (a faixa de hoje) e **À esquerda** (painel acoplado em duas colunas, com Elementos e Conexões). As duas usam as mesmas ações; o destaque das conexões aceitas (RF-10) vale nas duas; o painel não fecha nem solta, para nunca ficar sem ferramentas |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
-| RNF-12 | Pronto | 850 testes, sem tela |
+| RNF-12 | Pronto | 914 testes, sem tela |
 | RNF-13 | Pronto | Nada copiado do `.jar` |
 | RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
 
