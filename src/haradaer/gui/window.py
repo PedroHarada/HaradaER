@@ -602,7 +602,7 @@ class DocumentWindow(QMainWindow):
         return True
 
     def _write_schema(self, caminho: Path) -> None:
-        """Grava o `.esquema.md` (RF-23). Se falhar, o `.xml` já gravado continua valendo."""
+        """Grava o `.logic.md` (RF-23). Se falhar, o `.xml` já gravado continua valendo."""
         try:
             destino = write_schema_file(self._editor.document, caminho)
         except OSError as erro:

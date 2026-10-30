@@ -1,4 +1,4 @@
-"""Painel Esquema lógico e o `.esquema.md` gravado ao salvar (RF-23)."""
+"""Painel Esquema lógico e o `.logic.md` gravado ao salvar (RF-23)."""
 
 import pytest
 from PySide6.QtWidgets import QApplication, QMessageBox
@@ -21,7 +21,7 @@ def janela(qtbot):
 
 
 def texto(janela):
-    return janela.schema.text.toPlainText()
+    return janela.schema.markdown
 
 
 def entidade_com_chave(janela, nome="Aluno"):
@@ -39,6 +39,13 @@ def test_painel_acompanha_o_diagrama_e_o_desfazer(janela):
     assert "ALUNO (**mat**)" in texto(janela)
     janela.action_undo.trigger()  # desfaz a ligação da chave
     assert "ALUNO ()" in texto(janela)
+
+
+def test_painel_mostra_o_markdown_formatado(janela):
+    entidade_com_chave(janela)
+    na_tela = janela.schema.text.toPlainText()
+    assert "ALUNO (mat)" in na_tela and "**" not in na_tela and "##" not in na_tela
+    assert "<b>" in janela.schema.text.toHtml() or "font-weight" in janela.schema.text.toHtml()
 
 
 def test_copiar(janela):
@@ -61,7 +68,7 @@ def test_salvar_com_a_opcao_grava_o_esquema_ao_lado(janela, tmp_path):
     janela.action_schema_file.setChecked(True)
     entidade_com_chave(janela)
     assert janela._write(tmp_path / "modelo.xml")
-    esquema = tmp_path / "modelo.esquema.md"
+    esquema = tmp_path / "modelo.logic.md"
     conteudo = esquema.read_text("utf-8")
     assert conteudo.startswith("# Esquema lógico relacional — modelo\n")
     assert "a partir de `modelo.xml`" in conteudo and "ALUNO (**mat**)" in conteudo
@@ -72,10 +79,10 @@ def test_erro_no_esquema_mantem_o_modelo_salvo(janela, tmp_path, monkeypatch):
     avisos = []
     monkeypatch.setattr(QMessageBox, "warning", lambda pai, titulo, txt: avisos.append(txt))
     janela.action_schema_file.setChecked(True)
-    (tmp_path / "modelo.esquema.md").mkdir()  # uma pasta no lugar do arquivo
+    (tmp_path / "modelo.logic.md").mkdir()  # uma pasta no lugar do arquivo
     assert janela._write(tmp_path / "modelo.xml")
     assert (tmp_path / "modelo.xml").is_file() and not janela.isWindowModified()
-    assert len(avisos) == 1 and "modelo.esquema.md" in avisos[0]
+    assert len(avisos) == 1 and "modelo.logic.md" in avisos[0]
 
 
 def test_opcao_desligada_por_padrao_e_lembrada(qtbot, janela):

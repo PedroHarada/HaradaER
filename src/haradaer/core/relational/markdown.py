@@ -42,7 +42,7 @@ def schema_markdown(
     gerado_em: str,
     descrever: Callable[[Issue], str],
 ) -> str:
-    """O texto do `.esquema.md` (e do painel). `descrever` põe um aviso em palavras: a
+    """O texto do `.logic.md` (e do painel). `descrever` põe um aviso em palavras: a
     interface faz isso, porque o núcleo só dá códigos (D-09)."""
     linhas = [f"# {_('Esquema lógico relacional')} — {_escape(modelo)}", ""]
     if arquivo:
@@ -73,11 +73,16 @@ def schema_markdown(
     for relacao in schema.relations:
         linhas.append(relation_line(relacao))
         if relacao.foreign_keys:
-            linhas.append("")
+            rotulo = (
+                _("Chave estrangeira:")
+                if len(relacao.foreign_keys) == 1
+                else _("Chaves estrangeiras:")
+            )
+            linhas += ["", f"- {rotulo}"]
         for estrangeira in relacao.foreign_keys:
             de = ", ".join(_escape(c) for c in estrangeira.columns)
             para = ", ".join(_escape(c) for c in estrangeira.referenced)
-            linhas.append(f"- {de} → {_escape(estrangeira.relation)} ({para})")
+            linhas.append(f"  - {de} → {_escape(estrangeira.relation)} ({para})")
         linhas.append("")
     linhas += [f"## {_('Atributos derivados')}", ""]
     if schema.derived:

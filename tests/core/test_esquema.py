@@ -312,7 +312,8 @@ def test_markdown_basico():
         "\n"
         "FUNCIONARIO (**cpf**, num_DEPARTAMENTO)\n"
         "\n"
-        "- num_DEPARTAMENTO → DEPARTAMENTO (num)\n"
+        "- Chave estrangeira:\n"
+        "  - num_DEPARTAMENTO → DEPARTAMENTO (num)\n"
         "\n"
         "## Atributos derivados\n"
         "\n"
@@ -324,6 +325,22 @@ def test_markdown_basico():
         "\n"
         "Nenhum.\n"
     )
+
+
+def test_markdown_estrangeiras_em_lista_dentro_de_um_item():
+    m = Modelo()
+    func = m.entidade("Funcionario", "cpf")
+    rel = m.no("rel", "Supervisao")
+    m.liga("llabelMuitos", func, rel)
+    m.liga("llabelMuitos", func, rel)
+    texto = schema_markdown(m.esquema(), "m", None, "2026-10-29 10:00", str)
+    assert (
+        "SUPERVISAO (**cpf_FUNCIONARIO**, **cpf_FUNCIONARIO_2**)\n"
+        "\n"
+        "- Chaves estrangeiras:\n"
+        "  - cpf_FUNCIONARIO → FUNCIONARIO (cpf)\n"
+        "  - cpf_FUNCIONARIO_2 → FUNCIONARIO (cpf)\n"
+    ) in texto
 
 
 def test_markdown_escapa_formatacao():

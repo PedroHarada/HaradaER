@@ -1,6 +1,9 @@
 """Painel Esquema lógico (RF-23): o esquema relacional do diagrama, refeito a cada mudança.
 
-O mesmo texto vai para `<modelo>.esquema.md` ao salvar, se Arquivo › Gravar esquema lógico ao
+O painel mostra o Markdown já formatado (`setMarkdown`, o mesmo padrão do GitHub); Copiar leva o
+Markdown cru.
+
+O mesmo texto vai para `<modelo>.logic.md` ao salvar, se Arquivo › Gravar esquema lógico ao
 salvar estiver ligado. Nada disso entra no `.xml`.
 """
 
@@ -9,12 +12,11 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtGui import QFontDatabase
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
-    QPlainTextEdit,
     QPushButton,
+    QTextBrowser,
     QVBoxLayout,
     QWidget,
 )
@@ -54,8 +56,8 @@ def describe(issue: Issue) -> str:
 
 
 def schema_file(caminho: Path) -> Path:
-    """`modelo.xml` -> `modelo.esquema.md`, na mesma pasta."""
-    return caminho.with_name(f"{caminho.stem}.esquema.md")
+    """`modelo.xml` -> `modelo.logic.md`, na mesma pasta."""
+    return caminho.with_name(f"{caminho.stem}.logic.md")
 
 
 def schema_text(documento: Document, caminho: Path | None, agora: datetime | None = None) -> str:
@@ -80,10 +82,9 @@ def write_schema_file(documento: Document, caminho: Path) -> Path:
 class SchemaPanel(QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.text = QPlainTextEdit()
-        self.text.setReadOnly(True)
-        self.text.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
-        self.text.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        self.markdown = ""  # o texto cru, o mesmo do `.logic.md`
+        self.text = QTextBrowser()
+        self.text.setOpenLinks(False)
         self.copy_button = QPushButton(_("&Copiar"))
         self.copy_button.clicked.connect(self.copy)
         botoes = QHBoxLayout()
@@ -97,8 +98,9 @@ class SchemaPanel(QWidget):
     def show_schema(self, documento: Document, caminho: Path | None) -> None:
         barra = self.text.verticalScrollBar()
         posicao = barra.value()  # o texto é refeito a cada mudança: a rolagem fica onde estava
-        self.text.setPlainText(schema_text(documento, caminho))
+        self.markdown = schema_text(documento, caminho)
+        self.text.setMarkdown(self.markdown)
         barra.setValue(posicao)
 
     def copy(self) -> None:
-        QApplication.clipboard().setText(self.text.toPlainText())
+        QApplication.clipboard().setText(self.markdown)

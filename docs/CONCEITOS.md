@@ -53,11 +53,11 @@ As conexões dizem a razão de cardinalidade e a participação:
 
 ## 3. O esquema lógico relacional (RF-23)
 
-O HaradaER calcula o esquema relacional a partir do diagrama, segue o algoritmo do capítulo 9 e mostra o resultado no painel **Esquema lógico**. Com a opção **Arquivo › Gravar esquema lógico ao salvar** ligada, o mesmo texto vai para `<modelo>.esquema.md`, ao lado do `.xml`.
+O HaradaER calcula o esquema relacional a partir do diagrama, segue o algoritmo do capítulo 9 e mostra o resultado no painel **Esquema lógico**. Com a opção **Arquivo › Gravar esquema lógico ao salvar** ligada, o mesmo texto vai para `<modelo>.logic.md`, ao lado do `.xml`.
 
 O esquema nunca é gravado no `.xml`: ele é sempre refeito do desenho, e o arquivo continua igual ao do TerraER.
 
-A notação é a do livro, `RELACAO (chave, atributo, ...)`. Como o Markdown básico não tem sublinhado, a chave primária vai em **negrito**. As chaves estrangeiras ficam listadas abaixo de cada relação.
+A notação é a do livro, `RELACAO (chave, atributo, ...)`. Como o Markdown básico não tem sublinhado, a chave primária vai em **negrito**. As chaves estrangeiras ficam abaixo de cada relação, num item "Chave estrangeira:" (ou "Chaves estrangeiras:") com uma lista dentro.
 
 ### 3.1 Regras, etapa por etapa
 

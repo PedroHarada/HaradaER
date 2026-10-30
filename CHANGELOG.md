@@ -11,9 +11,10 @@ para mudanças que quebram algo que já funcionava.
 - Painel **Esquema lógico**: o esquema relacional calculado do diagrama, pelo mapeamento de
   Elmasri e Navathe (entidades, entidades fracas, 1:1, 1:N, N:N, n-ário, multivalorados,
   especialização, categorias e entidade associativa), com as chaves estrangeiras e os atributos
-  derivados. Atualiza a cada mudança e tem o botão Copiar.
+  derivados. Atualiza a cada mudança, mostra o texto já formatado (negrito, títulos, listas) e
+  tem o botão Copiar, que leva o Markdown.
 - **Arquivo › Gravar esquema lógico ao salvar** (desligado por padrão): grava o mesmo texto em
-  `<modelo>.esquema.md`, ao lado do `.xml`, em Markdown básico. Nada muda no `.xml`.
+  `<modelo>.logic.md`, ao lado do `.xml`, em Markdown básico. Nada muda no `.xml`.
 - `docs/CONCEITOS.md` e `docs/REVISAO-TEORICA.md`: a base teórica do HaradaER e os pontos ainda
   em aberto em relação ao livro.
 

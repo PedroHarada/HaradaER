@@ -287,7 +287,7 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 
 ### 5.5 Painéis
 
-`QDockWidget`s, como no Octave (RNF-09): paleta de elementos, inspetor de objetos (RF-16), mensagens da verificação (RF-09) e esquema lógico (RF-23, `gui/schema_panel.py`, refeito em cada `_history_changed`; com Arquivo › Gravar esquema lógico ao salvar, `write_schema_file` grava `<modelo>.esquema.md` depois do `.xml`, e uma falha nele não desfaz o `.xml`). Disposição e visibilidade salvas com `QSettings` (`saveState`/`restoreState`).
+`QDockWidget`s, como no Octave (RNF-09): paleta de elementos, inspetor de objetos (RF-16), mensagens da verificação (RF-09) e esquema lógico (RF-23, `gui/schema_panel.py`, refeito em cada `_history_changed` e mostrado já formatado com `QTextBrowser.setMarkdown`, enquanto Copiar leva o Markdown cru; com Arquivo › Gravar esquema lógico ao salvar, `write_schema_file` grava `<modelo>.logic.md` depois do `.xml`, e uma falha nele não desfaz o `.xml`). Disposição e visibilidade salvas com `QSettings` (`saveState`/`restoreState`).
 
 ### 5.6 Exportação e área de transferência (RF-11)
 

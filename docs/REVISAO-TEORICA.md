@@ -43,7 +43,7 @@ Cada item traz o que o livro diz, o que o HaradaER faz hoje, o impacto e uma rec
   - gravar o papel exigiria algo novo no `.xml`, e o TerraER poderia perder ou recusar.
 - **Recomendação:**
   - deixar como está até haver um jeito de guardar o papel sem mexer no `.xml`;
-  - uma opção é um arquivo à parte, como o `.esquema.md`, mas editável.
+  - uma opção é um arquivo à parte, como o `.logic.md`, mas editável.
 - **Esforço:** médio a grande.
 
 ## 4. Entidade associativa

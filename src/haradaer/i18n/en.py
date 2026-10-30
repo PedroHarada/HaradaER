@@ -329,6 +329,8 @@ EN: dict[str, str] = {
         "**bold**; foreign keys listed below each relation."
     ),
     "Relações": "Relations",
+    "Chave estrangeira:": "Foreign key:",
+    "Chaves estrangeiras:": "Foreign keys:",
     "Nenhuma.": "None.",
     "Nenhum.": "None.",
     "Atributos derivados": "Derived attributes",

@@ -127,7 +127,7 @@ Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como u
 atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
 
 O painel **Esquema lógico** mostra as tabelas que o diagrama gera (esquema relacional); com
-**Arquivo › Gravar esquema lógico ao salvar**, elas vão também para um `.esquema.md` ao lado
+**Arquivo › Gravar esquema lógico ao salvar**, elas vão também para um `.logic.md` ao lado
 do modelo.
 
 Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma

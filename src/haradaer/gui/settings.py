@@ -128,7 +128,7 @@ def set_last_update_check(dia: str) -> None:
 
 
 def schema_file_enabled() -> bool:
-    """Gravar `<modelo>.esquema.md` ao salvar (RF-23); desligado se nunca foi mudado."""
+    """Gravar `<modelo>.logic.md` ao salvar (RF-23); desligado se nunca foi mudado."""
     return str(settings().value(SCHEMA_KEY, "false")).lower() == "true"
 
 
