@@ -32,7 +32,6 @@ EN: dict[str, str] = {
     "Generalização simples": "Simple generalization",
     "Participação opcional em generalização": "Optional participation in generalization",
     "Participação obrigatória em generalização": "Mandatory participation in generalization",
-    "Conexão livre": "Free connection",
     # --- nomes curtos da faixa de ferramentas -----------------------------------------------
     "Selecionar": "Select",
     "Ent. fraca": "Weak ent.",
@@ -52,7 +51,6 @@ EN: dict[str, str] = {
     "General.": "General.",
     "Gen. opc.": "Gen. opt.",
     "Gen. obrig.": "Gen. mand.",
-    "Livre": "Free",
     # --- menus -------------------------------------------------------------------------------
     "&Arquivo": "&File",
     "&Novo": "&New",
@@ -228,6 +226,21 @@ EN: dict[str, str] = {
     " that TerraER does not recognize and now use the default type. TerraER would open the"
     " file, but could not save it.",
     "... e mais {n}": "... and {n} more",
+    # Conexão livre (RF-25)
+    "Conexões livres apagadas": "Free connections deleted",
+    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+    " Foi apagada 1 deste arquivo, entre:": (
+        "HaradaER doesn't use the free connection, which has no meaning in the ER model."
+        " 1 was deleted from this file, between:"
+    ),
+    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+    " Foram apagadas {n} deste arquivo, entre:": (
+        "HaradaER doesn't use the free connection, which has no meaning in the ER model."
+        " {n} were deleted from this file, between:"
+    ),
+    "O arquivo em disco só muda quando você salvar.": (
+        "The file on disk only changes when you save."
+    ),
     # --- exportar e copiar -------------------------------------------------------------------
     "Exportar desenho": "Export drawing",
     "Imagem PNG": "PNG image",

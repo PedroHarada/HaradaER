@@ -8,13 +8,13 @@ próprio TerraER (`docs/referencia-terraer/matriz-validacao.txt`), menos as dife
 
 from __future__ import annotations
 
-from haradaer.core.figures.tags import NODE_TAGS
+from haradaer.core.figures.tags import FREE_CONNECTION, NODE_TAGS
 
 Pair = tuple[str, str]
 
 ENT, ENTFRACA, REL, RELFRACO, ENTREL = "ent", "entfraca", "rel", "relfraco", "entrel"
 GENERALIZATIONS = ("uniao", "disjuncao", "sobreposicao")
-LINE_FREE = "llabel"
+LINE_FREE = FREE_CONNECTION  # medida no TerraER; o HaradaER a apaga ao abrir (RF-25)
 
 
 def _symmetric(pares: set[Pair]) -> frozenset[Pair]:

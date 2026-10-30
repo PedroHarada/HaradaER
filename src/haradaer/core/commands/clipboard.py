@@ -9,7 +9,12 @@ do TerraER fica fora (QA-13).
 from __future__ import annotations
 
 from haradaer.core import io
-from haradaer.core.commands.edit import InsertFigure, move_command, nested_nodes
+from haradaer.core.commands.edit import (
+    InsertFigure,
+    move_command,
+    nested_nodes,
+    remove_free_connections,
+)
 from haradaer.core.commands.history import Command, Composite
 from haradaer.core.figures.types import ConnectionFigure
 from haradaer.core.model.document import Document
@@ -53,6 +58,7 @@ def paste_command(
 ) -> tuple[Command, list[Element]]:
     """Cola o pedaço deslocado de (dx, dy). Levanta `ArquivoInvalidoError` se o texto não servir."""
     pedaco = io.loads(texto)
+    remove_free_connections(pedaco)  # a conexão livre não entra (RF-25)
     figuras = list(pedaco.figures)
     if dx or dy:
         move_command(

@@ -15,5 +15,4 @@ CONNECTIONS: list[tuple[str, str]] = [
     ("generalizacaoLine", N_("Generalização simples")),
     ("llabelGeneralizacao", N_("Participação opcional em generalização")),
     ("llabelDoubleGeneralizacao", N_("Participação obrigatória em generalização")),
-    ("llabel", N_("Conexão livre")),
 ]

@@ -37,7 +37,6 @@ FAMILIES: list[tuple[str, list[Tool]]] = [
             Tool(_L, "llabelDoubleGeneralizacao"),
         ],
     ),
-    ("C", [Tool(_L, "llabel")]),
 ]
 
 _BY_KEY = dict(FAMILIES)

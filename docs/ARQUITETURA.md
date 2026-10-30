@@ -192,6 +192,16 @@ A interface só converte as operações em pintura; todo o conhecimento do Terra
 - `recommend_connections(origem, destino)` devolve os tipos de conexão válidos para o par, sem a conexão livre; `recommend_elements(conexao)` devolve os pares (origem, destino) em que o tipo vale. Os dois usam a mesma tabela da validação (`INVESTIGACOES.md` seção 12).
 - **Teste de regressão contra o TerraER.** A tabela (`rules/tables.py`) é conferida par a par contra `matriz-validacao.txt`, e cada conexão dos arquivos de referência é conferida contra o que o próprio TerraER pinta de vermelho (`validacao-por-arquivo.txt`, gerado por `harness/ValidaArquivo.java`; JDK só para regenerar).
 
+### 4.3.1 Sem conexão livre (RF-25, 1.2.1)
+
+A conexão livre (`llabel`) não existe no HaradaER: nada a cria, e a que vier num arquivo ou na área de transferência é apagada. O leitor continua reconhecendo a tag, só para isso: sem ela, um arquivo com conexão livre daria erro ao abrir (RNF-14). Evidência no TerraER: `INVESTIGACOES.md` seção 18.
+
+- `core/commands/edit.py`, `remove_free_connections(documento)`: tira as conexões livres, também as de dentro de grupos, e devolve as pontas de cada uma (`None` na ponta solta). Fica fora do histórico, para desfazer não trazê-las de volta. `connect_command` e `change_connection_type_command` recusam o tipo `llabel`.
+- `paste_command` (`core/commands/clipboard.py`) chama a mesma função no pedaço colado.
+- `gui/window.py`, `load`: apaga antes de mostrar o modelo; se apagou alguma, marca o documento como modificado (`History.mark_dirty`, que não cria passo de desfazer) e mostra um aviso no molde do RNF-16, com as pontas de até 10 conexões ("Cliente (Entidade) ↔ ponta solta"). O arquivo em disco só muda ao salvar.
+- A ferramenta saiu da paleta, dos ícones, do painel de propriedades e da tecla `C` da Edição rápida.
+- `LINE_FREE` continua na tabela de regras (`rules/tables.py`), porque a tabela é a medida do TerraER e é conferida contra `matriz-validacao.txt`; como nenhum documento aberto tem conexão livre, a exceção dela na verificação não tem mais efeito.
+
 ### 4.4 DDL (`ddl`) — fora da v1
 
 O DDL foi adiado (RF-13). O desenho abaixo fica reservado para quando voltar ao escopo; a pasta `core/ddl/` não é criada na v1.

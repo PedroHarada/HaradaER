@@ -36,6 +36,7 @@ from haradaer.core.commands.edit import (
     reconnect_command,
     remove_bend_command,
     remove_command,
+    remove_free_connections,
     rename_command,
     resize_command,
     send_to_back_command,
@@ -48,6 +49,7 @@ from haradaer.core.commands.edit import (
 from haradaer.core.commands.history import Command, Composite, History
 
 __all__ = [
+    "remove_free_connections",
     "NODE_TYPE_FAMILIES",
     "change_node_type_command",
     "lost_on_type_change",

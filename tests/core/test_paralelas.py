@@ -197,7 +197,7 @@ def test_segunda_conexao_entre_o_mesmo_par_sai_para_o_lado_sem_cruzar():
 def test_conexoes_extras_alternam_de_lado_e_nao_se_sobrepoem():
     doc, h, ent, rel = modelo()
     for _ in range(5):
-        h.execute(connect_command(doc, "llabel", ent, rel))
+        h.execute(connect_command(doc, "generalizacaoLine", ent, rel))
     caminhos = [tuple(map(tuple, pontos(c))) for c in doc.figures[2:]]
     assert len(set(caminhos)) == 5
     desvios = [round(desvio(c[1], rel, ent)) for c in caminhos[1:]]
@@ -206,6 +206,6 @@ def test_conexoes_extras_alternam_de_lado_e_nao_se_sobrepoem():
 
 def test_conexao_em_sentido_contrario_tambem_conta_como_do_mesmo_par():
     doc, h, ent, rel = modelo()
-    h.execute(connect_command(doc, "llabel", rel, ent))
-    h.execute(connect_command(doc, "llabel", ent, rel))
+    h.execute(connect_command(doc, "generalizacaoLine", rel, ent))
+    h.execute(connect_command(doc, "generalizacaoLine", ent, rel))
     assert len(doc.figures[-1].points) == 4

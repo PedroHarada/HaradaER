@@ -26,6 +26,7 @@ from haradaer.core.figures.factory import (
 )
 from haradaer.core.figures.tags import (
     CONNECTION_TAGS,
+    FREE_CONNECTION,
     NODE_TAGS,
     TEXT_PART_TAGS,
     TYPED_ATTRIBUTE_TAGS,
@@ -290,7 +291,7 @@ def connect_command(documento: Document, tag: str, origem: Element, destino: Ele
     próxima letra do relacionamento (N, M, P...); e, se o par já tem conexão, a nova sai para o
     lado com duas dobras, para não ficar por cima (o desvio é do HaradaER, sem cruzar).
     """
-    if tag not in CONNECTION_TAGS:
+    if tag not in CONNECTION_TAGS or tag == FREE_CONNECTION:  # a livre não é criada (RF-25)
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
     if origem is destino:
         raise ValueError("uma conexão precisa de dois elementos diferentes")
@@ -607,7 +608,7 @@ def change_connection_type_command(
     Acerta o que depende do tipo, como o TerraER grava: o rótulo da generalização, os blocos de
     estilo das conexões duplas e, em `lcaf`, a direção atributo -> dono.
     """
-    if tag not in CONNECTION_TAGS:
+    if tag not in CONNECTION_TAGS or tag == FREE_CONNECTION:  # a livre não é criada (RF-25)
         raise ValueError(f"tipo de conexão desconhecido: {tag}")
     comandos: list[Command] = []
     if tag == conexao.tag:
@@ -794,6 +795,34 @@ def fix_attribute_types_command(documento: Document) -> Command:
         padrao = tipado[1] if tipado is not None else "VARCHAR2(128)"
         comandos.append(SetAttr(documento, no, no, "attributeType", padrao))
     return Composite(comandos, N_("Corrigir tipos de atributo"))
+
+
+# ---------------------------------------------------------------- conexão livre (RF-25)
+
+
+def remove_free_connections(documento: Document) -> list[tuple[Element | None, Element | None]]:
+    """Tira do documento toda conexão livre (`llabel`), também as de dentro de grupos.
+
+    Não passa pelo histórico: desfazer não pode trazê-las de volta. Devolve as pontas de cada
+    uma (`None` na ponta solta), na ordem de empilhamento, para o aviso.
+    """
+    pontas: list[tuple[Element | None, Element | None]] = []
+
+    def tirar(lista: list[Element]) -> None:
+        for figura in list(lista):
+            if figura.tag == FREE_CONNECTION:
+                lista.remove(figura)
+                if isinstance(figura, ConnectionFigure):
+                    pontas.append((figura.start, figura.end))
+                else:
+                    pontas.append((None, None))
+            elif figura.tag == "g":
+                grupo = figura.child("children")
+                if grupo is not None:
+                    tirar(grupo.children)
+
+    tirar(documento.figures)
+    return pontas
 
 
 # ---------------------------------------------------------------- agrupar e desagrupar

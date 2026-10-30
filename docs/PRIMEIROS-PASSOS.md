@@ -126,6 +126,10 @@ para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
 atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
 
+O HaradaER não usa a conexão livre do TerraER, que não tem significado no modelo. Se um
+arquivo tiver alguma, ela é apagada ao abrir, com um aviso dizendo entre quais elementos estava;
+o arquivo só muda quando você salvar.
+
 Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
 melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
 
@@ -211,7 +215,6 @@ exemplo, A num atributo o faz virar chave).
 | Participação, lado "N" → Participação total, lado "N" | `N` |
 | Ligação de atributo | `L` |
 | Generalização simples → Participação opcional em generalização → Participação obrigatória em generalização | `H` |
-| Conexão livre | `C` |
 | Voltar uma posição no ciclo | `Shift + letra` |
 | Trocar o tipo do elemento selecionado (com Selecionar) | `Letra da família` |
 | Criar onde está o mouse | `Espaço` |

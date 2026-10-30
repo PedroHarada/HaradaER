@@ -75,7 +75,7 @@ Também existem no formato, como figuras de apoio: texto (`t`, `tn` negrito, `ti
 
 | Conexão | Tag | Uso |
 |---|---|---|
-| Conexão livre | `llabel` | Sem restrição de validação. |
+| Conexão livre | `llabel` | Sem significado no modelo. **Desde a 1.2.1, o HaradaER não a cria nem a mantém:** só a reconhece ao abrir, para apagá-la (RF-25). |
 | Participação, lado "1" | `llabelUm` | Mostra o rótulo `1`. |
 | Participação, lado "N" | `llabelMuitos` | Mostra o rótulo `N`. |
 | Participação total, lado "1" | `llabelDoubleUm` | Linha dupla, rótulo `1`. |
@@ -241,8 +241,8 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-06 | Desfazer e refazer (o TerraER tem `UndoAction`/`RedoAction`). |
 | RF-07 | Zoom, grade, alinhamento, trazer para frente e enviar para trás, selecionar todos do mesmo tipo. |
 | RF-08 | Localizar elementos no modelo. |
-| RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão (exceto a livre, `llabel`) que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). Também avisa, em laranja e com opção de desligar, os problemas de estrutura da seção 5. |
-| RF-10 | Recomendação de conexão entre dois elementos selecionados (tipos de conexão válidos para o par) e dos elementos possíveis para um tipo de conexão. Usa a mesma tabela da verificação, então nunca recomenda algo que apareceria em vermelho; difere do TerraER em dois pontos (`INVESTIGACOES.md` seção 12). A conexão livre não é recomendada. |
+| RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). Também avisa, em laranja e com opção de desligar, os problemas de estrutura da seção 5. |
+| RF-10 | Recomendação de conexão entre dois elementos selecionados (tipos de conexão válidos para o par) e dos elementos possíveis para um tipo de conexão. Usa a mesma tabela da verificação, então nunca recomenda algo que apareceria em vermelho; difere do TerraER em dois pontos (`INVESTIGACOES.md` seção 12). A conexão livre não existe no HaradaER (RF-25). |
 | RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
 | RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
 | RF-13 | **(Fora da v1)** Gerar o DDL SQL do modelo. Regras e defeitos do TerraER levantados em `INVESTIGACOES.md` seção 6. Quando voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido com as mesmas convenções. |
@@ -256,6 +256,7 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-21 | **Relatar e sugerir:** Ajuda › Relatar um problema e Ajuda › Sugerir uma melhoria abrem no navegador a página de nova issue do repositório no GitHub, já com a versão, o sistema e o idioma preenchidos. O programa não envia nada sozinho (decisão do autor, 2026-10-22). |
 | RF-22 | **Aviso de versão nova:** ao abrir, no máximo uma vez por dia, o programa consulta no GitHub a versão mais recente e, se for maior, avisa com um botão que abre a página Releases. Ajuda › Verificar atualizações consulta na hora; Ajuda › Verificar ao abrir desliga a consulta automática. O programa não baixa nem instala nada sozinho (decisão do autor, 2026-10-22). |
 | RF-24 | **Edição rápida e troca de tipo:** com Editar › Edição rápida ligada (Ctrl+Shift+E ou o botão na barra de status), uma tecla escolhe a ferramenta, uma letra por família, e repetir a letra passa ao próximo tipo; a ferramenta continua ativa depois de criar; Espaço cria no cursor; a tecla de uma conexão liga os dois elementos selecionados; A cria um atributo ligado ao elemento selecionado; a letra da família troca o tipo do elemento selecionado. Clique direito › Trocar tipo troca o tipo dentro da família sem mudar o lugar, o nome e as conexões. Ajuda › Atalhos do teclado (F1) lista todos os atalhos, e os manuais trazem a mesma lista. Nada novo no `.xml` (RNF-01). Em avaliação na linha 1.2.x (decisão do autor, 2026-10-25). O RF-23 fica reservado para o esquema lógico relacional (branch `esquema-logico-relacional`). |
+| RF-25 | **Sem conexão livre:** o HaradaER não cria a conexão livre (`llabel`): ela sai da paleta e da tecla `C` da Edição rápida, e a verificação deixa de tratá-la como exceção. Ao abrir um arquivo (do TerraER ou de versões anteriores do HaradaER) e ao colar, toda conexão livre é apagada, inclusive dentro de grupos, sem perguntar e sem substituir por outro tipo. Ao abrir, um aviso diz quantas foram apagadas e entre quais elementos (nome e tipo de cada ponta, ou ponta solta). O arquivo em disco só muda quando o usuário salva, e o modelo abre como modificado; a remoção não entra no desfazer, para a conexão não voltar. O arquivo salvo continua abrindo no TerraER (RNF-01). Motivo: a conexão livre não tem significado na teoria ER (Elmasri e Navathe, caps. 7 e 8) e o TerraER 3.14 não tem ferramenta para criá-la (`INVESTIGACOES.md` seção 18). Na linha 1.2.x, junto com a Edição rápida em avaliação (decisão do autor, 2026-10-30). |
 
 ### 6.2 Requisitos não funcionais
 
@@ -324,7 +325,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 
 ## 10. Estado da v1 (revisão de 2026-10-20)
 
-Conferência de cada requisito com o programa e os testes (800 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
+Conferência de cada requisito com o programa e os testes (878 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
 
 **Requisitos funcionais**
 
@@ -353,6 +354,7 @@ Conferência de cada requisito com o programa e os testes (800 testes automátic
 | RF-21 | Pronto (1.1.0) | Menu Ajuda; formulários em `.github/ISSUE_TEMPLATE/` (`ARQUITETURA.md` seção 5.8) |
 | RF-22 | Pronto (1.1.0) | `updates.py` e `gui/updates.py` (`ARQUITETURA.md` seção 5.9) |
 | RF-24 | Pronto (1.2.0), em avaliação | `gui/shortcuts.py`, `gui/shortcuts_dialog.py`, `change_node_type_command` em `core/commands/edit.py`; pode mudar nas 1.2.x |
+| RF-25 | Pronto (1.2.1) | `remove_free_connections` em `core/commands/edit.py`; aviso ao abrir em `gui/window.py` (`ARQUITETURA.md` seção 4.3.1) |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 
@@ -368,7 +370,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois da v1 (decisão do autor em 2026-10-22, depois de ver uma maquete): a paleta como opção, sem substituir a faixa. Exibir › Paleta escolhe entre **No alto** (a faixa de hoje) e **À esquerda** (painel acoplado em duas colunas, com Elementos e Conexões). As duas usam as mesmas ações; o destaque das conexões aceitas (RF-10) vale nas duas; o painel não fecha nem solta, para nunca ficar sem ferramentas |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
-| RNF-12 | Pronto | 800 testes, sem tela |
+| RNF-12 | Pronto | 878 testes, sem tela |
 | RNF-13 | Pronto | Nada copiado do `.jar` |
 | RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
 

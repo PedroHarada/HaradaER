@@ -4,6 +4,21 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.2.1 — 2026-10-30
+
+### Removido
+
+- A conexão livre: ela não tem significado no modelo ER, e o TerraER 3.14 não tem ferramenta
+  para criá-la. Saiu da barra de ferramentas, do painel de propriedades e da tecla `C` da Edição
+  rápida.
+
+### Alterado
+
+- Ao abrir um arquivo com conexões livres (do TerraER ou de versões anteriores do HaradaER), elas
+  são apagadas, também dentro de grupos, e um aviso diz quantas eram e entre quais elementos. O
+  arquivo em disco só muda quando você salvar, e o TerraER continua abrindo o arquivo salvo.
+  Colar também descarta as conexões livres.
+
 ## 1.2.0 — 2026-10-25
 
 Versão em avaliação: a Edição rápida e a troca de tipo podem mudar nas versões 1.2.x, conforme o

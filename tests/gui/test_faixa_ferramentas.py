@@ -82,8 +82,8 @@ def test_dois_dedos_no_trackpad_rolam_para_os_lados(qtbot):
 def test_escolher_uma_ferramenta_escondida_rola_ate_ela(qtbot):
     j = janela_com_largura(qtbot, 900)
     faixa = j.tool_strip
-    j.view.set_tool(Tool("connect", "llabel"))  # a última da faixa
-    botao = faixa.button_for(j._tool_actions[Tool("connect", "llabel")])
+    j.view.set_tool(Tool("connect", "llabelDoubleGeneralizacao"))  # a última da faixa
+    botao = faixa.button_for(j._tool_actions[Tool("connect", "llabelDoubleGeneralizacao")])
     visivel = faixa.scroll.viewport().rect()
     canto = botao.mapTo(faixa.scroll.viewport(), botao.rect().topRight())
     assert visivel.contains(canto)

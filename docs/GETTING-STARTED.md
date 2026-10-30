@@ -124,6 +124,10 @@ English); to change it, use **View › Language** and open the program again. To
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
 without a key attribute. You can turn them off in **View › Structure warnings**.
 
+HaradaER doesn't use TerraER's free connection, which has no meaning in the model. If a file has
+any, they are deleted when it opens, with a notice saying which elements they connected; the file
+only changes when you save.
+
 Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
 improvement** open the GitHub page already filled in (a GitHub account is needed).
 
@@ -209,7 +213,6 @@ attribute makes it a key).
 | Participation, side "N" → Total participation, side "N" | `N` |
 | Attribute link | `L` |
 | Simple generalization → Optional participation in generalization → Mandatory participation in generalization | `H` |
-| Free connection | `C` |
 | Go back one step in the cycle | `Shift + letter` |
 | Change the selected element's type (with Select) | `Family letter` |
 | Create where the mouse is | `Space` |

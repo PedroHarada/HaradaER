@@ -50,7 +50,7 @@ def nos(janela):
 
 def test_cada_ferramenta_tem_uma_tecla_so():
     todas = [t for _, ferramentas in FAMILIES for t in ferramentas]
-    assert len(todas) == len(set(todas)) == 23
+    assert len(todas) == len(set(todas)) == 22
 
 
 def test_a_mesma_tecla_passa_para_o_proximo_tipo_e_o_shift_volta():

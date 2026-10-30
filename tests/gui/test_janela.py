@@ -76,9 +76,9 @@ def test_zoom_aparece_na_barra_de_status(qtbot, referencia):
 
 def test_uma_janela_por_documento(gerenciador, referencia):
     a = gerenciador.open_path(referencia / "amostra-basica.xml")
-    b = gerenciador.open_path(referencia / "amostra-todos-os-tipos.xml")
+    b = gerenciador.open_path(referencia / "amostra-estilos.xml")
     assert a is not b and len(gerenciador.windows) == 2
-    assert a.path.name == "amostra-basica.xml" and b.path.name == "amostra-todos-os-tipos.xml"
+    assert a.path.name == "amostra-basica.xml" and b.path.name == "amostra-estilos.xml"
 
 
 def test_abrir_de_novo_o_mesmo_arquivo_traz_a_janela_existente(gerenciador, referencia):
@@ -103,9 +103,9 @@ def test_falha_ao_abrir_nao_deixa_janela_sobrando(gerenciador, tmp_path, mensage
 
 def test_fechar_remove_a_janela_do_gerenciador(gerenciador, referencia):
     a = gerenciador.open_path(referencia / "amostra-basica.xml")
-    gerenciador.open_path(referencia / "amostra-todos-os-tipos.xml")
+    gerenciador.open_path(referencia / "amostra-estilos.xml")
     a.close()
-    assert [j.path.name for j in gerenciador.windows] == ["amostra-todos-os-tipos.xml"]
+    assert [j.path.name for j in gerenciador.windows] == ["amostra-estilos.xml"]
 
 
 def test_tipo_de_atributo_invalido_avisa_e_usa_o_padrao(qtbot, referencia, monkeypatch):
@@ -126,7 +126,7 @@ def test_barras_de_ferramentas_no_alto_com_icone_nome_curto_e_dica(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
     assert janela.toolBarArea(janela.tool_bar) == Qt.ToolBarArea.TopToolBarArea
-    assert len(janela._tool_actions) == 1 + 13 + 9
+    assert len(janela._tool_actions) == 1 + 13 + 8
     for acao in janela._tool_actions.values():
         assert not acao.icon().isNull()
         assert acao.text()  # nome curto embaixo do ícone

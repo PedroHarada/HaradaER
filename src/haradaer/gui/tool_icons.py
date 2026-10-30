@@ -48,7 +48,6 @@ SHORT_NAMES = {
     "generalizacaoLine": N_("General."),
     "llabelGeneralizacao": N_("Gen. opc."),
     "llabelDoubleGeneralizacao": N_("Gen. obrig."),
-    "llabel": N_("Livre"),
 }
 
 _ATRIBUTOS = ("atr", "atrchave", "atrchaveparcial", "atrderivado", "atrmulti")
@@ -60,7 +59,6 @@ _PONTAS = {
     "generalizacaoLine": ("uniao", "ent"),
     "llabelGeneralizacao": ("disjuncao", "ent"),
     "llabelDoubleGeneralizacao": ("sobreposicao", "ent"),
-    "llabel": ("ent", "ent"),
 }
 
 _medidor = QtMeasurer()

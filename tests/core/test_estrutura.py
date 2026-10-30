@@ -130,5 +130,5 @@ def test_atributo_sem_dono_e_parte_de_composto_tem_dono():
     m.liga("lcaf", endereco, aluno)
     m.liga("lcaf", m.no("atr"), endereco)  # rua: dono é o endereço
     m.no("atrderivado")  # solto
-    m.liga("llabel", m.no("atrmulti"), aluno)  # conexão livre não é ligação de atributo
+    m.liga("llabelUm", m.no("atrmulti"), aluno)  # participação não é ligação de atributo
     assert m.avisos() == {("atrderivado", ORPHAN_ATTRIBUTE), ("atrmulti", ORPHAN_ATTRIBUTE)}

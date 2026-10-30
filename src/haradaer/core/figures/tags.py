@@ -20,6 +20,7 @@ NODE_TAGS = frozenset(
 )
 
 # Conexões (seção 3.2). `lcf` é um apelido de `lcaf` que o TerraER também registra.
+# A conexão livre (`llabel`) só é lida, para ser apagada ao abrir e ao colar (RF-25).
 CONNECTION_TAGS = frozenset(
     {
         "llabel",
@@ -34,6 +35,8 @@ CONNECTION_TAGS = frozenset(
         "llabelDoubleGeneralizacao",
     }
 )
+
+FREE_CONNECTION = "llabel"
 
 # Figuras de apoio: texto, formas, linhas, imagem e grupo.
 SUPPORT_TAGS = frozenset(
