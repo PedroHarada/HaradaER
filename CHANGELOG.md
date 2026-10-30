@@ -4,7 +4,10 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
-## 1.2.1 — 2026-10-30
+## 1.2.2 — 2026-10-30
+
+A 1.2.1 não foi publicada: os testes do lançamento falharam com o pytest 9.2, e a correção
+saiu nesta versão.
 
 ### Removido
 

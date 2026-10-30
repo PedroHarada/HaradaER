@@ -192,7 +192,7 @@ A interface só converte as operações em pintura; todo o conhecimento do Terra
 - `recommend_connections(origem, destino)` devolve os tipos de conexão válidos para o par, sem a conexão livre; `recommend_elements(conexao)` devolve os pares (origem, destino) em que o tipo vale. Os dois usam a mesma tabela da validação (`INVESTIGACOES.md` seção 12).
 - **Teste de regressão contra o TerraER.** A tabela (`rules/tables.py`) é conferida par a par contra `matriz-validacao.txt`, e cada conexão dos arquivos de referência é conferida contra o que o próprio TerraER pinta de vermelho (`validacao-por-arquivo.txt`, gerado por `harness/ValidaArquivo.java`; JDK só para regenerar).
 
-### 4.3.1 Sem conexão livre (RF-25, 1.2.1)
+### 4.3.1 Sem conexão livre (RF-25, 1.2.2)
 
 A conexão livre (`llabel`) não existe no HaradaER: nada a cria, e a que vier num arquivo ou na área de transferência é apagada. O leitor continua reconhecendo a tag, só para isso: sem ela, um arquivo com conexão livre daria erro ao abrir (RNF-14). Evidência no TerraER: `INVESTIGACOES.md` seção 18.
 

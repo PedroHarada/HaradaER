@@ -75,7 +75,7 @@ Também existem no formato, como figuras de apoio: texto (`t`, `tn` negrito, `ti
 
 | Conexão | Tag | Uso |
 |---|---|---|
-| Conexão livre | `llabel` | Sem significado no modelo. **Desde a 1.2.1, o HaradaER não a cria nem a mantém:** só a reconhece ao abrir, para apagá-la (RF-25). |
+| Conexão livre | `llabel` | Sem significado no modelo. **Desde a 1.2.2, o HaradaER não a cria nem a mantém:** só a reconhece ao abrir, para apagá-la (RF-25). |
 | Participação, lado "1" | `llabelUm` | Mostra o rótulo `1`. |
 | Participação, lado "N" | `llabelMuitos` | Mostra o rótulo `N`. |
 | Participação total, lado "1" | `llabelDoubleUm` | Linha dupla, rótulo `1`. |
@@ -354,7 +354,7 @@ Conferência de cada requisito com o programa e os testes (878 testes automátic
 | RF-21 | Pronto (1.1.0) | Menu Ajuda; formulários em `.github/ISSUE_TEMPLATE/` (`ARQUITETURA.md` seção 5.8) |
 | RF-22 | Pronto (1.1.0) | `updates.py` e `gui/updates.py` (`ARQUITETURA.md` seção 5.9) |
 | RF-24 | Pronto (1.2.0), em avaliação | `gui/shortcuts.py`, `gui/shortcuts_dialog.py`, `change_node_type_command` em `core/commands/edit.py`; pode mudar nas 1.2.x |
-| RF-25 | Pronto (1.2.1) | `remove_free_connections` em `core/commands/edit.py`; aviso ao abrir em `gui/window.py` (`ARQUITETURA.md` seção 4.3.1) |
+| RF-25 | Pronto (1.2.2) | `remove_free_connections` em `core/commands/edit.py`; aviso ao abrir em `gui/window.py` (`ARQUITETURA.md` seção 4.3.1) |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 
