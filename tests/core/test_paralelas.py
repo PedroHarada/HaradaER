@@ -22,6 +22,12 @@ from haradaer.core.commands import (
 from haradaer.core.geometry import PARALLEL_OFFSET, center, node_rect, route_ends
 from haradaer.core.model.document import Document
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -84,7 +90,9 @@ def test_mover_os_dois_elementos_leva_as_dobras_junto(referencia):
     segunda = [f for f in doc.figures if f.tag == "llabelMuitos"][1]
     antes = pontos(segunda)
     History().execute(move_command(doc, nos, 10, 20))
-    assert pontos(segunda) == pytest.approx([(x + 10, y + 20) for x, y in antes])
+    assert achatado(pontos(segunda)) == pytest.approx(
+        achatado([(x + 10, y + 20) for x, y in antes])
+    )
 
 
 # ------------------------------------------------------------- criar no HaradaER

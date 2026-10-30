@@ -19,6 +19,12 @@ from haradaer.core.figures.types import NodeFigure
 from haradaer.core.geometry import connection_points, node_rect
 from haradaer.core.model.document import REORDERED, Document
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -47,7 +53,9 @@ def test_redimensionar_muda_a_forma_centraliza_o_texto_e_religa():
     texto = ent.parts[-1]
     assert float(texto.attrs["x"]) == pytest.approx(40 + (200 - largura) / 2)
     assert float(texto.attrs["y"]) == pytest.approx(30 + (90 - altura) / 2)
-    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(rel), node_rect(ent))))
+    assert achatado(pontos(conexao)) == pytest.approx(
+        achatado(list(connection_points(node_rect(rel), node_rect(ent))))
+    )
 
 
 def test_redimensionar_nao_fica_menor_que_o_texto():
@@ -99,12 +107,14 @@ def test_alinhar_a_esquerda_e_ao_meio_religa_entre_os_alinhados():
 
     historico.execute(align_command(doc, [a, b], "left"))
     assert node_rect(a)[0] == node_rect(b)[0] == 50
-    assert pontos(conexao) == pytest.approx(list(connection_points(node_rect(b), node_rect(a))))
+    assert achatado(pontos(conexao)) == pytest.approx(
+        achatado(list(connection_points(node_rect(b), node_rect(a))))
+    )
 
     historico.execute(align_command(doc, [a, b], "middle"))
     ra, rb = node_rect(a), node_rect(b)
     assert ra[1] + ra[3] / 2 == pytest.approx(rb[1] + rb[3] / 2)
-    assert pontos(conexao) == pytest.approx(list(connection_points(rb, ra)))
+    assert achatado(pontos(conexao)) == pytest.approx(achatado(list(connection_points(rb, ra))))
 
 
 @pytest.mark.parametrize(

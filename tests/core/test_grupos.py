@@ -25,6 +25,12 @@ from haradaer.core.geometry import node_rect, route_ends
 from haradaer.core.model.document import Document
 from haradaer.core.rules import validate
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -80,7 +86,9 @@ def test_mover_o_grupo_leva_as_conexoes_dos_elementos_de_dentro():
     antes = connection_path(interna)
     h.execute(move_command(doc, [grupo], 100, 40))
     assert node_rect(ent)[:2] == (50 + 100, 300 + 40)
-    assert connection_path(interna) == pytest.approx([(x + 100, y + 40) for x, y in antes])
+    assert achatado(connection_path(interna)) == pytest.approx(
+        achatado([(x + 100, y + 40) for x, y in antes])
+    )
     pontas_certas(externa)
 
 

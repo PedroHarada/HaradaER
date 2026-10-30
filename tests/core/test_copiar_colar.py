@@ -23,6 +23,12 @@ from haradaer.core.geometry import node_rect
 from haradaer.core.model.document import Document
 from haradaer.core.rules import validate
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -68,8 +74,8 @@ def test_colar_cria_figuras_novas_deslocadas_e_ligadas_entre_si():
     assert node_rect(nova_ent)[:2] == (node_rect(ent)[0] + 20, node_rect(ent)[1] + 20)
     assert (nova_conexao.start, nova_conexao.end) == (nova_rel, nova_ent)
     original = doc.figures[3]
-    assert connection_path(nova_conexao) == pytest.approx(
-        [(x + 20, y + 20) for x, y in connection_path(original)]
+    assert achatado(connection_path(nova_conexao)) == pytest.approx(
+        achatado([(x + 20, y + 20) for x, y in connection_path(original)])
     )
     assert validate(doc) == []
     assert io.loads(io.dumps(doc))
