@@ -69,7 +69,7 @@ Tag XML = nome usado no arquivo. Nomes entre parênteses são as classes origina
 | Generalização: disjunção | `disjuncao` | Círculo com "d". |
 | Generalização: sobreposição | `sobreposicao` | Círculo com "o". |
 
-Também existem no formato, como figuras de apoio: texto (`t`, `tn` negrito, `ti` itálico, `ta` área de texto), retângulo (`r`), elipse (`e`), losango (`diamond`), círculo (`circ`), linha (`l`), bézier (`b`/`bezier`), imagem (`image`) e grupo (`g`). O HaradaER deve ao menos **ler e preservar** essas figuras (RF-12).
+Também existem no formato, como figuras de apoio: texto (`t`, `tn` negrito, `ti` itálico, `ta` área de texto), retângulo (`r`), elipse (`e`), losango (`diamond`), círculo (`circ`), linha (`l`), bézier (`b`/`bezier`), imagem (`image`) e grupo (`g`). O HaradaER deve ao menos **ler e preservar** essas figuras (RF-12). Desde a 1.3.0, os textos soltos `t`, `tn` e `ti` viram `ta` ao abrir (RF-27): o único texto do HaradaER é o **Texto**, a Área de Texto do TerraER (RF-26).
 
 ### 3.2 Conexões
 
@@ -240,11 +240,11 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-05 | Escolher tipo e anulabilidade dos atributos (seção 3.3). Atributo derivado não tem tipo. |
 | RF-06 | Desfazer e refazer (o TerraER tem `UndoAction`/`RedoAction`). |
 | RF-07 | Zoom, grade, alinhamento, trazer para frente e enviar para trás, selecionar todos do mesmo tipo. |
-| RF-08 | Localizar elementos no modelo. |
+| RF-08 | Localizar elementos no modelo. Desde a 1.3.0, também os Textos, pelo conteúdo (RF-26). |
 | RF-09 | Verificação do modelo: destacar em vermelho as conexões com problema, com opção de ligar e desligar. Tem problema a conexão que tenha uma ponta solta ou que ligue um par de elementos que o tipo não aceita (seção 5). Também avisa, em laranja e com opção de desligar, os problemas de estrutura da seção 5. |
 | RF-10 | Recomendação de conexão entre dois elementos selecionados (tipos de conexão válidos para o par) e dos elementos possíveis para um tipo de conexão. Usa a mesma tabela da verificação, então nunca recomenda algo que apareceria em vermelho; difere do TerraER em dois pontos (`INVESTIGACOES.md` seção 12). A conexão livre não existe no HaradaER (RF-25). |
 | RF-11 | Exportar para imagem (PNG e JPG), para SVG e para PDF, e copiar o modelo como imagem para a área de transferência. GIF fica fora: o Qt não grava GIF. |
-| RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (texto livre, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
+| RF-12 | Preservar sem alteração as figuras de apoio **conhecidas** lidas de um arquivo (Área de Texto, formas, imagem, grupo) e seus atributos de estilo, regravando-as iguais. Os textos soltos `t`, `tn` e `ti` são a exceção: viram Texto (RF-27). Tags desconhecidas não existem em arquivos válidos do TerraER e geram erro (RNF-14). |
 | RF-13 | **(Fora da v1)** Gerar o DDL SQL do modelo. Regras e defeitos do TerraER levantados em `INVESTIGACOES.md` seção 6. Quando voltar ao escopo, decidir entre reproduzir o TerraER e gerar SQL válido com as mesmas convenções. |
 | RF-14 | **(Descartado, decisão do autor em 2026-10-22)** Imprimir. O PDF de Exportar desenho cobre a necessidade. |
 | **RF-15** | **Gestos de trackpad (obrigatório).** Na área do diagrama: pinça com dois dedos para zoom e rolagem com dois dedos para mover a visão. O zoom e a rolagem por teclado e menu continuam disponíveis como alternativa. Teste em Linux/Wayland com PySide6 6.12.0 confirmou: o zoom chega como `QNativeGestureEvent` do tipo `ZoomNativeGesture` (591 eventos, valores de -0,043 a +0,059 por evento, que se acumulam na escala) e a rolagem como `QWheelEvent` com `pixelDelta` e fases `ScrollBegin`/`ScrollUpdate` (145 eventos). A API `QPinchGesture` **não** disparou no Wayland; usar o evento nativo. Na v1 os gestos são considerados só no Linux/Wayland desta máquina, onde foram verificados; nos demais sistemas valem apenas as alternativas de teclado e menu (QA-11). |
@@ -257,6 +257,9 @@ O TerraER também oferece "Recomendar conexão" (`ConnectionRecommendationAction
 | RF-22 | **Aviso de versão nova:** ao abrir, no máximo uma vez por dia, o programa consulta no GitHub a versão mais recente e, se for maior, avisa com um botão que abre a página Releases. Ajuda › Verificar atualizações consulta na hora; Ajuda › Verificar ao abrir desliga a consulta automática. O programa não baixa nem instala nada sozinho (decisão do autor, 2026-10-22). |
 | RF-24 | **Edição rápida e troca de tipo:** com Editar › Edição rápida ligada (Ctrl+Shift+E ou o botão na barra de status), uma tecla escolhe a ferramenta, uma letra por família, e repetir a letra passa ao próximo tipo; a ferramenta continua ativa depois de criar; Espaço cria no cursor; a tecla de uma conexão liga os dois elementos selecionados; A cria um atributo ligado ao elemento selecionado; a letra da família troca o tipo do elemento selecionado. Clique direito › Trocar tipo troca o tipo dentro da família sem mudar o lugar, o nome e as conexões. Ajuda › Atalhos do teclado (F1) lista todos os atalhos, e os manuais trazem a mesma lista. Nada novo no `.xml` (RNF-01). Em avaliação na linha 1.2.x (decisão do autor, 2026-10-25). O RF-23 fica reservado para o esquema lógico relacional (branch `esquema-logico-relacional`). |
 | RF-25 | **Sem conexão livre:** o HaradaER não cria a conexão livre (`llabel`): ela sai da paleta e da tecla `C` da Edição rápida, e a verificação deixa de tratá-la como exceção. Ao abrir um arquivo (do TerraER ou de versões anteriores do HaradaER) e ao colar, toda conexão livre é apagada, inclusive dentro de grupos, sem perguntar e sem substituir por outro tipo. Ao abrir, um aviso diz quantas foram apagadas e entre quais elementos (nome e tipo de cada ponta, ou ponta solta). O arquivo em disco só muda quando o usuário salva, e o modelo abre como modificado; a remoção não entra no desfazer, para a conexão não voltar. O arquivo salvo continua abrindo no TerraER (RNF-01). Motivo: a conexão livre não tem significado na teoria ER (Elmasri e Navathe, caps. 7 e 8) e o TerraER 3.14 não tem ferramenta para criá-la (`INVESTIGACOES.md` seção 18). Na linha 1.2.x, junto com a Edição rápida em avaliação (decisão do autor, 2026-10-30). |
+| RF-26 | **Texto:** uma única ferramenta de texto livre, gravada como `ta` (a Área de Texto do TerraER): uma caixa com borda, fundo e texto de várias linhas que quebra pela largura, com Markdown (RF-28). Criada pela faixa de ferramentas ou pela tecla `T` da Edição rápida: um clique cria uma caixa de 120 × 60 (a do TerraER, 40 × 40, é pequena demais para digitar), e arrastar dá o tamanho. O editor abre direto: Enter quebra a linha, Ctrl+Enter ou clicar fora confirma, Esc cancela; sem texto, nada é criado. Duplo clique edita; apagar todo o texto exclui o Texto. A largura só muda quando o usuário redimensiona; a altura cresce para caber o texto e não encolhe sozinha. O Localizar (Ctrl+F) procura também no conteúdo dos Textos. O Texto não aceita conexões; a verificação o ignora. Decisão do autor em 2026-11-06, na 1.3.0. |
+| RF-27 | **Textos soltos viram Texto:** ao abrir e ao colar, todo texto solto `t`, `tn` (negrito) ou `ti` (Papel), também dentro de grupos, vira um Texto no mesmo lugar, com o mesmo texto, cor e fonte (`tn` ganha `fontBold`, `ti` ganha `fontItalic`); os caracteres de Markdown que mudariam a aparência são escapados com `\` (RF-28), e um texto comum fica igual. As partes de texto que dão nome aos elementos ER não mudam. Ao abrir, um aviso diz quantos foram convertidos e quais; o modelo abre como modificado, sem passo de desfazer, e o arquivo em disco só muda quando o usuário salva (mesmo padrão do RF-25). O arquivo salvo continua abrindo no TerraER (RNF-01). |
+| RF-28 | **Markdown no Texto:** o conteúdo do Texto é lido como Markdown, seguindo o **CommonMark 0.31.2** (biblioteca markdown-it-py 4.2.0). Valem títulos `#` a `######` (em negrito, com 2×, 1,5×, 1,17×, 1×, 0,83× e 0,67× o tamanho da fonte), `*itálico*`/`_itálico_`, `**negrito**`/`__negrito__` (o `_` não vale dentro de palavras), listas com `-`, `*`, `+` e numeradas (inclusive começando em outro número), com sublistas recuadas, código em linha e em bloco (cercas ```` ``` ```` ou `~~~`, ou recuo de 4 espaços) em fonte monoespaçada com fundo cinza, links do CommonMark (`[texto](url)`, `<url>` e por referência, com a definição `[ref]: url`), em azul sublinhado, que o Ctrl+clique abre no navegador ou no e-mail (só `http`, `https` e `mailto`; o mouse sobre o link mostra o endereço na barra de status), as **listas de tarefas do GitHub** (`- [ ]` e `- [x]`, com uma caixinha no lugar do marcador e um tique quando marcada; o Ctrl+clique na caixinha marca ou desmarca, trocando `[ ]` e `[x]` no texto, com desfazer) e escape com `\` antes de qualquer pontuação. **Desvio declarado:** Enter é sempre linha nova, e as linhas em branco aparecem como digitadas. Imagens, citações, tabelas, linha separadora, título sublinhado, links sem `<...>` (`www.site.com`) e HTML ficam como texto literal; endereços perigosos (`javascript:`, `file:`, `data:`) não viram link. O arquivo guarda o texto com os marcadores, sem nada novo no XML; o TerraER mostra os marcadores e regrava o texto igual (RNF-01). O editor mostra os marcadores; Ctrl+B e Ctrl+I os põem em volta da seleção. O Localizar procura no texto sem os marcadores. O negrito/itálico da caixa inteira (`fontBold`/`fontItalic`) é a base da formatação. Decisão do autor em 2026-11-06. |
 
 ### 6.2 Requisitos não funcionais
 
@@ -325,7 +328,7 @@ Detalhes e evidências em `INVESTIGACOES.md`.
 
 ## 10. Estado da v1 (revisão de 2026-10-20)
 
-Conferência de cada requisito com o programa e os testes (878 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
+Conferência de cada requisito com o programa e os testes (974 testes automáticos). Na revisão, o autor decidiu implementar copiar/colar/duplicar e agrupar (RF-03) e deixar para depois da v1 a paleta como painel (RNF-09); o painel Mensagens entrou depois, na mesma revisão. Em 2026-10-22 o autor trouxe a opção de inglês (RNF-06) de volta para a v1 e descartou a impressão (RF-14), o GIF (QA-14) e copiar e colar com o TerraER (QA-13).
 
 **Requisitos funcionais**
 
@@ -338,7 +341,7 @@ Conferência de cada requisito com o programa e os testes (878 testes automátic
 | RF-05 | Pronto | Tipo SQL e anulabilidade em Propriedades (M5c) |
 | RF-06 | Pronto | Desfazer e refazer de toda edição |
 | RF-07 | Pronto | Zoom, grade, alinhar, frente/trás, selecionar do mesmo tipo (M3, M5b) |
-| RF-08 | Pronto | Localizar (Ctrl+F) no inspetor (M5c) |
+| RF-08 | Pronto | Localizar (Ctrl+F) no inspetor (M5c); Textos pelo conteúdo desde a 1.3.0 |
 | RF-09 | Pronto | Conexões com problema em vermelho, liga/desliga em Exibir (M5a); avisos de estrutura em laranja, também com liga/desliga |
 | RF-10 | Pronto | Conexões aceitas entre dois elementos (negrito na barra) e pares aceitos de um tipo (barra de status) (M5a) |
 | RF-11 | Pronto | PNG, JPG, SVG, PDF e copiar como imagem (M5d) |
@@ -355,6 +358,9 @@ Conferência de cada requisito com o programa e os testes (878 testes automátic
 | RF-22 | Pronto (1.1.0) | `updates.py` e `gui/updates.py` (`ARQUITETURA.md` seção 5.9) |
 | RF-24 | Pronto (1.2.0), em avaliação | `gui/shortcuts.py`, `gui/shortcuts_dialog.py`, `change_node_type_command` em `core/commands/edit.py`; pode mudar nas 1.2.x |
 | RF-25 | Pronto (1.2.2) | `remove_free_connections` em `core/commands/edit.py`; aviso ao abrir em `gui/window.py` (`ARQUITETURA.md` seção 4.3.1) |
+| RF-26 | Pronto (1.3.0) | `core/commands/text.py` (criar, editar, redimensionar); quebra de linha em `core/appearance/describe.py`; ferramenta, editor e tecla `T` na interface (`ARQUITETURA.md` seção 4.3.2) |
+| RF-27 | Pronto (1.3.0) | `convert_free_texts` em `core/commands/text.py`; aviso ao abrir em `gui/window.py` |
+| RF-28 | Pronto (1.3.0) | `core/appearance/markdown.py` (leitura pelo markdown-it-py) e o desenho em `core/appearance/describe.py` (`ARQUITETURA.md` seção 4.3.2, D-13) |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 
@@ -370,7 +376,7 @@ Além do pedido: edição dos vértices das conexões e reconexão de pontas (`I
 | RNF-09 | Parcial; **o resto fica fora da v1 (decisão do autor)** | Painéis acopláveis (inspetor, propriedades e mensagens) com disposição lembrada. O painel Mensagens lista os erros de conexão e os avisos de estrutura, e escolher um leva ao elemento; a barra de status resume a verificação. Fica para depois da v1 (decisão do autor em 2026-10-22, depois de ver uma maquete): a paleta como opção, sem substituir a faixa. Exibir › Paleta escolhe entre **No alto** (a faixa de hoje) e **À esquerda** (painel acoplado em duas colunas, com Elementos e Conexões). As duas usam as mesmas ações; o destaque das conexões aceitas (RF-10) vale nas duas; o painel não fecha nem solta, para nunca ficar sem ferramentas |
 | RNF-10, 14, 15 | Pronto | Leitura segura e erros claros (M1) |
 | RNF-11 | Pronto | Gravação por arquivo temporário, mantendo as permissões do arquivo |
-| RNF-12 | Pronto | 878 testes, sem tela |
+| RNF-12 | Pronto | 974 testes, sem tela |
 | RNF-13 | Pronto | Nada copiado do `.jar` |
 | RNF-16 | Pronto | Corrigido na revisão: tipo inválido avisa ao abrir e vira o tipo padrão |
 

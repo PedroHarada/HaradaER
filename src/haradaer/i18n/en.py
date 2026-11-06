@@ -120,7 +120,7 @@ EN: dict[str, str] = {
     "Atributos sem dono": "Attributes without owner",
     "Outros": "Others",
     "Conexões": "Connections",
-    "Localizar elemento...": "Find element...",
+    "Localizar elemento ou texto...": "Find element or text...",
     "Nome": "Name",
     "Tipo": "Kind",
     "Nada encontrado": "Nothing found",
@@ -240,6 +240,31 @@ EN: dict[str, str] = {
     ),
     "O arquivo em disco só muda quando você salvar.": (
         "The file on disk only changes when you save."
+    ),
+    # Texto (RF-26, RF-27)
+    "Texto": "Text",
+    "Textos": "Texts",
+    "Criar texto": "Create text",
+    "Editar texto": "Edit text",
+    "Textos convertidos": "Texts converted",
+    "{link} ({tecla}+clique abre)": "{link} ({tecla}+click opens it)",
+    "{tecla}+clique marca ou desmarca a tarefa": "{tecla}+click checks or unchecks the task",
+    "Marcar tarefa": "Check task",
+    "Só links da web (http, https) e de e-mail abrem: {link}": (
+        "Only web (http, https) and e-mail links open: {link}"
+    ),
+    "texto": "text",
+    "texto em negrito": "bold text",
+    "papel": "role",
+    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+    " 1 texto deste arquivo virou Texto, no mesmo lugar e com a mesma fonte:": (
+        "HaradaER has a single kind of text, the Text (TerraER's Text Area)."
+        " 1 text in this file became a Text, in the same place and with the same font:"
+    ),
+    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+    " {n} textos deste arquivo viraram Texto, no mesmo lugar e com a mesma fonte:": (
+        "HaradaER has a single kind of text, the Text (TerraER's Text Area)."
+        " {n} texts in this file became Texts, in the same place and with the same font:"
     ),
     # --- exportar e copiar -------------------------------------------------------------------
     "Exportar desenho": "Export drawing",

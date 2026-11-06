@@ -153,10 +153,10 @@ def test_abrir_e_salvar_entram_nos_recentes(gerenciador, referencia, tmp_path, m
 
 def test_clicar_num_recente_abre_em_outra_janela(gerenciador, referencia):
     primeira = gerenciador.open_path(referencia / "amostra-basica.xml")
-    gerenciador.recent.add(referencia / "amostra-estilos.xml")
-    primeira.open_recent((referencia / "amostra-estilos.xml").resolve())
+    gerenciador.recent.add(referencia / "amostra-grupo.xml")
+    primeira.open_recent((referencia / "amostra-grupo.xml").resolve())
     assert len(gerenciador.windows) == 2
-    assert gerenciador.windows[1].path.name == "amostra-estilos.xml"
+    assert gerenciador.windows[1].path.name == "amostra-grupo.xml"
 
 
 def test_recente_que_sumiu_e_tirado_da_lista(gerenciador, tmp_path, mensagens, referencia):

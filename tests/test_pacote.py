@@ -40,6 +40,8 @@ def test_avisos_de_licenca_com_os_textos_completos():
         "PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2",
         "OpenSSL",
         "zstd",
+        "markdown-it-py",
+        "Taneli Hukkinen",  # o copyright do mdurl, que a licença MIT pede junto
     ):
         assert trecho in texto, trecho
 

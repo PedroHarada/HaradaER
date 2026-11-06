@@ -6,7 +6,7 @@ também vale.
 
 ## Instalar e abrir
 
-Alvo da v1: Linux (Wayland), Python 3.14 e PySide6 6.12.
+Alvo da v1: Linux (Wayland), Python 3.14 e PySide6 6.12. O Markdown do Texto usa o markdown-it-py 4.2.0.
 
 ```
 python -m venv .venv
@@ -31,9 +31,10 @@ cp docs/referencia-terraer/criados-no-haradaer/todos-os-tipos.xml /tmp/
 |---|---|
 | Criar um elemento | Escolha o tipo na faixa de cima e clique no desenho; digite o nome e Enter |
 | Ligar dois elementos | Escolha o tipo de conexão (à direita na faixa) e arraste de um elemento ao outro (verde: o par é aceito; vermelho: não é, mas a conexão é criada e fica marcada) |
+| Escrever uma observação | **Texto**, no fim da faixa: clique (caixa padrão) ou arraste (dá o tamanho) e digite; Enter quebra a linha, Ctrl+Enter ou clicar fora confirma. A caixa cresce para baixo conforme o texto. Aceita Markdown: `#` títulos, `*itálico*`, `**negrito**` (Ctrl+I e Ctrl+B no editor), listas `-`/`1.`, tarefas `- [ ]` (Ctrl+clique marca), links `[texto](url)` (Ctrl+clique abre) e `` `código` `` |
 | Repetir a ferramenta | Segure Shift ao clicar ou soltar |
 | Voltar a selecionar | Esc |
-| Renomear | Duplo clique no elemento, ou o campo Nome em Propriedades |
+| Renomear | Duplo clique no elemento, ou o campo Nome em Propriedades; duplo clique num Texto edita o texto |
 | Mover e redimensionar | Arraste o elemento; arraste as alças do elemento selecionado |
 | Excluir | Delete (leva junto as conexões ligadas) |
 | Copiar, recortar, colar | Ctrl+C, Ctrl+X, Ctrl+V (também de uma janela para outra); as conexões vão junto quando os dois elementos ligados são copiados |
@@ -59,7 +60,7 @@ conexões "N" de um relacionamento são numeradas N, M, P..., como no TerraER.
 - **Mensagens**: os erros de conexão (vermelho) e os avisos de estrutura (laranja) do modelo;
   clicar numa linha leva ao elemento. A barra de status também resume a verificação.
 - **Inspetor de objetos**: a árvore do modelo, com os atributos dentro do dono. Ctrl+F procura
-  um elemento pelo nome (sem diferenciar maiúsculas e acentos).
+  um elemento pelo nome, ou um Texto pelo conteúdo (sem diferenciar maiúsculas e acentos).
 - **Propriedades**: nome, tipo SQL e "pode ser nulo" dos atributos, tipo de uma conexão e
   rótulo das generalizações.
 - **Exibir**: zoom (também pinça e rolagem com dois dedos no trackpad, ou Ctrl + roda), grade
@@ -100,8 +101,8 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 ## Lançar uma versão
 
 ```
-git tag v1.2.2
-git push origin v1.2.2
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
 O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis

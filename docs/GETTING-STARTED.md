@@ -128,6 +128,28 @@ HaradaER doesn't use TerraER's free connection, which has no meaning in the mode
 any, they are deleted when it opens, with a notice saying which elements they connected; the file
 only changes when you save.
 
+To write a note on the drawing, use **Text** (at the end of the strip, or the `T` key in Quick
+edit): click for a default box, or drag to set its size, and type. Enter breaks the line; clicking
+outside confirms. The box grows downward as you type, and its width changes
+with the handles. TerraER's loose texts (Text, Role) become Text when the file opens, with a
+notice; the file only changes when you save.
+
+Text accepts Markdown (CommonMark), and the drawing shows it formatted. In TerraER the markers
+show as typed.
+
+| Type | To get |
+|---|---|
+| `# Title` to `###### Title` | Heading, from largest to smallest |
+| `*italic*` or `_italic_` | Italic |
+| `**bold**` or `__bold__` | Bold |
+| `- item` or `1. item` | List; indent 2 spaces for a sublist |
+| `- [ ] task` and `- [x] done` | Task list, with a checkbox; check or uncheck it with Ctrl-click; on a Mac, Cmd-click |
+| `[text](https://site)` or `<https://site>` | Link, which opens in the browser (Ctrl-click; on a Mac, Cmd-click) |
+| `` `code` `` or a block between lines with ```` ``` ```` | Code, in a monospaced font |
+| `\*` | A real `*` (works for any punctuation) |
+
+Each Enter is a new line.
+
 Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
 improvement** open the GitHub page already filled in (a GitHub account is needed).
 
@@ -213,6 +235,7 @@ attribute makes it a key).
 | Participation, side "N" → Total participation, side "N" | `N` |
 | Attribute link | `L` |
 | Simple generalization → Optional participation in generalization → Mandatory participation in generalization | `H` |
+| Text | `T` |
 | Go back one step in the cycle | `Shift + letter` |
 | Change the selected element's type (with Select) | `Family letter` |
 | Create where the mouse is | `Space` |

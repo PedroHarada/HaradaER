@@ -36,6 +36,7 @@ class ShapeOp:
     h: float
     fill: RGBA | None
     stroke: Stroke | None
+    task: int | None = None  # caixinha de tarefa de um Texto: a linha do item no texto (RF-28)
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ class TextOp:
     font: FontSpec
     color: RGBA = BLACK
     dashes: tuple[float, ...] = ()
+    link: str | None = None  # destino, se o texto for um link (Markdown do Texto, RF-28)
 
 
 @dataclass(frozen=True)

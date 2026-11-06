@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import base64
 import math
+import re
+from dataclasses import dataclass, replace
 
+from haradaer.core.appearance.markdown import Run, parse
 from haradaer.core.appearance.metrics import TextMeasurer
 from haradaer.core.appearance.ops import (
     ArcOp,
@@ -129,6 +132,207 @@ def _text(elemento: Element, medidor: TextMeasurer) -> list[DrawOp]:
     return ops
 
 
+# --- Texto (RF-26) com Markdown (RF-28) --------------------------------------------------------
+
+HEADING_SCALE = {1: 2.0, 2: 1.5, 3: 1.17, 4: 1.0, 5: 0.83, 6: 0.67}  # como os títulos do HTML
+CODE_FAMILY = "Monospaced"  # a fonte lógica monoespaçada do Java
+CODE_FILL: RGBA = (235, 235, 235, 255)
+LINK_COLOR: RGBA = (0, 0, 238, 255)  # o azul dos links do HTML
+CHECKBOX_SCALE = 0.8  # lado da caixinha da tarefa, em múltiplos do tamanho da fonte
+LIST_STEP = 1.5  # recuo de cada nível de lista, em múltiplos do tamanho da fonte
+
+
+@dataclass(frozen=True)
+class TextSegment:
+    """Um pedaço de uma linha do Texto, a `x` do começo da área útil da caixa."""
+
+    x: float
+    text: str
+    font: FontSpec
+    code: bool = False
+    link: str | None = None
+    checkbox: bool | None = None  # caixinha de tarefa (marcada ou não), no lugar do texto
+    task_line: int = 0  # linha do item da tarefa no texto
+
+
+@dataclass(frozen=True)
+class TextLine:
+    segments: tuple[TextSegment, ...]
+    height: float
+    code_block: bool = False  # fundo de código na largura toda
+    indent: float = 0.0
+
+
+def _run_font(base: FontSpec, run: Run, titulo: int) -> FontSpec:
+    sublinhado = base.underline or run.link is not None
+    if run.code:
+        return replace(base, family=CODE_FAMILY, bold=False, italic=False, underline=sublinhado)
+    tamanho = base.size * HEADING_SCALE[titulo] if titulo else base.size
+    return replace(
+        base,
+        size=tamanho,
+        bold=base.bold or run.bold or bool(titulo),
+        italic=base.italic or run.italic,
+        underline=sublinhado,
+    )
+
+
+def _height(segmentos: list[TextSegment], vazio: FontSpec, medidor: TextMeasurer) -> float:
+    if not segmentos:
+        return medidor.size(" ", vazio)[1]
+    return max(medidor.size(s.text or " ", s.font)[1] for s in segmentos)
+
+
+def _wrap_runs(
+    runs: list[Run],
+    base: FontSpec,
+    titulo: int,
+    largura: float,
+    recuo: float,
+    marcador: str | None,
+    medidor: TextMeasurer,
+    tarefa: bool | None = None,
+    linha_da_tarefa: int = 0,
+) -> list[TextLine]:
+    """Quebra os pedaços pela largura, entre palavras; uma palavra mais larga que a linha é
+    cortada. A palavra pode misturar fontes (`in*crí*vel`) e não quebra no meio da troca."""
+    linha_vazia = _run_font(base, Run(""), titulo)
+    linhas: list[TextLine] = []
+    atual: list[TextSegment] = []
+    x = recuo
+    if tarefa is not None:  # a caixinha fica no lugar do marcador
+        atual.append(
+            TextSegment(
+                recuo - LIST_STEP * base.size,
+                "",
+                linha_vazia,
+                checkbox=tarefa,
+                task_line=linha_da_tarefa,
+            )
+        )
+    elif marcador is not None:
+        atual.append(TextSegment(recuo - LIST_STEP * base.size, marcador, linha_vazia))
+
+    def fechar() -> None:
+        nonlocal atual, x
+        linhas.append(TextLine(tuple(atual), _height(atual, linha_vazia, medidor), indent=recuo))
+        atual, x = [], recuo
+
+    def largura_de(texto: str, fonte: FontSpec) -> float:
+        return medidor.size(texto, fonte)[0]
+
+    def por(texto: str, fonte: FontSpec, codigo: bool, link: str | None) -> None:
+        """Põe o texto na linha, juntando ao pedaço anterior se o estilo for o mesmo."""
+        nonlocal x
+        ultimo = atual[-1] if atual else None
+        if (
+            ultimo
+            and ultimo.x >= recuo
+            and (ultimo.font, ultimo.code, ultimo.link) == (fonte, codigo, link)
+        ):
+            atual[-1] = TextSegment(ultimo.x, ultimo.text + texto, fonte, codigo, link)
+            x = ultimo.x + largura_de(atual[-1].text, fonte)
+            return
+        atual.append(TextSegment(x, texto, fonte, codigo, link))
+        x += largura_de(texto, fonte)
+
+    # Palavras (pedaços sem espaço, talvez de fontes diferentes) separadas por espaços.
+    palavras: list[tuple[str, list[tuple[str, FontSpec, bool, str | None]]]] = []
+    for run in runs:
+        if run.text == "\n":
+            palavras.append(("quebra", []))
+            continue
+        fonte = _run_font(base, run, titulo)
+        for pedaco in re.split(r"( +)", run.text):
+            if not pedaco:
+                continue
+            parte = (pedaco, fonte, run.code, run.link)
+            if pedaco.startswith(" ") and not run.code:
+                palavras.append(("espaco", [parte]))
+            elif palavras and palavras[-1][0] == "palavra":
+                palavras[-1][1].append(parte)
+            else:
+                palavras.append(("palavra", [parte]))
+
+    espaco: tuple[str, FontSpec, bool, str | None] | None = None
+    for tipo, partes in palavras:
+        if tipo == "quebra":
+            fechar()
+            espaco = None
+            continue
+        if tipo == "espaco":
+            espaco = partes[0]
+            continue
+        conteudo = [s for s in atual if s.x >= recuo]  # o marcador não conta
+        largura_palavra = sum(largura_de(t, f) for t, f, _c, _l in partes)
+        largura_espaco = largura_de(espaco[0], espaco[1]) if espaco and conteudo else 0.0
+        if conteudo and x + largura_espaco + largura_palavra > largura:
+            fechar()
+            largura_espaco = 0.0
+        if largura_espaco and espaco is not None:
+            por(*espaco)
+        espaco = None
+        if largura_palavra <= largura - x or not partes:
+            for parte in partes:
+                por(*parte)
+            continue
+        for texto, fonte, codigo, link in partes:  # mais larga que a linha: corta
+            for letra in texto:
+                if x + largura_de(letra, fonte) > largura and any(s.x >= recuo for s in atual):
+                    fechar()
+                por(letra, fonte, codigo, link)
+    fechar()
+    return linhas
+
+
+def _wrap_code(
+    codigo: str, base: FontSpec, largura: float, recuo: float, medidor: TextMeasurer
+) -> list[TextLine]:
+    """Bloco de código: quebra por caractere, para nada sumir da caixa."""
+    fonte = _run_font(base, Run("", code=True), 0)
+    altura = medidor.size(" ", fonte)[1]
+    linhas = []
+    for linha in codigo.split("\n"):
+        atual = ""
+        for letra in linha:
+            if atual and recuo + medidor.size(atual + letra, fonte)[0] > largura:
+                linhas.append(TextLine((TextSegment(recuo, atual, fonte),), altura, True, recuo))
+                atual = ""
+            atual += letra
+        segmentos = (TextSegment(recuo, atual, fonte),) if atual else ()
+        linhas.append(TextLine(segmentos, altura, True, recuo))
+    return linhas
+
+
+def text_area_layout(
+    texto: str, fonte: FontSpec, largura: float, medidor: TextMeasurer
+) -> tuple[list[TextLine], float]:
+    """As linhas do Texto numa caixa dessa largura e a altura de que a caixa precisa."""
+    util = largura - 2 * TEXT_AREA_INSET
+    linhas: list[TextLine] = []
+    for bloco in parse(texto):
+        recuo = bloco.depth * LIST_STEP * fonte.size
+        if bloco.kind == "blank":
+            linhas.append(TextLine((), medidor.size(" ", fonte)[1]))
+        elif bloco.kind == "code":
+            linhas.extend(_wrap_code(bloco.runs[0].text, fonte, util, recuo, medidor))
+        else:
+            linhas.extend(
+                _wrap_runs(
+                    bloco.runs,
+                    fonte,
+                    bloco.level,
+                    util,
+                    recuo,
+                    bloco.marker,
+                    medidor,
+                    bloco.task,
+                    bloco.line,
+                )
+            )
+    return linhas, sum(linha.height for linha in linhas) + 2 * TEXT_AREA_INSET
+
+
 def _text_area(elemento: Element, medidor: TextMeasurer) -> list[DrawOp]:
     style = Style.of(elemento)
     fonte = _font(style, "ta")
@@ -138,10 +342,45 @@ def _text_area(elemento: Element, medidor: TextMeasurer) -> list[DrawOp]:
     ops: list[DrawOp] = [
         ShapeOp("rect", x, y, w, h, style.color("fillColor", WHITE), _stroke(style))
     ]
-    topo = y + TEXT_AREA_INSET
-    for linha in (style.string("text", "") or "").split("\n"):
-        ops.append(TextOp(x + TEXT_AREA_INSET, topo, linha, fonte, cor))
-        topo += medidor.size(linha or " ", fonte)[1]
+    esquerda, topo = x + TEXT_AREA_INSET, y + TEXT_AREA_INSET
+    linhas, _altura = text_area_layout(style.string("text", "") or "", fonte, w, medidor)
+    for linha in linhas:
+        if linha.code_block:
+            largura = w - 2 * TEXT_AREA_INSET - linha.indent
+            ops.append(
+                ShapeOp(
+                    "rect", esquerda + linha.indent, topo, largura, linha.height, CODE_FILL, None
+                )
+            )
+        for pedaco in linha.segments:
+            if pedaco.checkbox is not None:
+                ops.extend(_checkbox(esquerda + pedaco.x, topo, linha.height, pedaco, cor))
+                continue
+            if pedaco.code and not linha.code_block:
+                largura = medidor.size(pedaco.text, pedaco.font)[0]
+                ops.append(
+                    ShapeOp(
+                        "rect", esquerda + pedaco.x, topo, largura, linha.height, CODE_FILL, None
+                    )
+                )
+            tinta = LINK_COLOR if pedaco.link is not None else cor
+            ops.append(
+                TextOp(esquerda + pedaco.x, topo, pedaco.text, pedaco.font, tinta, link=pedaco.link)
+            )
+        topo += linha.height
+    return ops
+
+
+def _checkbox(x: float, topo: float, altura: float, pedaco: TextSegment, cor: RGBA) -> list[DrawOp]:
+    """A caixinha da tarefa, centrada na linha, com um tique se estiver marcada."""
+    lado = pedaco.font.size * CHECKBOX_SCALE
+    y = topo + (altura - lado) / 2
+    caixa = ShapeOp("rect", x, y, lado, lado, WHITE, Stroke(color=cor), task=pedaco.task_line)
+    ops: list[DrawOp] = [caixa]
+    if pedaco.checkbox:
+        tique = ((x + lado * 0.2, y + lado * 0.5), (x + lado * 0.42, y + lado * 0.75))
+        tique += ((x + lado * 0.8, y + lado * 0.25),)
+        ops.append(PolylineOp(tique, Stroke(color=cor, width=1.5)))
     return ops
 
 

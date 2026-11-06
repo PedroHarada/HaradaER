@@ -5,22 +5,25 @@ Gestos verificados em Linux/Wayland com Qt 6.12 (`docs/INVESTIGACOES.md`):
 - rolagem com dois dedos chega como `QWheelEvent` com `pixelDelta`;
 - `QPinchGesture` não é usado: não dispara no Wayland.
 
-Ferramentas: selecionar (clicar, arrastar, laço), criar elemento (um clique) e conectar (arrastar
-de um elemento a outro). A vista só traduz o mouse em pedidos ao `Editor`.
+Ferramentas: selecionar (clicar, arrastar, laço), criar elemento (um clique), criar Texto (um
+clique, ou arrastar para dar o tamanho) e conectar (arrastar de um elemento a outro). A vista só
+traduz o mouse em pedidos ao `Editor`.
 """
 
 from __future__ import annotations
 
 import math
+import sys
 from typing import NamedTuple
 
 import shiboken6
-from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, Signal
+from PySide6.QtCore import QEvent, QPointF, QRect, QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QActionGroup,
     QColor,
     QContextMenuEvent,
     QCursor,
+    QDesktopServices,
     QKeyEvent,
     QMouseEvent,
     QNativeGestureEvent,
@@ -32,27 +35,32 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QGraphicsLineItem,
     QGraphicsPathItem,
+    QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
     QMenu,
     QMessageBox,
 )
 
-from haradaer.core.appearance import FontSpec, TextOp
-from haradaer.core.appearance.describe import font_of
+from haradaer.core.appearance import FontSpec, ShapeOp, TextOp
+from haradaer.core.appearance.describe import TEXT_AREA_INSET, font_of
 from haradaer.core.commands import (
     can_move,
     connection_path,
+    is_text_area,
     lost_on_type_change,
     nested_nodes,
     node_type_family,
+    text_area_rect,
+    text_of,
 )
-from haradaer.core.figures.factory import KINDS
+from haradaer.core.figures.factory import KINDS, TEXT_AREA, TEXT_AREA_SIZE, create_text_area
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
-from haradaer.core.geometry import nearest_segment, node_rect
+from haradaer.core.geometry import Rect, nearest_segment, node_rect
+from haradaer.core.model.element import Element
 from haradaer.core.rules import is_valid_connection
 from haradaer.gui.editor import Editor
-from haradaer.gui.inline_edit import InlineEdit
+from haradaer.gui.inline_edit import InlineEdit, InlineTextEdit
 from haradaer.gui.qt_utils import qfont
 from haradaer.gui.scene.items import FigureItem, op_bounds
 from haradaer.gui.theme import current_theme
@@ -119,6 +127,17 @@ def resized_rect(
     return (esquerda, topo, direita - esquerda, base - topo)
 
 
+def figure_box(figura: Element | None) -> Rect | None:
+    """A caixa de um elemento ER ou de um Texto; `None` para o resto."""
+    if is_text_area(figura):
+        return text_area_rect(figura)  # type: ignore[arg-type]
+    return node_rect(figura) if isinstance(figura, NodeFigure) else None
+
+
+# Links de um Texto que o Ctrl+clique abre (RF-28): só os da web e de e-mail.
+LINK_SCHEMES = ("http", "https", "mailto")
+
+
 class Tool(NamedTuple):
     kind: str  # "select", "create" ou "connect"
     tag: str | None = None
@@ -140,7 +159,10 @@ class DiagramView(QGraphicsView):
         self.tool = SELECT
         self.quick_edit = False  # Edição rápida: atalhos de uma tecla e a ferramenta fica
         self._attached_owner: NodeFigure | None = None  # volta a ser selecionado depois do nome
-        self._inline: InlineEdit | None = None
+        self._inline: InlineEdit | InlineTextEdit | None = None
+        self._text_drag: tuple[QPointF, bool] | None = None  # Texto: canto inicial e se fica
+        self._text_preview: QGraphicsRectItem | None = None
+        self._hover_link: str | None = None
         self._drag_from: QPointF | None = None  # cena: onde o arrasto de elementos começou
         self._drag_origin_px: QPointF | None = None
         self._dragging = False
@@ -150,9 +172,9 @@ class DiagramView(QGraphicsView):
         self._preview: QGraphicsLineItem | None = None
         self.grid: float | None = None
         self._drag_start: QPointF | None = None  # cena: onde o arrasto começou (para a grade)
-        self._drag_anchor: tuple[NodeFigure, float, float] | None = None
+        self._drag_anchor: tuple[Element, float, float] | None = None
         self._drag_moved = (0.0, 0.0)
-        self._resizing: tuple[NodeFigure, str, tuple[float, float, float, float]] | None = None
+        self._resizing: tuple[Element, str, tuple[float, float, float, float]] | None = None
         self._bend_drag: tuple[ConnectionFigure, int] | None = None
         self._reconnecting: tuple[ConnectionFigure, str] | None = None
         self._reconnect_preview: QGraphicsPathItem | None = None
@@ -254,14 +276,13 @@ class DiagramView(QGraphicsView):
         if shiboken6.isValid(self):
             self.viewport().update()
 
-    def resizable(self) -> NodeFigure | None:
-        """O elemento que mostra alças: só quando ele é o único selecionado."""
+    def resizable(self) -> Element | None:
+        """O elemento (ou Texto) que mostra alças: só quando ele é o único selecionado."""
         if self.tool.kind != "select" or not shiboken6.isValid(self._scene):
             return None
         figuras = self._scene.selected_figures()
-        if len(figuras) == 1 and isinstance(figuras[0], NodeFigure):
-            if node_rect(figuras[0]) is not None:
-                return figuras[0]
+        if len(figuras) == 1 and figure_box(figuras[0]) is not None:
+            return figuras[0]
         return None
 
     def handle_rects(self) -> dict[str, QRectF]:
@@ -269,7 +290,7 @@ class DiagramView(QGraphicsView):
         no = self.resizable()
         if no is None:
             return {}
-        x, y, w, h = node_rect(no)  # type: ignore[misc]
+        x, y, w, h = figure_box(no)  # type: ignore[misc]
         lado = HANDLE_PX / self.zoom
         alcas = {}
         for nome, (lado_x, lado_y) in HANDLES.items():
@@ -513,7 +534,7 @@ class DiagramView(QGraphicsView):
     def _begin_resize(self, alca: str) -> None:
         no = self.resizable()
         assert no is not None and self.editor is not None
-        rect = node_rect(no)
+        rect = figure_box(no)
         assert rect is not None
         self._resizing = (no, alca, rect)
         self._scene.hold_extent(True)
@@ -525,7 +546,7 @@ class DiagramView(QGraphicsView):
         rect = resized_rect(
             original, alca, self.snap(pos.x()), self.snap(pos.y()), self.editor.min_size(no)
         )
-        if rect != node_rect(no):
+        if rect != figure_box(no):
             self.editor.resize(no, rect)
 
     def _end_resize(self) -> None:
@@ -549,6 +570,7 @@ class DiagramView(QGraphicsView):
         self.tool_changed.emit(tool)
 
     def _cancel_interaction(self) -> None:
+        self._end_text_drag()
         self._end_connection()
         self._end_resize()
         self._end_bend_drag()
@@ -585,6 +607,15 @@ class DiagramView(QGraphicsView):
             return
         if event.button() == Qt.MouseButton.LeftButton and self.editor is not None:
             pos = self._scene_pos(event)
+            ctrl = event.modifiers() & Qt.KeyboardModifier.ControlModifier
+            link = self.link_at(pos) if ctrl and self.tool.kind == "select" else None
+            if link is not None:
+                self.open_link(link)
+                return
+            tarefa = self.task_at(pos) if ctrl and self.tool.kind == "select" else None
+            if tarefa is not None:
+                self.editor.toggle_task(*tarefa)
+                return
             alca = self._handle_at(pos)
             if alca is not None:
                 self._begin_resize(alca)
@@ -592,6 +623,9 @@ class DiagramView(QGraphicsView):
             alca_linha = self._connection_handle_at(pos)
             if alca_linha is not None:
                 self._begin_line_edit(alca_linha, pos)
+                return
+            if self.tool.kind == "create" and self.tool.tag == TEXT_AREA:
+                self._begin_text_drag(pos, keep_tool=self._keep_tool(event))
                 return
             if self.tool.kind == "create":
                 self._create(pos, keep_tool=self._keep_tool(event))
@@ -608,8 +642,8 @@ class DiagramView(QGraphicsView):
                 self._dragging = False
                 self._drag_start, self._drag_moved = pos, (0.0, 0.0)
                 self._drag_anchor = None
-                ancora = item.figure if isinstance(item.figure, NodeFigure) else None
-                rect = node_rect(ancora) if ancora is not None else None
+                ancora = item.figure if figure_box(item.figure) is not None else None
+                rect = figure_box(ancora)
                 if ancora is not None and rect is not None:
                     self._drag_anchor = (ancora, rect[0], rect[1])
 
@@ -624,6 +658,9 @@ class DiagramView(QGraphicsView):
             return
         if self._connect_from is not None:
             self._update_connection(self._scene_pos(event))
+            return
+        if self._text_drag is not None:
+            self._update_text_drag(self._scene_pos(event))
             return
         if self._resizing is not None:
             self._resize_to(self._scene_pos(event))
@@ -641,14 +678,29 @@ class DiagramView(QGraphicsView):
             pos = self._scene_pos(event)
             alca = self._handle_at(pos)
             alca_linha = self._connection_handle_at(pos)
+            link = self.link_at(pos)
+            tarefa = self.task_at(pos) if link is None else None
             if alca is not None:
                 cursor = _HANDLE_CURSORS[alca]
             elif alca_linha is not None:
                 pontas = alca_linha[0] in ("start", "end")
                 cursor = Qt.CursorShape.CrossCursor if pontas else Qt.CursorShape.SizeAllCursor
+            elif link is not None or tarefa is not None:
+                cursor = Qt.CursorShape.PointingHandCursor
             else:
                 cursor = Qt.CursorShape.ArrowCursor
             self.viewport().setCursor(cursor)
+            sob_o_mouse = link if link is not None else ("tarefa" if tarefa else None)
+            if sob_o_mouse != self._hover_link:
+                self._hover_link = sob_o_mouse
+                tecla = "Cmd" if sys.platform == "darwin" else "Ctrl"
+                if link is not None:
+                    dica = _("{link} ({tecla}+clique abre)").format(link=link, tecla=tecla)
+                elif tarefa is not None:
+                    dica = _("{tecla}+clique marca ou desmarca a tarefa").format(tecla=tecla)
+                else:
+                    dica = ""
+                self.message.emit(dica)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent) -> None:
@@ -665,6 +717,9 @@ class DiagramView(QGraphicsView):
                 self._scene_pos(event),
                 keep_tool=self._keep_tool(event),
             )
+            return
+        if self._text_drag is not None and event.button() == Qt.MouseButton.LeftButton:
+            self._finish_text_drag(self._scene_pos(event))
             return
         if self._resizing is not None and event.button() == Qt.MouseButton.LeftButton:
             self._end_resize()
@@ -700,6 +755,9 @@ class DiagramView(QGraphicsView):
                     self.editor.add_bend(item.figure, trecho, ponto)
                     self._scene.select_only(item.figure)
                     return
+            if item is not None and is_text_area(item.figure):
+                self._edit_text_area(item.figure)
+                return
             if item is not None:
                 no = self._node_at(pos) if item.figure.tag == "g" else None
                 self._edit_text(no if no is not None else item.figure)
@@ -749,6 +807,9 @@ class DiagramView(QGraphicsView):
         ponto = self.viewport().mapFromGlobal(QCursor.pos())
         if not self.viewport().rect().contains(ponto):
             self.message.emit(_("Ponha o mouse sobre o desenho."))
+            return
+        if self.tool.tag == TEXT_AREA:
+            self._new_text(self._default_text_box(self.mapToScene(ponto)), keep_tool=True)
             return
         self._create(self.mapToScene(ponto), keep_tool=True)
 
@@ -802,6 +863,132 @@ class DiagramView(QGraphicsView):
         if self._creating and self.editor is not None:
             self._creating = False
             self.editor.history.end_macro()
+
+    # --- criar e editar Texto (RF-26) ---------------------------------------------------------
+
+    def link_at(self, pos: QPointF) -> str | None:
+        """O destino do link de um Texto sob o mouse, se houver (RF-28)."""
+        for item in self._scene.items(pos):
+            if isinstance(item, FigureItem) and is_text_area(item.figure):
+                for op in item.ops:
+                    if isinstance(op, TextOp) and op.link and op_bounds(op).contains(pos):
+                        return op.link
+                return None
+        return None
+
+    def task_at(self, pos: QPointF) -> tuple[Element, int] | None:
+        """O Texto e a linha da tarefa cuja caixinha está sob o mouse (RF-28)."""
+        for item in self._scene.items(pos):
+            if isinstance(item, FigureItem) and is_text_area(item.figure):
+                for op in item.ops:
+                    if isinstance(op, ShapeOp) and op.task is not None:
+                        folga = 2 / self.zoom
+                        caixa = QRectF(op.x, op.y, op.w, op.h).adjusted(
+                            -folga, -folga, folga, folga
+                        )
+                        if caixa.contains(pos):
+                            return item.figure, op.task
+                return None
+        return None
+
+    def open_link(self, link: str) -> None:
+        """Abre no navegador (ou no e-mail); outros tipos de endereço não abrem."""
+        url = QUrl(link)
+        if url.scheme().lower() in LINK_SCHEMES:
+            QDesktopServices.openUrl(url)
+        else:
+            self.message.emit(
+                _("Só links da web (http, https) e de e-mail abrem: {link}").format(link=link)
+            )
+
+    def _default_text_box(self, centro: QPointF) -> Rect:
+        """A caixa padrão do Texto, com o centro no ponto (o canto cai na grade)."""
+        w, h = TEXT_AREA_SIZE
+        return (self.snap(centro.x() - w / 2), self.snap(centro.y() - h / 2), w, h)
+
+    def _begin_text_drag(self, pos: QPointF, *, keep_tool: bool) -> None:
+        inicio = QPointF(self.snap(pos.x()), self.snap(pos.y()))
+        self._text_drag = (inicio, keep_tool)
+        self._text_preview = QGraphicsRectItem()
+        self._text_preview.setZValue(1e9)
+        pen = QPen(QColor(80, 80, 80), 1, Qt.PenStyle.DashLine)
+        pen.setCosmetic(True)
+        self._text_preview.setPen(pen)
+        self._scene.addItem(self._text_preview)
+        self._update_text_drag(pos)
+
+    def _text_drag_box(self, pos: QPointF) -> Rect | None:
+        """A caixa arrastada, ou `None` se o arrasto foi curto (aí vale o tamanho padrão)."""
+        assert self._text_drag is not None
+        inicio = self._text_drag[0]
+        fim = QPointF(self.snap(pos.x()), self.snap(pos.y()))
+        if (self.mapFromScene(fim) - self.mapFromScene(inicio)).manhattanLength() < DRAG_THRESHOLD:
+            return None
+        caixa = QRectF(inicio, fim).normalized()
+        return (caixa.x(), caixa.y(), caixa.width(), caixa.height())
+
+    def _update_text_drag(self, pos: QPointF) -> None:
+        if self._text_drag is None or self._text_preview is None:
+            return
+        caixa = self._text_drag_box(pos)
+        self._text_preview.setRect(QRectF(*caixa) if caixa is not None else QRectF())
+
+    def _end_text_drag(self) -> None:
+        if self._text_preview is not None:
+            self._scene.removeItem(self._text_preview)
+        self._text_preview = None
+        self._text_drag = None
+
+    def _finish_text_drag(self, pos: QPointF) -> None:
+        assert self._text_drag is not None
+        inicio, fica = self._text_drag
+        caixa = self._text_drag_box(pos)
+        self._end_text_drag()
+        if caixa is None:
+            w, h = TEXT_AREA_SIZE
+            caixa = (inicio.x() - w / 2, inicio.y() - h / 2, w, h)  # um clique: centro no clique
+            caixa = (self.snap(caixa[0]), self.snap(caixa[1]), w, h)
+        self._new_text(caixa, keep_tool=fica)
+
+    def _new_text(self, caixa: Rect, *, keep_tool: bool) -> None:
+        """Abre o editor na caixa; o Texto só é criado se, ao confirmar, houver texto."""
+        editor = self.editor
+        assert editor is not None
+        if not keep_tool:
+            self.set_tool(SELECT)
+
+        def ao_confirmar(conteudo: str) -> None:
+            if conteudo.strip():
+                texto = editor.add_text(caixa, conteudo)
+                self._scene.select_only(texto)
+
+        self._open_text_editor(create_text_area(*caixa, ""), caixa, "", ao_confirmar)
+
+    def _edit_text_area(self, texto: Element) -> None:
+        editor = self.editor
+        assert editor is not None
+
+        def ao_confirmar(conteudo: str) -> None:
+            editor.set_text(texto, conteudo)
+
+        caixa = text_area_rect(texto)
+        self._open_text_editor(texto, caixa, text_of(texto), ao_confirmar)
+
+    def _open_text_editor(self, modelo: Element, caixa: Rect, texto: str, ao_confirmar) -> None:
+        if self._inline is not None:
+            return
+        fonte = qfont(font_of(modelo))
+        fonte.setPixelSize(max(6, round(fonte.pixelSize() * self.zoom)))
+        quadro: QRect = self.mapFromScene(QRectF(*caixa)).boundingRect()
+        self._inline = InlineTextEdit(
+            self.viewport(),
+            quadro,
+            texto,
+            fonte,
+            TEXT_AREA_INSET * self.zoom,
+            ao_confirmar,
+            self._inline_closed,
+        )
 
     # --- mover -------------------------------------------------------------------------------
 

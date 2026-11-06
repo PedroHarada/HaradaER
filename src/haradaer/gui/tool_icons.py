@@ -13,7 +13,13 @@ from haradaer.core.appearance import describe_figure
 from haradaer.core.appearance.describe import font_of
 from haradaer.core.appearance.ops import DrawOp
 from haradaer.core.appearance.style import Style
-from haradaer.core.figures.factory import create_connection, create_node, text_position
+from haradaer.core.figures.factory import (
+    TEXT_AREA,
+    create_connection,
+    create_node,
+    create_text_area,
+    text_position,
+)
 from haradaer.core.geometry import node_rect
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number
@@ -48,6 +54,7 @@ SHORT_NAMES = {
     "generalizacaoLine": N_("General."),
     "llabelGeneralizacao": N_("Gen. opc."),
     "llabelDoubleGeneralizacao": N_("Gen. obrig."),
+    "ta": N_("Texto"),
 }
 
 _ATRIBUTOS = ("atr", "atrchave", "atrchaveparcial", "atrderivado", "atrmulti")
@@ -116,7 +123,10 @@ def _reshape(no: Element, x: float, y: float, largura: float, altura: float) -> 
 
 def element_icon(tag: str) -> QIcon:
     """O elemento como aparece ao ser criado. Atributos ganham um nome curto ("id") e uma elipse
-    menos achatada, para o sublinhado da chave aparecer."""
+    menos achatada, para o sublinhado da chave aparecer. O Texto é uma caixa com "Abc"."""
+    if tag == TEXT_AREA:
+        texto = create_text_area(0, 0, 44, 26, "Abc")
+        return _render(describe_figure(texto, _medidor))
     nome = None if tag in _CIRCULOS else ("id" if tag in _ATRIBUTOS else "")
     no = create_node(tag, 0, 0, _medidor, nome)
     if tag in _ATRIBUTOS:

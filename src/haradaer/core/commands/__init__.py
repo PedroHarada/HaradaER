@@ -47,8 +47,30 @@ from haradaer.core.commands.edit import (
     ungroup_command,
 )
 from haradaer.core.commands.history import Command, Composite, History
+from haradaer.core.commands.text import (
+    FREE_TEXT_TAGS,
+    add_text_area_command,
+    all_text_areas,
+    convert_free_texts,
+    is_text_area,
+    min_text_area_size,
+    resize_text_area_command,
+    set_text_command,
+    text_area_rect,
+    text_of,
+)
 
 __all__ = [
+    "FREE_TEXT_TAGS",
+    "add_text_area_command",
+    "all_text_areas",
+    "convert_free_texts",
+    "is_text_area",
+    "min_text_area_size",
+    "resize_text_area_command",
+    "set_text_command",
+    "text_area_rect",
+    "text_of",
     "remove_free_connections",
     "NODE_TYPE_FAMILIES",
     "change_node_type_command",

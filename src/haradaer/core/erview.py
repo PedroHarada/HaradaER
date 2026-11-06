@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import unicodedata
 
+from haradaer.core.appearance.markdown import plain_text
 from haradaer.core.commands.edit import all_nodes
+from haradaer.core.commands.text import all_text_areas, text_of
 from haradaer.core.figures.tags import TYPED_ATTRIBUTE_TAGS
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
@@ -77,3 +79,10 @@ def find_nodes(documento: Document, texto: str) -> list[NodeFigure]:
     """Elementos cujo nome contém o texto, na ordem do desenho (RF-08)."""
     procurado = normalize(texto.strip())
     return [f for f in all_nodes(documento) if procurado in normalize(f.name or "")]
+
+
+def find_texts(documento: Document, texto: str) -> list[Element]:
+    """Textos (RF-26) cujo conteúdo, sem os marcadores do Markdown (RF-28), contém o texto
+    procurado, na ordem do desenho."""
+    procurado = normalize(texto.strip())
+    return [t for t in all_text_areas(documento) if procurado in normalize(plain_text(text_of(t)))]

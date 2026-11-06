@@ -202,6 +202,18 @@ A conexão livre (`llabel`) não existe no HaradaER: nada a cria, e a que vier n
 - A ferramenta saiu da paleta, dos ícones, do painel de propriedades e da tecla `C` da Edição rápida.
 - `LINE_FREE` continua na tabela de regras (`rules/tables.py`), porque a tabela é a medida do TerraER e é conferida contra `matriz-validacao.txt`; como nenhum documento aberto tem conexão livre, a exceção dela na verificação não tem mais efeito.
 
+### 4.3.2 Texto (RF-26, RF-27, RF-28, 1.3.0)
+
+O HaradaER tem um só texto livre, o **Texto**, gravado como a Área de Texto do TerraER (`ta`), para o arquivo continuar abrindo nele (RNF-01). No TerraER, a figura é a `TextAreaFigure`: quebra o texto pela largura da caixa e, num clique sem arrastar, cria 40 × 40 (`CreationTool`, conferido no `.jar`).
+
+- `core/appearance/describe.py`: `wrap_text` quebra entre palavras, sempre no `\n`, e corta a palavra mais larga que a caixa; `text_area_layout` dá as linhas e a altura de que a caixa precisa. O desenho da `ta` passa a quebrar pela largura (antes só quebrava no `\n`).
+- `core/figures/factory.py`, `create_text_area`: a `ta` com `x`, `y`, `w`, `h` e o texto no bloco `<a>`; `TEXT_AREA_SIZE` é a caixa de um clique (120 × 60).
+- `core/commands/text.py`: criar (`add_text_area_command`), trocar o texto (`set_text_command`, que cria a entrada do texto numa Área de Texto vazia do TerraER) e redimensionar (`resize_text_area_command`). Nos três, a largura é a pedida e a altura cresce até caber o texto; nunca encolhe sozinha.
+- `convert_free_texts(documento, medidor)`: troca cada `t`, `tn` e `ti` soltos (também dentro de grupos) por uma `ta` com as mesmas entradas de estilo, mais `fontBold` (`tn`) ou `fontItalic` (`ti`); a caixa fica 5 para fora do texto (a margem interna), para o texto não sair do lugar, e larga o bastante para cada linha caber. Não desce nos elementos ER, então os nomes não mudam. Fica fora do histórico, como o RF-25; `load` (`gui/window.py`) e `paste_command` a chamam.
+- `core/erview.py`, `find_texts`: a busca pelo conteúdo, sem diferenciar maiúsculas nem acentos; o inspetor ganha a categoria Textos e procura neles pelo texto todo.
+- **Markdown (RF-28):** `core/appearance/markdown.py` configura o markdown-it-py no modo CommonMark com `breaks` (Enter = linha nova, desvio declarado) e `tasklists` (as listas de tarefas do GitHub, que o leitor marca no `meta` do item), e as regras de citação, linha separadora, título sublinhado e HTML desligadas, que viram texto literal. A regra da imagem fica ligada só para ela não virar "!" seguido de um link: o token volta a ser escrito como `![legenda](arquivo)`. Os links levam o destino em cada pedaço; o markdown-it-py já recusa `javascript:`, `file:` e `data:`, e a vista só abre `http`, `https` e `mailto` (Ctrl+clique, `DiagramView.link_at`/`open_link`). As tarefas desenham uma caixinha (e um tique) no lugar do marcador; a caixinha (`ShapeOp.task`) leva a linha do item no texto, e o Ctrl+clique troca `[ ]` e `[x]` nessa linha (`toggle_task`), como uma edição do texto, que pode ser desfeita. No tema escuro, o Texto fica fora do clareamento das linhas pretas (`FigureItem._themed_ops`), porque tudo nele é desenhado sobre a caixa branca. Os tokens viram blocos (título, parágrafo, código, linha em branco) com pedaços de texto e estilo; o `map` de cada bloco (as linhas de origem) devolve as linhas em branco que o CommonMark juntaria; só contam as linhas vazias, para a definição de um link por referência continuar sumindo. `describe.py` monta as linhas: pedaços de fontes diferentes, quebra entre palavras (uma palavra com troca de fonte no meio não quebra), recuo e marcador das listas (`•`, `◦`, `▪`, números), código em `Monospaced` com fundo cinza, e o bloco de código quebrando por caractere. O negrito/itálico da caixa (`fontBold`/`fontItalic`) é a base. `plain_text` dá o texto sem marcadores para o Localizar; `escape_literal` escapa, ao converter um texto solto, só o que mudaria a aparência (`1. item` → `1\. item`).
+- Interface: a ferramenta `Tool("create", "ta")` fica no fim da faixa e na tecla `T`. No editor, Ctrl+B e Ctrl+I põem `**` e `*` em volta da seleção. A vista cria o Texto só ao confirmar o editor (`InlineTextEdit`, em `gui/inline_edit.py`), então cancelar ou confirmar vazio não deixa nada no histórico. As alças de redimensionar valem para elementos e Textos (`figure_box`).
+
 ### 4.4 DDL (`ddl`) — fora da v1
 
 O DDL foi adiado (RF-13). O desenho abaixo fica reservado para quando voltar ao escopo; a pasta `core/ddl/` não é criada na v1.
@@ -387,10 +399,11 @@ Os fixtures são cópias dos arquivos em `docs/referencia-terraer/`.
 |---|---|---|
 | Python | Linguagem: 3.14 (QA-12) | Sim |
 | PySide6 | Interface (Qt 6): 6.12 | Sim, só para `gui` |
+| `markdown-it-py` 4.2.0 e `mdurl` 0.1.2 | Markdown do Texto (RF-28, D-13), versão exata | Sim, no núcleo (só Python, sem Qt) |
 | `pytest`, `pytest-qt` | Testes | Só desenvolvimento |
 | JDK | Regenerar amostras e a matriz de validação; teste de ida e volta | Só desenvolvimento |
 
-O núcleo usa somente a biblioteca padrão.
+O núcleo usa a biblioteca padrão e, desde a 1.3.0, o markdown-it-py (D-13).
 
 ## 9. Decisões
 
@@ -410,6 +423,7 @@ Estado: **Decidida** = confirmada pelo autor.
 | D-10 | Tabelas de dados para tags, regras e estilos | Código condicional | Fácil de validar contra o TerraER | **Decidida** |
 | D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (aceita pelo autor em 2026-10-22) |
 | D-12 | Versões `x.y.z` pelo efeito para quem usa (seção 13) | Subir o `x` por acúmulo de versões | Critério que dá para conferir; segue o Versionamento Semântico | **Decidida** (aceita pelo autor em 2026-10-22) |
+| D-13 | Markdown do Texto pelo `markdown-it-py`, na versão exata (4.2.0) | Analisador próprio; `QTextDocument.setMarkdown` do Qt | Segue o CommonMark 0.31.2 (passa nos exemplos oficiais), devolve tokens para o nosso desenho, deixa desligar o que não usamos e fica no núcleo sem Qt. O do Qt devolve um documento do Qt e não cabe no núcleo; o próprio seria muito código para as regras de ênfase e de listas. Versão exata porque uma atualização muda o desenho | **Decidida** (aceita pelo autor em 2026-11-06) |
 
 ## 10. Riscos
 

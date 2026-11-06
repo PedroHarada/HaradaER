@@ -14,9 +14,13 @@ def qcolor(rgba: RGBA) -> QColor:
 
 
 def qfont(spec: FontSpec) -> QFont:
-    """Fonte do Qt. `Dialog` é a fonte lógica do Java; no Qt vira a fonte sem serifa do sistema."""
+    """Fonte do Qt. `Dialog` e `Monospaced` são fontes lógicas do Java; no Qt viram a fonte sem
+    serifa e a monoespaçada do sistema."""
     fonte = QFont()
-    if spec.family and spec.family != "Dialog":
+    if spec.family == "Monospaced":
+        fonte.setStyleHint(QFont.StyleHint.Monospace)
+        fonte.setFamily("monospace")
+    elif spec.family and spec.family != "Dialog":
         fonte.setFamily(spec.family)
     else:
         fonte.setStyleHint(QFont.StyleHint.SansSerif)

@@ -34,7 +34,8 @@ def test_autoteste_grava_o_resultado(qtbot, tmp_path, monkeypatch):
     saida = tmp_path / "resultado.txt"
     assert selftest.main(["HaradaER", "--autoteste", str(saida)]) == 0
     texto = saida.read_text("utf-8")
-    assert "janela: ok" in texto and "9.9.9" in texto and texto.endswith("RESULTADO: ok\n")
+    assert "janela: ok" in texto and "markdown: ok" in texto and "9.9.9" in texto
+    assert texto.endswith("RESULTADO: ok\n")
 
 
 def test_resposta_http_prova_a_conexao_segura(monkeypatch):

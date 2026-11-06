@@ -14,10 +14,15 @@ from haradaer.core.rules.structure import (
     ORPHAN_ATTRIBUTE,
     WEAK_WITHOUT_IDENTIFYING,
 )
-from haradaer.gui.palette import CONNECTIONS, ELEMENTS
+from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
 from haradaer.i18n import N_, _
 
-_NOMES = dict(ELEMENTS) | dict(CONNECTIONS) | {"g": N_("Grupo"), "lcf": N_("Ligação de atributo")}
+_NOMES = (
+    dict(ELEMENTS)
+    | dict(CONNECTIONS)
+    | dict(TEXTS)
+    | {"g": N_("Grupo"), "lcf": N_("Ligação de atributo")}
+)
 
 _FALTANDO = {
     "ambas": N_("as duas pontas estão soltas"),

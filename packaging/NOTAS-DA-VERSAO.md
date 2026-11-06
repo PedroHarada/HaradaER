@@ -34,6 +34,10 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 
 - O HaradaER foi desenvolvido e testado no Linux. No Windows e no macOS os testes automáticos
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
+- Novo **Texto** (tecla `T` na Edição rápida): caixa de texto de várias linhas para observações
+  no desenho, com Markdown (títulos, negrito, itálico, listas, tarefas, links e código), que o TerraER também
+  abre. Os textos soltos do TerraER (Texto, Papel) viram Texto
+  ao abrir, com um aviso, e o Localizar (Ctrl+F) procura dentro deles.
 - A conexão livre não existe mais: ao abrir um arquivo que tenha alguma, ela é apagada, com um
   aviso dizendo entre quais elementos estava. O arquivo só muda quando você salvar.
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
@@ -77,6 +81,9 @@ system: the full step-by-step guide, with what to do if it doesn't open.
 
 - HaradaER was developed and tested on Linux. On Windows and macOS the automated tests pass,
   but real use is just starting: let us know if anything odd happens.
+- New **Text** (`T` key in Quick edit): a multi-line text box for notes on the drawing, with
+  Markdown (headings, bold, italic, lists, tasks, links and code), which TerraER also opens. TerraER's loose texts (Text, Role) become Text on opening, with a notice,
+  and Find (Ctrl+F) searches inside them.
 - The free connection no longer exists: when a file has any, they are deleted on opening, with a
   notice saying which elements they connected. The file only changes when you save.
 - To report a problem or suggest an improvement: **Help › Report a problem** or

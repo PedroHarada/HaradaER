@@ -130,6 +130,28 @@ O HaradaER não usa a conexão livre do TerraER, que não tem significado no mod
 arquivo tiver alguma, ela é apagada ao abrir, com um aviso dizendo entre quais elementos estava;
 o arquivo só muda quando você salvar.
 
+Para escrever uma observação no desenho, use **Texto** (no fim da faixa, ou a tecla `T` na
+Edição rápida): clique para uma caixa padrão, ou arraste para dar o tamanho, e digite. Enter quebra
+a linha; clicar fora confirma. A caixa cresce para baixo conforme o texto, e a
+largura muda pelas alças. Os textos soltos do TerraER (Texto, Papel) viram Texto ao abrir, com um
+aviso; o arquivo só muda quando você salvar.
+
+O Texto aceita Markdown (CommonMark), e o desenho mostra formatado. No TerraER os marcadores
+aparecem como foram digitados.
+
+| Digite | Para ter |
+|---|---|
+| `# Título` a `###### Título` | Título, do maior ao menor |
+| `*itálico*` ou `_itálico_` | Itálico |
+| `**negrito**` ou `__negrito__` | Negrito |
+| `- item` ou `1. item` | Lista; recue 2 espaços para uma sublista |
+| `- [ ] tarefa` e `- [x] feita` | Lista de tarefas, com caixinha; marque ou desmarque com Ctrl + clique; no Mac, Cmd + clique |
+| `[texto](https://site)` ou `<https://site>` | Link, que abre no navegador (Ctrl + clique; no Mac, Cmd + clique) |
+| `` `código` `` ou um bloco entre linhas com ```` ``` ```` | Código, em fonte monoespaçada |
+| `\*` | Um `*` de verdade (vale para qualquer pontuação) |
+
+Cada Enter é uma linha nova.
+
 Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
 melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
 
@@ -215,6 +237,7 @@ exemplo, A num atributo o faz virar chave).
 | Participação, lado "N" → Participação total, lado "N" | `N` |
 | Ligação de atributo | `L` |
 | Generalização simples → Participação opcional em generalização → Participação obrigatória em generalização | `H` |
+| Texto | `T` |
 | Voltar uma posição no ciclo | `Shift + letra` |
 | Trocar o tipo do elemento selecionado (com Selecionar) | `Letra da família` |
 | Criar onde está o mouse | `Espaço` |

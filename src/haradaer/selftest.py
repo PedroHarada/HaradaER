@@ -1,9 +1,10 @@
 """Autoteste do executável (`HaradaER --autoteste SAIDA.txt`), rodado pelo workflow de versão.
 
 Confere o que só aparece no programa empacotado e escapou dos testes comuns: o Qt abre uma
-janela, nada que ficou de fora do pacote voltou (o teclado virtual é só GPLv3) e a conexão segura
-com o GitHub funciona com o OpenSSL empacotado (na 1.1.1 ela falhava fora do Ubuntu). O
-resultado vai para um arquivo, porque o executável do Windows não tem console.
+janela, o Markdown do Texto é lido (o markdown-it-py foi junto), nada que ficou de fora do pacote
+voltou (o teclado virtual é só GPLv3) e a conexão segura com o GitHub funciona com o OpenSSL
+empacotado (na 1.1.1 ela falhava fora do Ubuntu). O resultado vai para um arquivo, porque o
+executável do Windows não tem console.
 """
 
 from __future__ import annotations
@@ -47,6 +48,16 @@ def check_window() -> str:
     return "janela: ok"
 
 
+def check_markdown() -> str:
+    """O markdown-it-py (RF-28) foi para o pacote e lê o Markdown do Texto."""
+    from haradaer.core.appearance.markdown import parse
+
+    tipos = [bloco.kind for bloco in parse("# Título\n- *item* `x`")]
+    if tipos != ["heading", "paragraph"]:
+        raise RuntimeError(f"leitura inesperada: {tipos}")
+    return "markdown: ok"
+
+
 def check_tls() -> str:
     """Só a conexão segura importa: qualquer resposta HTTP (até 404 ou limite de consultas)
     prova que o certificado do GitHub foi aceito."""
@@ -64,7 +75,7 @@ def run(saida: Path) -> int:
     linhas: list[str] = []
     falhou = False
     pasta = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else None  # dentro do pacote
-    verificacoes = [check_window, check_tls]
+    verificacoes = [check_window, check_markdown, check_tls]
     for verificar in verificacoes:
         try:
             linhas.append(verificar())
