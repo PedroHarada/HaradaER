@@ -332,6 +332,7 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 ### 5.9 Aviso de versão nova (RF-22)
 
 - `haradaer/updates.py` lê a versão mais recente em `api.github.com/repos/PedroHarada/HaradaER/releases/latest` (as pré-versões ficam de fora) e a compara com `haradaer.__version__` por número; uma pré-versão vem antes da final de mesmo número. Resposta estranha, erro do GitHub ou falta de rede viram `OSError`.
+- A API aceita só 60 consultas por hora por IP sem login, e redes que dividem o IP esgotam o limite. Com 403 ou 429, `fetch_latest` pede a página `github.com/PedroHarada/HaradaER/releases/latest` (sem esse limite) e tira a versão do endereço para onde ela redireciona, `.../releases/tag/vX.Y.Z` (`latest_from_url`, desde a 1.3.1).
 - `gui/updates.py` (`UpdateChecker`) consulta numa linha de execução à parte e devolve o resultado por sinal do Qt: a janela nunca espera pela rede (limite de 5 s).
 - Ao abrir, no máximo uma vez por dia (`atualizacoes/ultima-verificacao`), e só se Ajuda › Verificar ao abrir estiver ligado (padrão). Sem novidade ou sem rede, fica quieto. Ajuda › Verificar atualizações sempre responde.
 - Só avisa: **Baixar** abre a página Releases. O programa não baixa nem troca a si mesmo (decisão do autor, 2026-10-22). A única coisa que sai do computador é essa consulta, sem nada pessoal.

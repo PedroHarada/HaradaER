@@ -4,6 +4,15 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.3.1 — 2026-11-06
+
+### Corrigido
+
+- Ajuda › Verificar atualizações dizia "sem internet" com a internet funcionando quando o GitHub
+  recusava a consulta (HTTP 403: rate limit exceeded). A API do GitHub aceita só 60 consultas por
+  hora de cada IP, e redes que dividem o IP entre muita gente esgotam esse limite. Agora, com o
+  limite esgotado, a versão é lida na página de versões, que não tem esse limite.
+
 ## 1.3.0 — 2026-11-06
 
 ### Adicionado
