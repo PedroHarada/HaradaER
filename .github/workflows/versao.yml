@@ -24,7 +24,7 @@ jobs:
             sistema: linux
           - os: windows-latest
             sistema: windows
-          - os: macos-14  # chip Apple (M1 em diante)
+          - os: macos-15  # chip Apple (M1 em diante); o GitHub aposentou o macos-14 em 2026-11
             sistema: macos
     runs-on: ${{ matrix.os }}
     env:

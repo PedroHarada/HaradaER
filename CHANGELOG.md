@@ -21,6 +21,8 @@ para mudanças que quebram algo que já funcionava.
   O arquivo guarda o texto com os marcadores, e o TerraER os mostra como foram digitados.
 - O Localizar (Ctrl+F) procura também dentro dos Textos, sem os marcadores do Markdown.
 - Nova dependência: markdown-it-py 4.2.0 (com o mdurl 0.1.2), ambas MIT, incluídas nos pacotes.
+- O pacote do macOS passa a ser gerado e testado no macOS 15 (o GitHub aposentou a máquina do
+  macOS 14). O macOS 14 continua indicado como mínimo, mas sem conferência automática.
 
 ### Alterado
 

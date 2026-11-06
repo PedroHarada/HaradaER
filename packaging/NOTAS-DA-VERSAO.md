@@ -34,6 +34,8 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 
 - O HaradaER foi desenvolvido e testado no Linux. No Windows e no macOS os testes automáticos
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
+- O pacote do macOS é gerado e testado no macOS 15. Ele deve abrir no macOS 14, mas isso não é
+  mais conferido automaticamente.
 - Novo **Texto** (tecla `T` na Edição rápida): caixa de texto de várias linhas para observações
   no desenho, com Markdown (títulos, negrito, itálico, listas, tarefas, links e código), que o TerraER também
   abre. Os textos soltos do TerraER (Texto, Papel) viram Texto
@@ -81,6 +83,8 @@ system: the full step-by-step guide, with what to do if it doesn't open.
 
 - HaradaER was developed and tested on Linux. On Windows and macOS the automated tests pass,
   but real use is just starting: let us know if anything odd happens.
+- The macOS package is built and tested on macOS 15. It should open on macOS 14, but that is no
+  longer checked automatically.
 - New **Text** (`T` key in Quick edit): a multi-line text box for notes on the drawing, with
   Markdown (headings, bold, italic, lists, tasks, links and code), which TerraER also opens. TerraER's loose texts (Text, Role) become Text on opening, with a notice,
   and Find (Ctrl+F) searches inside them.
