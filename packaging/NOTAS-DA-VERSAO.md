@@ -45,7 +45,9 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
   **Ajuda › Sugerir uma melhoria**, no próprio programa.
 - Uma vez por dia, ao abrir, o programa avisa se há versão nova (desliga em
-  **Ajuda › Verificar ao abrir**). Nada é baixado sozinho.
+  **Ajuda › Verificar ao abrir**). Desde a 1.4.0, **Atualizar e reiniciar** instala a versão
+  nova pelo próprio programa, sem precisar baixar à mão (quem tem a 1.3.1 ou anterior instala a
+  1.4.0 à mão uma vez).
 - Os avisos de licença das bibliotecas incluídas estão em `AVISOS-DE-LICENCA.txt`.
 
 ---
@@ -93,5 +95,7 @@ system: the full step-by-step guide, with what to do if it doesn't open.
 - To report a problem or suggest an improvement: **Help › Report a problem** or
   **Help › Suggest an improvement**, inside the program.
 - Once a day, when opening, the program tells you if there's a new version (turn it off in
-  **Help › Check when opening**). Nothing is downloaded by itself.
+  **Help › Check when opening**). Since 1.4.0, **Update and restart** installs the new version
+  from the program itself, with no manual download (if you have 1.3.1 or older, install 1.4.0
+  by hand once).
 - The license notices of the bundled libraries are in `AVISOS-DE-LICENCA.txt`.

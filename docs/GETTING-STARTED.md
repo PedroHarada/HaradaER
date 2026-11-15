@@ -32,8 +32,8 @@ install Python or anything else.
    files get the option **Open with › HaradaER**.
 
 No `sudo` needed: the program goes to `~/.local/bin`, for your user only. After installing, you
-can delete the extracted folder. To update, extract the new version and run `./instalar.sh`
-again.
+can delete the extracted folder. To update, use **Update and restart** in the new version
+notice, or run `HaradaER --atualizar` in the terminal.
 
 **Uninstall:** in the extracted folder, `./instalar.sh --remover`. Preferences are kept in
 `~/.config/HaradaER` (delete that folder to reset them).
@@ -76,7 +76,8 @@ There is no installation: `HaradaER.exe` runs from wherever it is. For a shortcu
 › **Send to** › **Desktop (create shortcut)** (on Windows 11, **Send to** is under
 **Show more options**).
 
-To update, download the new version and replace the old `HaradaER.exe`.
+To update, use **Update and restart** in the new version notice. If the program's folder can't
+be written to, download the new version and replace the old `HaradaER.exe`.
 
 ### If it doesn't open
 
@@ -106,7 +107,8 @@ To update, download the new version and replace the old `HaradaER.exe`.
 
    From then on, it opens normally from Launchpad or the Dock.
 
-To update, drag the new version to Applications and choose **Replace**.
+To update, use **Update and restart** in the new version notice (with HaradaER in
+Applications). You can also drag the new version to Applications and choose **Replace**.
 
 ---
 

@@ -13,6 +13,8 @@ import os
 import sys
 from pathlib import Path
 
+import haradaer
+
 # Igual a FORA_DO_PACOTE em packaging/HaradaER.spec (um teste confere).
 PROIBIDOS = (
     "virtualkeyboard",
@@ -89,6 +91,7 @@ def run(saida: Path) -> int:
             linhas.append("arquivos que deviam ficar de fora: " + ", ".join(achados))
         else:
             linhas.append("arquivos de fora do pacote: nenhum")
+    linhas.append(f"versão: {haradaer.__version__}")  # a atualização confere (selfupdate.py)
     linhas.append("RESULTADO: FALHOU" if falhou else "RESULTADO: ok")
     saida.write_text("\n".join(linhas) + "\n", encoding="utf-8")
     return 1 if falhou else 0

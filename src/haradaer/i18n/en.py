@@ -344,6 +344,44 @@ EN: dict[str, str] = {
     "Não foi possível verificar agora (sem internet ou o GitHub não respondeu).": (
         "Couldn't check right now (no internet, or GitHub didn't respond)."
     ),
+    "Atualizar e &reiniciar": "Update and &restart",
+    "Baixando o HaradaER {versao}…": "Downloading HaradaER {versao}…",
+    "Conferindo a versão nova…": "Checking the new version…",
+    "O HaradaER {versao} está pronto.": "HaradaER {versao} is ready.",
+    "Se continuar agora, a atualização é instalada quando você fechar o HaradaER.": (
+        "If you keep working now, the update is installed when you close HaradaER."
+    ),
+    "&Reiniciar agora": "&Restart now",
+    "Ao &fechar": "When I &close",
+    "HaradaER atualizado para a {versao}.": "HaradaER updated to {versao}.",
+    "Atualização cancelada.": "Update canceled.",
+    "Cancelar": "Cancel",
+    "A atualização automática só funciona no programa baixado em Releases.": (
+        "Automatic updates only work in the program downloaded from Releases."
+    ),
+    "Não há pacote do HaradaER para este processador.": (
+        "There is no HaradaER package for this processor."
+    ),
+    "Não há pacote do HaradaER para este processador ({maquina}).": (
+        "There is no HaradaER package for this processor ({maquina})."
+    ),
+    "Mova o HaradaER para a pasta Aplicativos e abra de lá para poder atualizar.": (
+        "Move HaradaER to the Applications folder and open it from there to update."
+    ),
+    "Sem permissão para gravar na pasta {pasta}.": "No permission to write to the folder {pasta}.",
+    "A versão {versao} ainda não está completa no GitHub. Tente mais tarde.": (
+        "Version {versao} isn't complete on GitHub yet. Try again later."
+    ),
+    "O download veio corrompido. Tente de novo.": "The download was corrupted. Try again.",
+    "O pacote baixado não pôde ser aberto.": "The downloaded package couldn't be opened.",
+    "O pacote baixado tem um caminho inválido.": "The downloaded package has an invalid path.",
+    "O pacote baixado não tem o programa.": "The downloaded package doesn't contain the program.",
+    "A versão nova não abriu neste computador.": "The new version didn't open on this computer.",
+    "Não foi possível baixar a versão nova ({erro}).": (
+        "Couldn't download the new version ({erro})."
+    ),
+    "Não foi possível trocar o programa ({erro}).": "Couldn't replace the program ({erro}).",
+    "Não foi possível verificar agora ({erro}).": "Couldn't check right now ({erro}).",
     # Edição rápida
     "Edição rápid&a": "Quick edit&ing",
     "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (

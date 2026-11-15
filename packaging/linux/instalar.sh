@@ -1,6 +1,7 @@
 #!/bin/sh
 # Instala o HaradaER só para o seu usuário (sem sudo): o programa vai para ~/.local/bin e o
 # atalho com ícone para o menu de aplicativos. Para desinstalar: ./instalar.sh --remover
+# Para atualizar o HaradaER já instalado: ./instalar.sh --update (o mesmo que HaradaER --atualizar)
 set -eu
 
 ID=io.github.pedroharada.haradaer
@@ -16,6 +17,14 @@ atualizar_menu() {
     command -v gtk-update-icon-cache >/dev/null 2>&1 &&
         gtk-update-icon-cache -q -t "$DADOS/icons/hicolor" 2>/dev/null || true
 }
+
+if [ "${1:-}" = "--update" ]; then
+    if [ ! -x "$BIN/HaradaER" ]; then
+        echo "O HaradaER não está instalado em $BIN. Rode ./instalar.sh primeiro." >&2
+        exit 1
+    fi
+    exec "$BIN/HaradaER" --atualizar
+fi
 
 if [ "${1:-}" = "--remover" ]; then
     rm -f "$BIN/HaradaER" "$ATALHO" "$ICONE"

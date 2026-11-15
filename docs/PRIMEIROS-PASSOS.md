@@ -32,8 +32,8 @@ instalar Python nem nada mais.
    `.xml` passam a ter a opção **Abrir com › HaradaER**.
 
 Não precisa de `sudo`: o programa vai para `~/.local/bin`, só para o seu usuário. Depois de
-instalar, a pasta extraída pode ser apagada. Para atualizar, extraia a versão nova e rode
-`./instalar.sh` de novo.
+instalar, a pasta extraída pode ser apagada. Para atualizar, use **Atualizar e reiniciar** no
+aviso de versão nova, ou rode `HaradaER --atualizar` no terminal.
 
 **Desinstalar:** na pasta extraída, `./instalar.sh --remover`. As preferências ficam em
 `~/.config/HaradaER` (apague essa pasta se quiser zerá-las).
@@ -76,7 +76,8 @@ Não há instalação: o `HaradaER.exe` roda de onde estiver. Para ter um atalho
 direito nele › **Enviar para** › **Área de trabalho (criar atalho)** (no Windows 11, o
 **Enviar para** fica em **Mostrar mais opções**).
 
-Para atualizar, baixe a versão nova e substitua o `HaradaER.exe` antigo.
+Para atualizar, use **Atualizar e reiniciar** no aviso de versão nova. Se a pasta do programa não
+puder ser gravada, baixe a versão nova e substitua o `HaradaER.exe` antigo.
 
 ### Se não abrir
 
@@ -108,7 +109,8 @@ Para atualizar, baixe a versão nova e substitua o `HaradaER.exe` antigo.
 
    Nas próximas vezes, ele abre normalmente pelo Launchpad ou pelo Dock.
 
-Para atualizar, arraste a versão nova para Aplicativos e escolha **Substituir**.
+Para atualizar, use **Atualizar e reiniciar** no aviso de versão nova (com o HaradaER em
+Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolher **Substituir**.
 
 ---
 

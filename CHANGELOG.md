@@ -4,6 +4,26 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## 1.4.0 — 2026-11-15
+
+### Adicionado
+
+- **Atualizar e reiniciar:** o aviso de versão nova atualiza o próprio programa, no Linux, no
+  Windows e no macOS. O HaradaER baixa o pacote do sistema, confere o SHA-256, testa a versão nova
+  e só então troca a antiga, quando você fechar o programa ou escolher **Reiniciar agora**. Se
+  algo falhar, a versão instalada continua como estava. **Baixar** continua disponível.
+- No terminal (Linux e macOS): `HaradaER --atualizar`. No Linux, `./instalar.sh --update` faz o
+  mesmo.
+- Cada versão publica um `SHA256SUMS` com a conferência de cada pacote.
+
+### Alterado
+
+- O workflow de versão recusa uma etiqueta que não bata com a versão do programa e testa a
+  atualização de ponta a ponta nos três sistemas antes de publicar.
+
+A atualização automática vale a partir desta versão: quem tem a 1.3.1 ou anterior instala a 1.4.0
+à mão uma vez.
+
 ## 1.3.1 — 2026-11-06
 
 ### Corrigido
