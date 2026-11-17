@@ -76,6 +76,12 @@ class History:
         self._clean = len(self._undo)
         self._notify()
 
+    def mark_dirty(self) -> None:
+        """Modificado em relação ao arquivo, sem passo de desfazer (RF-25: o documento aberto já
+        difere do que está em disco). Só salvar volta a deixá-lo limpo."""
+        self._clean = None
+        self._notify()
+
     def execute(self, comando: Command) -> None:
         """Aplica o comando e o guarda para desfazer. Apaga o que havia para refazer."""
         comando.apply()

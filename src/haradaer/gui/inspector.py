@@ -1,8 +1,9 @@
 """Inspetor de objetos (RF-16) com a busca por nome (RF-08).
 
 Mostra os elementos do modelo em árvore: entidades, relacionamentos e generalizações, com os
-atributos pendurados no dono, e as conexões. Escolher um item seleciona a figura no desenho;
-o campo de busca filtra a árvore e Enter leva ao primeiro encontrado.
+atributos pendurados no dono, as conexões e os Textos (procurados pelo conteúdo). Escolher um
+item seleciona a figura no desenho; o campo de busca filtra a árvore e Enter leva ao primeiro
+encontrado.
 """
 
 from __future__ import annotations
@@ -10,7 +11,8 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
-from haradaer.core.commands import all_nodes
+from haradaer.core.appearance.markdown import plain_text
+from haradaer.core.commands import all_nodes, all_text_areas, is_text_area, text_of
 from haradaer.core.erview import ATTRIBUTE_TAGS, attribute_owners, normalize
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
@@ -27,7 +29,15 @@ CATEGORIES = [
 NO_NAME = N_("(sem nome)")
 
 
+TEXT_PREVIEW = 40  # caracteres do Texto que aparecem como nome
+
+
 def display_name(figura: Element) -> str:
+    if is_text_area(figura):
+        linha = " ".join(plain_text(text_of(figura)).split())  # sem Markdown, numa linha só
+        if len(linha) > TEXT_PREVIEW:
+            linha = linha[: TEXT_PREVIEW - 1] + "…"
+        return f"“{linha}”" if linha else _(NO_NAME)
     if isinstance(figura, NodeFigure):
         return figura.name or _(NO_NAME)
     if isinstance(figura, ConnectionFigure):
@@ -44,7 +54,7 @@ class ObjectInspector(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self.search = QLineEdit()
-        self.search.setPlaceholderText(_("Localizar elemento..."))
+        self.search.setPlaceholderText(_("Localizar elemento ou texto..."))
         self.search.setClearButtonEnabled(True)
         self.search.textChanged.connect(self._apply_filter)
         self.search.returnPressed.connect(self._locate_first)
@@ -89,6 +99,7 @@ class ObjectInspector(QWidget):
         self._add_category(N_("Outros"), soltos, {})
         conexoes = [f for f in documento.figures if isinstance(f, ConnectionFigure)]
         self._add_category(N_("Conexões"), conexoes, {})
+        self._add_category(N_("Textos"), all_text_areas(documento), {})
         self.tree.expandAll()
         self.tree.resizeColumnToContents(0)
         self._syncing = False
@@ -181,8 +192,11 @@ class ObjectInspector(QWidget):
         return saida
 
     def _is_match(self, item: QTreeWidgetItem, procurado: str) -> bool:
-        """A busca acha elementos pelo nome; conexões não entram (RF-08)."""
+        """A busca acha elementos pelo nome e Textos pelo conteúdo todo; conexões não entram
+        (RF-08, RF-26)."""
         figura = self._figures.get(item.data(0, Qt.ItemDataRole.UserRole))
+        if is_text_area(figura):
+            return procurado in normalize(plain_text(text_of(figura)))  # type: ignore[arg-type]
         return isinstance(figura, NodeFigure) and procurado in normalize(item.text(0))
 
     def _locate_first(self) -> None:

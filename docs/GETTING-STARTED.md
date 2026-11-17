@@ -32,8 +32,8 @@ install Python or anything else.
    files get the option **Open with › HaradaER**.
 
 No `sudo` needed: the program goes to `~/.local/bin`, for your user only. After installing, you
-can delete the extracted folder. To update, extract the new version and run `./instalar.sh`
-again.
+can delete the extracted folder. To update, use **Update and restart** in the new version
+notice, or run `HaradaER --atualizar` in the terminal.
 
 **Uninstall:** in the extracted folder, `./instalar.sh --remover`. Preferences are kept in
 `~/.config/HaradaER` (delete that folder to reset them).
@@ -76,7 +76,8 @@ There is no installation: `HaradaER.exe` runs from wherever it is. For a shortcu
 › **Send to** › **Desktop (create shortcut)** (on Windows 11, **Send to** is under
 **Show more options**).
 
-To update, download the new version and replace the old `HaradaER.exe`.
+To update, use **Update and restart** in the new version notice. If the program's folder can't
+be written to, download the new version and replace the old `HaradaER.exe`.
 
 ### If it doesn't open
 
@@ -106,7 +107,8 @@ To update, download the new version and replace the old `HaradaER.exe`.
 
    From then on, it opens normally from Launchpad or the Dock.
 
-To update, drag the new version to Applications and choose **Replace**.
+To update, use **Update and restart** in the new version notice (with HaradaER in
+Applications). You can also drag the new version to Applications and choose **Replace**.
 
 ---
 
@@ -126,6 +128,32 @@ without a key attribute. You can turn them off in **View › Structure warnings*
 
 The **Logical schema** panel shows the tables the diagram produces (relational schema); with
 **File › Save logical schema on save**, they also go to a `.logic.md` next to the model.
+
+HaradaER doesn't use TerraER's free connection, which has no meaning in the model. If a file has
+any, they are deleted when it opens, with a notice saying which elements they connected; the file
+only changes when you save.
+
+To write a note on the drawing, use **Text** (at the end of the strip, or the `T` key in Quick
+edit): click for a default box, or drag to set its size, and type. Enter breaks the line; clicking
+outside confirms. The box grows downward as you type, and its width changes
+with the handles. TerraER's loose texts (Text, Role) become Text when the file opens, with a
+notice; the file only changes when you save.
+
+Text accepts Markdown (CommonMark), and the drawing shows it formatted. In TerraER the markers
+show as typed.
+
+| Type | To get |
+|---|---|
+| `# Title` to `###### Title` | Heading, from largest to smallest |
+| `*italic*` or `_italic_` | Italic |
+| `**bold**` or `__bold__` | Bold |
+| `- item` or `1. item` | List; indent 2 spaces for a sublist |
+| `- [ ] task` and `- [x] done` | Task list, with a checkbox; check or uncheck it with Ctrl-click; on a Mac, Cmd-click |
+| `[text](https://site)` or `<https://site>` | Link, which opens in the browser (Ctrl-click; on a Mac, Cmd-click) |
+| `` `code` `` or a block between lines with ```` ``` ```` | Code, in a monospaced font |
+| `\*` | A real `*` (works for any punctuation) |
+
+Each Enter is a new line.
 
 Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
 improvement** open the GitHub page already filled in (a GitHub account is needed).
@@ -212,7 +240,7 @@ attribute makes it a key).
 | Participation, side "N" → Total participation, side "N" | `N` |
 | Attribute link | `L` |
 | Simple generalization → Optional participation in generalization → Mandatory participation in generalization | `H` |
-| Free connection | `C` |
+| Text | `T` |
 | Go back one step in the cycle | `Shift + letter` |
 | Change the selected element's type (with Select) | `Family letter` |
 | Create where the mouse is | `Space` |

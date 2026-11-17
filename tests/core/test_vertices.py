@@ -21,6 +21,12 @@ from haradaer.core.geometry import nearest_segment, node_rect, route_ends
 from haradaer.core.model.document import Document
 from haradaer.core.rules import validate
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -78,7 +84,7 @@ def test_endireitar_tira_todos_os_vertices():
     h.execute(add_bend_command(doc, conexao, 0, (200, 100)))
     h.execute(add_bend_command(doc, conexao, 0, (150, 80)))
     h.execute(straighten_command(doc, conexao))
-    assert connection_path(conexao) == pytest.approx(reta)
+    assert achatado(connection_path(conexao)) == pytest.approx(achatado(reta))
 
 
 def test_cada_edicao_se_desfaz_e_o_arquivo_volta_igual():

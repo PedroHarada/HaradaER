@@ -112,3 +112,95 @@ def test_desligado_nao_verifica(qtbot, janela):
 
 def test_opcao_ligada_por_padrao(janela):
     assert janela.auto_updates_action.isChecked()
+
+
+# Atualizar e reiniciar (1.4.0)
+
+
+def _botoes(monkeypatch):
+    """Guarda os botões de cada aviso e aperta o primeiro da lista `apertar` que existir."""
+    estado = {"botoes": [], "apertar": []}
+
+    def exec_(self):
+        nomes = [b.text() for b in self.buttons()]
+        estado["botoes"].append(nomes)
+        for botao in self.buttons():
+            if botao.text() in estado["apertar"]:
+                self._clicado = botao
+                break
+        return 0
+
+    monkeypatch.setattr(QMessageBox, "exec", exec_)
+    monkeypatch.setattr(QMessageBox, "clickedButton", lambda self: getattr(self, "_clicado", None))
+    return estado
+
+
+@pytest.fixture
+def instalador(monkeypatch):
+    from haradaer.gui import updates as gui_updates
+
+    novo = gui_updates.UpdateInstaller()
+    monkeypatch.setattr(gui_updates, "_installer", novo)
+    return novo
+
+
+def test_do_codigo_fonte_so_baixar(qtbot, janela, monkeypatch):
+    estado = _botoes(monkeypatch)
+    _resposta(monkeypatch, "99.0.0")
+    janela.check_updates_action.trigger()
+    _espera(qtbot, janela)
+    assert "Atualizar e &reiniciar" not in estado["botoes"][0]
+    assert "&Baixar" in estado["botoes"][0]
+
+
+def test_atualizar_prepara_e_troca_ao_fechar(qtbot, janela, monkeypatch, tmp_path, instalador):
+    from haradaer import selfupdate
+
+    alvo = selfupdate.Target(tmp_path / "HaradaER", "linux")
+    pronto = selfupdate.Prepared("99.0.0", alvo, tmp_path / "novo")
+    monkeypatch.setattr(selfupdate, "install_target", lambda: alvo)
+    monkeypatch.setattr(selfupdate, "why_not", lambda a: None)
+    monkeypatch.setattr(selfupdate, "prepare", lambda versao, a, progresso, cancelado: pronto)
+    aplicados, reabertos = [], []
+    monkeypatch.setattr(selfupdate, "apply", aplicados.append)
+    monkeypatch.setattr(selfupdate, "restart", reabertos.append)
+    estado = _botoes(monkeypatch)
+    estado["apertar"] = ["Atualizar e &reiniciar", "Ao &fechar"]
+    _resposta(monkeypatch, "99.0.0")
+    janela.check_updates_action.trigger()
+    _espera(qtbot, janela)
+    qtbot.waitUntil(lambda: instalador.prepared is pronto, timeout=2000)
+    assert "&Reiniciar agora" in estado["botoes"][-1]
+    assert aplicados == []  # nada trocado com o programa aberto
+    instalador.apply_on_quit()
+    assert aplicados == [pronto] and reabertos == []
+    instalador.apply_on_quit()  # só uma vez
+    assert aplicados == [pronto]
+
+
+def test_reiniciar_agora_troca_e_reabre(monkeypatch, tmp_path, instalador):
+    from haradaer import selfupdate
+
+    alvo = selfupdate.Target(tmp_path / "HaradaER", "linux")
+    instalador.prepared = selfupdate.Prepared("99.0.0", alvo, tmp_path / "novo")
+    reabertos = []
+    monkeypatch.setattr(selfupdate, "apply", lambda p: None)
+    monkeypatch.setattr(selfupdate, "restart", reabertos.append)
+    instalador.restart_now()
+    instalador.apply_on_quit()
+    assert reabertos == [alvo]
+
+
+def test_falha_no_preparo_avisa(qtbot, monkeypatch, tmp_path, instalador, avisos):
+    from haradaer import selfupdate
+
+    def falha(versao, alvo, progresso, cancelado):
+        raise selfupdate.UpdateError("O download veio corrompido. Tente de novo.")
+
+    monkeypatch.setattr(selfupdate, "prepare", falha)
+    monkeypatch.setattr(QMessageBox, "warning", lambda pai, titulo, texto: avisos.append(texto))
+    alvo = selfupdate.Target(tmp_path / "HaradaER", "linux")
+    assert instalador.start("99.0.0", alvo)
+    qtbot.waitUntil(lambda: not instalador._running, timeout=2000)
+    assert avisos == ["O download veio corrompido. Tente de novo."]
+    assert instalador.prepared is None

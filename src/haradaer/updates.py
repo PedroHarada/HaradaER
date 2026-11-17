@@ -55,6 +55,14 @@ def latest_from_json(dados: bytes) -> str:
     return etiqueta.removeprefix("v")
 
 
+def latest_from_url(endereco: str) -> str:
+    """A versão no endereço para onde `RELEASES` redireciona (`.../releases/tag/v1.2.0`)."""
+    etiqueta = endereco.rstrip("/").rpartition("/releases/tag/")[2]
+    if not etiqueta or parse_version(etiqueta) is None:
+        raise OSError(f"endereço inesperado: {endereco}")
+    return etiqueta.removeprefix("v")
+
+
 def ssl_context(arquivos: tuple[str, ...] = SYSTEM_CA_FILES) -> ssl.SSLContext:
     """Contexto padrão mais os certificados do primeiro arquivo do sistema que existir."""
     from pathlib import Path
@@ -68,12 +76,25 @@ def ssl_context(arquivos: tuple[str, ...] = SYSTEM_CA_FILES) -> ssl.SSLContext:
 
 
 def fetch_latest() -> str:
-    """Versão mais recente publicada. Lança `OSError` sem rede ou com resposta estranha."""
+    """Versão mais recente publicada. Lança `OSError` sem rede ou com resposta estranha.
+
+    A API aceita só 60 consultas por hora por IP sem login, e numa rede que divide o IP entre
+    muita gente o limite acaba (403 ou 429). Aí a versão sai do redirecionamento da página de
+    versões, que não entra nesse limite."""
+    from urllib.error import HTTPError
     from urllib.request import Request, urlopen
 
+    contexto = ssl_context()
     pedido = Request(API, headers={"Accept": "application/vnd.github+json"})
-    with urlopen(pedido, timeout=TIMEOUT, context=ssl_context()) as resposta:  # noqa: S310
-        return latest_from_json(resposta.read(64 * 1024))
+    try:
+        with urlopen(pedido, timeout=TIMEOUT, context=contexto) as resposta:  # noqa: S310
+            return latest_from_json(resposta.read(64 * 1024))
+    except HTTPError as erro:
+        if erro.code not in (403, 429):
+            raise
+    pagina = Request(RELEASES, method="HEAD")
+    with urlopen(pagina, timeout=TIMEOUT, context=contexto) as resposta:  # noqa: S310
+        return latest_from_url(resposta.geturl())
 
 
 def due_today(ultima: str | None, hoje: date) -> bool:

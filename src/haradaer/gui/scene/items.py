@@ -263,10 +263,11 @@ class FigureItem(QGraphicsItem):
     def _themed_ops(self, tema: Theme) -> list[DrawOp]:
         """No tema escuro, o preto do que fica direto sobre o fundo vira a cor de tinta do tema:
         linhas e rótulos das conexões, linhas livres e texto solto. O texto dentro das formas
-        continua preto, porque as formas mantêm as cores claras do TerraER."""
+        continua preto, porque as formas mantêm as cores claras do TerraER. O Texto também fica
+        como está: tudo nele (o tique da tarefa, inclusive) é desenhado sobre a caixa branca."""
         if not tema.is_dark:
             return self.ops
-        if isinstance(self.figure, NodeFigure):
+        if isinstance(self.figure, NodeFigure) or self.figure.tag == "ta":
             return self.ops
         texto_solto = self.is_connection or not any(isinstance(op, ShapeOp) for op in self.ops)
         return [ink_op(op, tema.ink, textos=texto_solto) for op in self.ops]

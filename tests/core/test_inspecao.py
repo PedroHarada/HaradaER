@@ -90,7 +90,7 @@ def test_rotulo_da_generalizacao_entra_e_sai_com_o_tipo():
 
 def test_mudar_para_ligacao_de_atributo_grava_do_atributo_para_o_dono():
     doc, h, nos = modelo()
-    h.execute(connect_command(doc, "llabel", nos["aluno"], nos["nome"]))
+    h.execute(connect_command(doc, "llabelUm", nos["aluno"], nos["nome"]))
     conexao = doc.figures[-1]
     pontos = [(p.attrs["x"], p.attrs["y"]) for p in conexao.points]
     h.execute(change_connection_type_command(doc, conexao, "lcaf"))
@@ -126,7 +126,7 @@ def test_dono_dos_atributos_vem_das_ligacoes(referencia):
 
 def test_dono_aceita_as_duas_direcoes_e_atributo_composto():
     doc, h, nos = modelo()
-    h.execute(connect_command(doc, "llabel", nos["aluno"], nos["nome"]))
+    h.execute(connect_command(doc, "llabelUm", nos["aluno"], nos["nome"]))
     h.execute(change_connection_type_command(doc, doc.figures[-1], "lcaf"))
     h.execute(connect_command(doc, "lcaf", nos["rua"], nos["nome"]))  # atributo de atributo
     donos = attribute_owners(doc)

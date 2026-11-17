@@ -1,8 +1,11 @@
 """Painel Esquema lógico e o `.logic.md` gravado ao salvar (RF-23)."""
 
+import xml.etree.ElementTree as ET
+
 import pytest
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from haradaer.core.erview import find_texts
 from haradaer.gui.schema_panel import schema_file
 from haradaer.gui.settings import schema_file_enabled
 from haradaer.gui.window import DocumentWindow
@@ -39,6 +42,20 @@ def test_painel_acompanha_o_diagrama_e_o_desfazer(janela):
     assert "ALUNO (**mat**)" in texto(janela)
     janela.action_undo.trigger()  # desfaz a ligação da chave
     assert "ALUNO ()" in texto(janela)
+
+
+def test_esquema_e_texto_markdown_no_mesmo_modelo(janela, tmp_path):
+    entidade_com_chave(janela)
+    nota = janela.editor.add_text((0, 0, 120, 60), "**Observação** do modelo")
+    assert find_texts(janela.editor.document, "Observação") == [nota]
+    assert "ALUNO (**mat**)" in texto(janela)
+    assert "Observação" not in texto(janela)
+
+    janela.action_schema_file.setChecked(True)
+    assert janela._write(tmp_path / "modelo.xml")
+    assert "ALUNO (**mat**)" in (tmp_path / "modelo.logic.md").read_text("utf-8")
+    xml = ET.parse(tmp_path / "modelo.xml").getroot()
+    assert "**Observação** do modelo" in "".join(xml.itertext())
 
 
 def test_painel_mostra_o_markdown_formatado(janela):

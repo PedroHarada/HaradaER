@@ -22,6 +22,12 @@ from haradaer.core.commands import (
 from haradaer.core.geometry import PARALLEL_OFFSET, center, node_rect, route_ends
 from haradaer.core.model.document import Document
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -84,7 +90,9 @@ def test_mover_os_dois_elementos_leva_as_dobras_junto(referencia):
     segunda = [f for f in doc.figures if f.tag == "llabelMuitos"][1]
     antes = pontos(segunda)
     History().execute(move_command(doc, nos, 10, 20))
-    assert pontos(segunda) == pytest.approx([(x + 10, y + 20) for x, y in antes])
+    assert achatado(pontos(segunda)) == pytest.approx(
+        achatado([(x + 10, y + 20) for x, y in antes])
+    )
 
 
 # ------------------------------------------------------------- criar no HaradaER
@@ -197,7 +205,7 @@ def test_segunda_conexao_entre_o_mesmo_par_sai_para_o_lado_sem_cruzar():
 def test_conexoes_extras_alternam_de_lado_e_nao_se_sobrepoem():
     doc, h, ent, rel = modelo()
     for _ in range(5):
-        h.execute(connect_command(doc, "llabel", ent, rel))
+        h.execute(connect_command(doc, "generalizacaoLine", ent, rel))
     caminhos = [tuple(map(tuple, pontos(c))) for c in doc.figures[2:]]
     assert len(set(caminhos)) == 5
     desvios = [round(desvio(c[1], rel, ent)) for c in caminhos[1:]]
@@ -206,6 +214,6 @@ def test_conexoes_extras_alternam_de_lado_e_nao_se_sobrepoem():
 
 def test_conexao_em_sentido_contrario_tambem_conta_como_do_mesmo_par():
     doc, h, ent, rel = modelo()
-    h.execute(connect_command(doc, "llabel", rel, ent))
-    h.execute(connect_command(doc, "llabel", ent, rel))
+    h.execute(connect_command(doc, "generalizacaoLine", rel, ent))
+    h.execute(connect_command(doc, "generalizacaoLine", ent, rel))
     assert len(doc.figures[-1].points) == 4

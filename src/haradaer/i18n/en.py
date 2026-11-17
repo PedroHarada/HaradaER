@@ -32,7 +32,6 @@ EN: dict[str, str] = {
     "Generalização simples": "Simple generalization",
     "Participação opcional em generalização": "Optional participation in generalization",
     "Participação obrigatória em generalização": "Mandatory participation in generalization",
-    "Conexão livre": "Free connection",
     # --- nomes curtos da faixa de ferramentas -----------------------------------------------
     "Selecionar": "Select",
     "Ent. fraca": "Weak ent.",
@@ -52,7 +51,6 @@ EN: dict[str, str] = {
     "General.": "General.",
     "Gen. opc.": "Gen. opt.",
     "Gen. obrig.": "Gen. mand.",
-    "Livre": "Free",
     # --- menus -------------------------------------------------------------------------------
     "&Arquivo": "&File",
     "&Novo": "&New",
@@ -122,7 +120,7 @@ EN: dict[str, str] = {
     "Atributos sem dono": "Attributes without owner",
     "Outros": "Others",
     "Conexões": "Connections",
-    "Localizar elemento...": "Find element...",
+    "Localizar elemento ou texto...": "Find element or text...",
     "Nome": "Name",
     "Tipo": "Kind",
     "Nada encontrado": "Nothing found",
@@ -228,6 +226,46 @@ EN: dict[str, str] = {
     " that TerraER does not recognize and now use the default type. TerraER would open the"
     " file, but could not save it.",
     "... e mais {n}": "... and {n} more",
+    # Conexão livre (RF-25)
+    "Conexões livres apagadas": "Free connections deleted",
+    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+    " Foi apagada 1 deste arquivo, entre:": (
+        "HaradaER doesn't use the free connection, which has no meaning in the ER model."
+        " 1 was deleted from this file, between:"
+    ),
+    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+    " Foram apagadas {n} deste arquivo, entre:": (
+        "HaradaER doesn't use the free connection, which has no meaning in the ER model."
+        " {n} were deleted from this file, between:"
+    ),
+    "O arquivo em disco só muda quando você salvar.": (
+        "The file on disk only changes when you save."
+    ),
+    # Texto (RF-26, RF-27)
+    "Texto": "Text",
+    "Textos": "Texts",
+    "Criar texto": "Create text",
+    "Editar texto": "Edit text",
+    "Textos convertidos": "Texts converted",
+    "{link} ({tecla}+clique abre)": "{link} ({tecla}+click opens it)",
+    "{tecla}+clique marca ou desmarca a tarefa": "{tecla}+click checks or unchecks the task",
+    "Marcar tarefa": "Check task",
+    "Só links da web (http, https) e de e-mail abrem: {link}": (
+        "Only web (http, https) and e-mail links open: {link}"
+    ),
+    "texto": "text",
+    "texto em negrito": "bold text",
+    "papel": "role",
+    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+    " 1 texto deste arquivo virou Texto, no mesmo lugar e com a mesma fonte:": (
+        "HaradaER has a single kind of text, the Text (TerraER's Text Area)."
+        " 1 text in this file became a Text, in the same place and with the same font:"
+    ),
+    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+    " {n} textos deste arquivo viraram Texto, no mesmo lugar e com a mesma fonte:": (
+        "HaradaER has a single kind of text, the Text (TerraER's Text Area)."
+        " {n} texts in this file became Texts, in the same place and with the same font:"
+    ),
     # --- exportar e copiar -------------------------------------------------------------------
     "Exportar desenho": "Export drawing",
     "Imagem PNG": "PNG image",
@@ -349,6 +387,45 @@ EN: dict[str, str] = {
         "in the generalization, the superclass was inferred (link the superclass with a "
         "participation line and the subclasses with the simple generalization)"
     ),
+
+    "Atualizar e &reiniciar": "Update and &restart",
+    "Baixando o HaradaER {versao}…": "Downloading HaradaER {versao}…",
+    "Conferindo a versão nova…": "Checking the new version…",
+    "O HaradaER {versao} está pronto.": "HaradaER {versao} is ready.",
+    "Se continuar agora, a atualização é instalada quando você fechar o HaradaER.": (
+        "If you keep working now, the update is installed when you close HaradaER."
+    ),
+    "&Reiniciar agora": "&Restart now",
+    "Ao &fechar": "When I &close",
+    "HaradaER atualizado para a {versao}.": "HaradaER updated to {versao}.",
+    "Atualização cancelada.": "Update canceled.",
+    "Cancelar": "Cancel",
+    "A atualização automática só funciona no programa baixado em Releases.": (
+        "Automatic updates only work in the program downloaded from Releases."
+    ),
+    "Não há pacote do HaradaER para este processador.": (
+        "There is no HaradaER package for this processor."
+    ),
+    "Não há pacote do HaradaER para este processador ({maquina}).": (
+        "There is no HaradaER package for this processor ({maquina})."
+    ),
+    "Mova o HaradaER para a pasta Aplicativos e abra de lá para poder atualizar.": (
+        "Move HaradaER to the Applications folder and open it from there to update."
+    ),
+    "Sem permissão para gravar na pasta {pasta}.": "No permission to write to the folder {pasta}.",
+    "A versão {versao} ainda não está completa no GitHub. Tente mais tarde.": (
+        "Version {versao} isn't complete on GitHub yet. Try again later."
+    ),
+    "O download veio corrompido. Tente de novo.": "The download was corrupted. Try again.",
+    "O pacote baixado não pôde ser aberto.": "The downloaded package couldn't be opened.",
+    "O pacote baixado tem um caminho inválido.": "The downloaded package has an invalid path.",
+    "O pacote baixado não tem o programa.": "The downloaded package doesn't contain the program.",
+    "A versão nova não abriu neste computador.": "The new version didn't open on this computer.",
+    "Não foi possível baixar a versão nova ({erro}).": (
+        "Couldn't download the new version ({erro})."
+    ),
+    "Não foi possível trocar o programa ({erro}).": "Couldn't replace the program ({erro}).",
+    "Não foi possível verificar agora ({erro}).": "Couldn't check right now ({erro}).",
     # Edição rápida
     "Edição rápid&a": "Quick edit&ing",
     "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (

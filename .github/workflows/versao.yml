@@ -24,7 +24,7 @@ jobs:
             sistema: linux
           - os: windows-latest
             sistema: windows
-          - os: macos-14  # chip Apple (M1 em diante)
+          - os: macos-15  # chip Apple (M1 em diante); o GitHub aposentou o macos-14 em 2026-11
             sistema: macos
     runs-on: ${{ matrix.os }}
     env:
@@ -45,6 +45,17 @@ jobs:
             libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1
       - name: Instalar o HaradaER e o PyInstaller
         run: pip install ".[dev]" pyinstaller==6.22.3
+      - name: Etiqueta igual à versão do programa
+        # Sem isso, uma etiqueta v1.4.1 com o programa ainda dizendo 1.4.0 faria a atualização
+        # oferecer a mesma versão sem parar. Uma pré-versão (v1.4.0-rc1) também vale.
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          versao=$(python -c "import haradaer; print(haradaer.__version__)")
+          case "${{ github.ref_name }}" in
+            "v$versao" | "v$versao"-*) ;;
+            *) echo "A etiqueta ${{ github.ref_name }} não bate com a versão $versao do programa"; exit 1 ;;
+          esac
       - name: Lint
         run: |
           ruff check .
@@ -111,6 +122,19 @@ jobs:
           python packaging/manual_do_sistema.py macos pacote/PRIMEIROS-PASSOS.txt
           python packaging/manual_do_sistema.py macos pacote/GETTING-STARTED.txt en
           ditto -c -k pacote "$NOME.zip"  # sem a pasta pacote/ dentro do zip
+      # A atualização pelo próprio programa (RF-22): uma cópia "instalada" do executável se
+      # atualiza com o pacote recém-gerado, servido localmente. Única vez em que a troca roda de
+      # verdade no Windows e no macOS (packaging/teste_atualizacao.py).
+      - name: Teste da atualização (Linux)
+        if: matrix.sistema == 'linux'
+        run: python packaging/teste_atualizacao.py linux "$NOME.tar.gz" dist/HaradaER
+      - name: Teste da atualização (Windows)
+        if: matrix.sistema == 'windows'
+        shell: pwsh
+        run: python packaging/teste_atualizacao.py windows "$env:NOME.zip" dist/HaradaER.exe
+      - name: Teste da atualização (macOS)
+        if: matrix.sistema == 'macos'
+        run: python packaging/teste_atualizacao.py macos "$NOME.zip" dist/HaradaER.app
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.NOME }}
@@ -131,7 +155,10 @@ jobs:
         with:
           path: arquivos
           merge-multiple: true
-      - uses: softprops/action-gh-release@v3
+      - name: SHA256SUMS (a atualização confere o pacote baixado)
+        run: cd arquivos && sha256sum -- * > SHA256SUMS && cat SHA256SUMS
+      # Fixada pelo commit (v3.0.4): é ela que publica os arquivos que a atualização baixa.
+      - uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3
         with:
           name: HaradaER ${{ github.ref_name }}
           body_path: packaging/NOTAS-DA-VERSAO.md

@@ -36,10 +36,21 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
 - Painel **Esquema lógico**: as tabelas que o diagrama gera, que também podem ir para um
   `.logic.md` ao salvar (**Arquivo › Gravar esquema lógico ao salvar**).
+
+- O pacote do macOS é gerado e testado no macOS 15. Ele deve abrir no macOS 14, mas isso não é
+  mais conferido automaticamente.
+- Novo **Texto** (tecla `T` na Edição rápida): caixa de texto de várias linhas para observações
+  no desenho, com Markdown (títulos, negrito, itálico, listas, tarefas, links e código), que o TerraER também
+  abre. Os textos soltos do TerraER (Texto, Papel) viram Texto
+  ao abrir, com um aviso, e o Localizar (Ctrl+F) procura dentro deles.
+- A conexão livre não existe mais: ao abrir um arquivo que tenha alguma, ela é apagada, com um
+  aviso dizendo entre quais elementos estava. O arquivo só muda quando você salvar.
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
   **Ajuda › Sugerir uma melhoria**, no próprio programa.
 - Uma vez por dia, ao abrir, o programa avisa se há versão nova (desliga em
-  **Ajuda › Verificar ao abrir**). Nada é baixado sozinho.
+  **Ajuda › Verificar ao abrir**). Desde a 1.4.0, **Atualizar e reiniciar** instala a versão
+  nova pelo próprio programa, sem precisar baixar à mão (quem tem a 1.3.1 ou anterior instala a
+  1.4.0 à mão uma vez).
 - Os avisos de licença das bibliotecas incluídas estão em `AVISOS-DE-LICENCA.txt`.
 
 ---
@@ -79,8 +90,18 @@ system: the full step-by-step guide, with what to do if it doesn't open.
   but real use is just starting: let us know if anything odd happens.
 - **Logical schema** panel: the tables the diagram produces, which can also go to a
   `.logic.md` on save (**File › Save logical schema on save**).
+
+- The macOS package is built and tested on macOS 15. It should open on macOS 14, but that is no
+  longer checked automatically.
+- New **Text** (`T` key in Quick edit): a multi-line text box for notes on the drawing, with
+  Markdown (headings, bold, italic, lists, tasks, links and code), which TerraER also opens. TerraER's loose texts (Text, Role) become Text on opening, with a notice,
+  and Find (Ctrl+F) searches inside them.
+- The free connection no longer exists: when a file has any, they are deleted on opening, with a
+  notice saying which elements they connected. The file only changes when you save.
 - To report a problem or suggest an improvement: **Help › Report a problem** or
   **Help › Suggest an improvement**, inside the program.
 - Once a day, when opening, the program tells you if there's a new version (turn it off in
-  **Help › Check when opening**). Nothing is downloaded by itself.
+  **Help › Check when opening**). Since 1.4.0, **Update and restart** installs the new version
+  from the program itself, with no manual download (if you have 1.3.1 or older, install 1.4.0
+  by hand once).
 - The license notices of the bundled libraries are in `AVISOS-DE-LICENCA.txt`.

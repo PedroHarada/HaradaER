@@ -21,6 +21,12 @@ from haradaer.core.geometry import connection_points, node_rect
 from haradaer.core.model.document import Document
 from haradaer.core.rules import validate
 
+
+def achatado(pontos):
+    """[(x, y), ...] -> [x, y, ...]: o pytest.approx (9.2+) não compara listas de pontos."""
+    return [c for ponto in pontos for c in ponto]
+
+
 MEDIDOR = FixedMeasurer()
 
 
@@ -98,7 +104,7 @@ def test_mover_religa_as_conexoes_as_bordas(referencia):
     assert node_rect(aluno)[1] == 150
     esperado = connection_points(node_rect(aluno), node_rect(ligacao.end))
     obtido = [(float(p.attrs["x"]), float(p.attrs["y"])) for p in ligacao.points]
-    assert obtido == pytest.approx(list(esperado))
+    assert achatado(obtido) == pytest.approx(achatado(list(esperado)))
 
 
 def test_mover_e_desfazer_volta_aos_mesmos_bytes(referencia):
@@ -141,7 +147,9 @@ def test_conectar_cria_linha_ligada_as_bordas():
     # como o TerraER: entidade -> relacionamento é gravado do relacionamento para a entidade
     assert (ligacao.start, ligacao.end) == (rel, aluno)
     pontos = [(float(p.attrs["x"]), float(p.attrs["y"])) for p in ligacao.points]
-    assert pontos == pytest.approx(list(connection_points(node_rect(rel), node_rect(aluno))))
+    assert achatado(pontos) == pytest.approx(
+        achatado(list(connection_points(node_rect(rel), node_rect(aluno))))
+    )
     assert validate(doc) == []
 
 
@@ -221,7 +229,7 @@ def test_renomear_para_nome_longo_cresce_e_para_nome_curto_nao_encolhe():
     ligacao = doc.figures[-1]
     esperado = connection_points(node_rect(rel), node_rect(aluno))
     obtido = [(float(p.attrs["x"]), float(p.attrs["y"])) for p in ligacao.points]
-    assert obtido == pytest.approx(list(esperado))
+    assert achatado(obtido) == pytest.approx(achatado(list(esperado)))
 
 
 def test_renomear_e_desfazer():

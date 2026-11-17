@@ -15,5 +15,7 @@ CONNECTIONS: list[tuple[str, str]] = [
     ("generalizacaoLine", N_("Generalização simples")),
     ("llabelGeneralizacao", N_("Participação opcional em generalização")),
     ("llabelDoubleGeneralizacao", N_("Participação obrigatória em generalização")),
-    ("llabel", N_("Conexão livre")),
 ]
+
+# Texto livre (RF-26): a Área de Texto do TerraER.
+TEXTS: list[tuple[str, str]] = [("ta", N_("Texto"))]

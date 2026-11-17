@@ -12,6 +12,7 @@ from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QFileDialog
 
 import haradaer
+from haradaer import selfupdate
 from haradaer.gui.settings import RecentFiles, saved_language
 from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.theme import manager as theme_manager
@@ -131,5 +132,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         gerenciador.open_path(caminho)
     if not gerenciador.windows:
         return 1
+    selfupdate.cleanup_old(selfupdate.install_target())  # o .old de uma atualização anterior
     gerenciador.windows[0].update_checker.check_if_due()  # no máximo uma vez por dia (RF-22)
     return app.exec()

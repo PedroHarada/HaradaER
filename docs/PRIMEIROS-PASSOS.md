@@ -32,8 +32,8 @@ instalar Python nem nada mais.
    `.xml` passam a ter a opção **Abrir com › HaradaER**.
 
 Não precisa de `sudo`: o programa vai para `~/.local/bin`, só para o seu usuário. Depois de
-instalar, a pasta extraída pode ser apagada. Para atualizar, extraia a versão nova e rode
-`./instalar.sh` de novo.
+instalar, a pasta extraída pode ser apagada. Para atualizar, use **Atualizar e reiniciar** no
+aviso de versão nova, ou rode `HaradaER --atualizar` no terminal.
 
 **Desinstalar:** na pasta extraída, `./instalar.sh --remover`. As preferências ficam em
 `~/.config/HaradaER` (apague essa pasta se quiser zerá-las).
@@ -76,7 +76,8 @@ Não há instalação: o `HaradaER.exe` roda de onde estiver. Para ter um atalho
 direito nele › **Enviar para** › **Área de trabalho (criar atalho)** (no Windows 11, o
 **Enviar para** fica em **Mostrar mais opções**).
 
-Para atualizar, baixe a versão nova e substitua o `HaradaER.exe` antigo.
+Para atualizar, use **Atualizar e reiniciar** no aviso de versão nova. Se a pasta do programa não
+puder ser gravada, baixe a versão nova e substitua o `HaradaER.exe` antigo.
 
 ### Se não abrir
 
@@ -108,7 +109,8 @@ Para atualizar, baixe a versão nova e substitua o `HaradaER.exe` antigo.
 
    Nas próximas vezes, ele abre normalmente pelo Launchpad ou pelo Dock.
 
-Para atualizar, arraste a versão nova para Aplicativos e escolha **Substituir**.
+Para atualizar, use **Atualizar e reiniciar** no aviso de versão nova (com o HaradaER em
+Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolher **Substituir**.
 
 ---
 
@@ -129,6 +131,32 @@ atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
 O painel **Esquema lógico** mostra as tabelas que o diagrama gera (esquema relacional); com
 **Arquivo › Gravar esquema lógico ao salvar**, elas vão também para um `.logic.md` ao lado
 do modelo.
+
+O HaradaER não usa a conexão livre do TerraER, que não tem significado no modelo. Se um
+arquivo tiver alguma, ela é apagada ao abrir, com um aviso dizendo entre quais elementos estava;
+o arquivo só muda quando você salvar.
+
+Para escrever uma observação no desenho, use **Texto** (no fim da faixa, ou a tecla `T` na
+Edição rápida): clique para uma caixa padrão, ou arraste para dar o tamanho, e digite. Enter quebra
+a linha; clicar fora confirma. A caixa cresce para baixo conforme o texto, e a
+largura muda pelas alças. Os textos soltos do TerraER (Texto, Papel) viram Texto ao abrir, com um
+aviso; o arquivo só muda quando você salvar.
+
+O Texto aceita Markdown (CommonMark), e o desenho mostra formatado. No TerraER os marcadores
+aparecem como foram digitados.
+
+| Digite | Para ter |
+|---|---|
+| `# Título` a `###### Título` | Título, do maior ao menor |
+| `*itálico*` ou `_itálico_` | Itálico |
+| `**negrito**` ou `__negrito__` | Negrito |
+| `- item` ou `1. item` | Lista; recue 2 espaços para uma sublista |
+| `- [ ] tarefa` e `- [x] feita` | Lista de tarefas, com caixinha; marque ou desmarque com Ctrl + clique; no Mac, Cmd + clique |
+| `[texto](https://site)` ou `<https://site>` | Link, que abre no navegador (Ctrl + clique; no Mac, Cmd + clique) |
+| `` `código` `` ou um bloco entre linhas com ```` ``` ```` | Código, em fonte monoespaçada |
+| `\*` | Um `*` de verdade (vale para qualquer pontuação) |
+
+Cada Enter é uma linha nova.
 
 Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
 melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
@@ -215,7 +243,7 @@ exemplo, A num atributo o faz virar chave).
 | Participação, lado "N" → Participação total, lado "N" | `N` |
 | Ligação de atributo | `L` |
 | Generalização simples → Participação opcional em generalização → Participação obrigatória em generalização | `H` |
-| Conexão livre | `C` |
+| Texto | `T` |
 | Voltar uma posição no ciclo | `Shift + letra` |
 | Trocar o tipo do elemento selecionado (com Selecionar) | `Letra da família` |
 | Criar onde está o mouse | `Espaço` |

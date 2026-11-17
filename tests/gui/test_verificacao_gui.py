@@ -20,6 +20,16 @@ def sem_perguntas(monkeypatch):
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Discard)
 
 
+@pytest.fixture(autouse=True)
+def avisos(monkeypatch):
+    """A amostra de conexões incompletas tem conexões livres: abrir mostra o aviso do RF-25."""
+    capturados: list[tuple[str, str]] = []
+    monkeypatch.setattr(
+        QMessageBox, "information", lambda pai, titulo, texto: capturados.append((titulo, texto))
+    )
+    return capturados
+
+
 @pytest.fixture
 def mensagens(monkeypatch):
     capturadas: list[tuple[str, str]] = []
@@ -65,12 +75,10 @@ def apagada(janela, tag) -> bool:
 # --- verificação ---------------------------------------------------------------------------
 
 
-def test_arquivo_com_conexoes_soltas_mostra_os_problemas_menos_na_conexao_livre(janela, referencia):
+def test_arquivo_com_conexoes_soltas_mostra_os_problemas(janela, referencia):
     assert janela.load(referencia / "amostra-conexoes-incompletas.xml")
     assert janela.action_validate.isChecked()
-    livres = [i for i in itens_de_conexao(janela) if i.figure.tag == "llabel"]
-    assert livres and all(i.problem is None and i.toolTip() == "" for i in livres)
-    assert all(i.problem for i in itens_de_conexao(janela) if i.figure.tag != "llabel")
+    assert all(i.problem for i in itens_de_conexao(janela))  # as livres foram apagadas (RF-25)
     # Na ordem do arquivo: sem pontas, sem a ponta de fim, de uma entidade a ela mesma.
     sem_pontas, sem_fim, mesma = [i for i in itens_de_conexao(janela) if i.figure.tag == "llabelUm"]
     assert sem_pontas.problem.endswith("as duas pontas estão soltas")
@@ -160,7 +168,7 @@ def test_dois_elementos_selecionados_destacam_as_aceitas_e_apagam_as_outras(qtbo
     selecionar(qtbot, janela, a, b)
     for tag in ("llabelUm", "llabelDoubleMuitos"):
         assert destacada(janela, tag) and not apagada(janela, tag)
-    for tag in ("lcaf", "llabel"):
+    for tag in ("lcaf", "generalizacaoLine"):
         assert apagada(janela, tag) and not destacada(janela, tag)
     assert not janela.tool_strip.is_dimmed(janela._tool_actions[Tool("create", "ent")])
     rotulo = janela._recommendation_label
@@ -192,7 +200,7 @@ def test_par_sem_conexao_aceita_avisa(qtbot, janela):
     assert janela._recommendation_label.text() == (
         "Nenhuma conexão aceita entre Relacionamento e Relacionamento"
     )
-    assert apagada(janela, "llabelUm") and apagada(janela, "llabel")
+    assert apagada(janela, "llabelUm") and apagada(janela, "lcaf")
 
 
 def test_clicar_no_tipo_aceito_liga_os_dois_selecionados(qtbot, janela):
@@ -231,8 +239,6 @@ def test_tipo_nao_aceito_com_par_selecionado_so_escolhe_a_ferramenta(qtbot, jane
 def test_escolher_ferramenta_de_conexao_mostra_os_pares_aceitos(janela):
     janela.view.set_tool(Tool("connect", "generalizacaoLine"))
     assert janela.statusBar().currentMessage().startswith("Liga: Entidade → Entidade")
-    janela.view.set_tool(Tool("connect", "llabel"))
-    assert janela.statusBar().currentMessage() == ""
 
 
 # --- gravação ------------------------------------------------------------------------------

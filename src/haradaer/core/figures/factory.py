@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from haradaer.core.appearance.metrics import TextMeasurer
 from haradaer.core.appearance.ops import FontSpec
 from haradaer.core.figures.tags import CONNECTION_TAGS, NODE_TAGS
-from haradaer.core.figures.types import ConnectionFigure, NodeFigure
+from haradaer.core.figures.types import ConnectionFigure, NodeFigure, SupportFigure
 from haradaer.core.geometry import Rect, route_ends
 from haradaer.core.model.element import Element
 from haradaer.core.xmlfmt.numbers import format_number
@@ -218,6 +218,30 @@ def create_node(
     return NodeFigure(
         tag, attrs=atributos, children=[Element("children", children=partes)], has_id=True
     )
+
+
+# Texto (RF-26): a Área de Texto do TerraER (`ta`). Um clique cria uma caixa deste tamanho; o
+# TerraER cria 40 x 40, pequena demais para digitar.
+TEXT_AREA = "ta"
+TEXT_AREA_SIZE = (120.0, 60.0)
+
+
+def create_text_area(
+    x: float, y: float, w: float, h: float, texto: str, estilo: list[Element] | None = None
+) -> SupportFigure:
+    """Um Texto com a caixa dada. `estilo` são outras entradas do bloco `<a>` (fonte, cor...);
+    o texto vai por último, se o estilo ainda não o tiver."""
+    entradas = list(estilo or [])
+    if not any(e.tag == "text" for e in entradas):
+        entradas.append(_text_entry(texto))
+    attrs = {"x": format_number(x), "y": format_number(y)}
+    attrs |= {"w": format_number(w), "h": format_number(h)}
+    return SupportFigure(TEXT_AREA, attrs=attrs, children=[_style(*entradas)], has_id=True)
+
+
+def bool_entry(nome: str) -> Element:
+    """Entrada de estilo booleana ligada (`fontBold`, `fontItalic`...)."""
+    return _bool(nome)
 
 
 def double_style_block() -> Element:

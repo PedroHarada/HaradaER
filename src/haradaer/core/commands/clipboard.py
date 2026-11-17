@@ -9,8 +9,15 @@ do TerraER fica fora (QA-13).
 from __future__ import annotations
 
 from haradaer.core import io
-from haradaer.core.commands.edit import InsertFigure, move_command, nested_nodes
+from haradaer.core.appearance.metrics import FixedMeasurer, TextMeasurer
+from haradaer.core.commands.edit import (
+    InsertFigure,
+    move_command,
+    nested_nodes,
+    remove_free_connections,
+)
 from haradaer.core.commands.history import Command, Composite
+from haradaer.core.commands.text import convert_free_texts
 from haradaer.core.figures.types import ConnectionFigure
 from haradaer.core.model.document import Document
 from haradaer.core.model.element import Element
@@ -49,10 +56,18 @@ def copy_text(documento: Document, figuras: list[Element]) -> str | None:
 
 
 def paste_command(
-    documento: Document, texto: str, dx: float, dy: float
+    documento: Document,
+    texto: str,
+    dx: float,
+    dy: float,
+    medidor: TextMeasurer | None = None,
 ) -> tuple[Command, list[Element]]:
-    """Cola o pedaço deslocado de (dx, dy). Levanta `ArquivoInvalidoError` se o texto não servir."""
+    """Cola o pedaço deslocado de (dx, dy). Levanta `ArquivoInvalidoError` se o texto não servir.
+
+    `medidor` mede os textos soltos que viram Texto (RF-27); a interface passa o dela."""
     pedaco = io.loads(texto)
+    remove_free_connections(pedaco)  # a conexão livre não entra (RF-25)
+    convert_free_texts(pedaco, medidor or FixedMeasurer())  # nem os textos soltos (RF-27)
     figuras = list(pedaco.figures)
     if dx or dy:
         move_command(

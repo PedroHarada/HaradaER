@@ -23,14 +23,17 @@ import haradaer
 from haradaer.core import io
 from haradaer.core.commands import (
     PASTE_OFFSET,
+    convert_free_texts,
     fix_attribute_types_command,
     invalid_attribute_types,
     node_type_family,
+    remove_free_connections,
 )
 from haradaer.core.errors import ArquivoInvalidoError
 from haradaer.core.figures.factory import KINDS
 from haradaer.core.figures.types import NodeFigure
 from haradaer.core.model.document import Document
+from haradaer.core.model.element import Element
 from haradaer.core.rules import (
     check_structure,
     is_valid_connection,
@@ -38,14 +41,15 @@ from haradaer.core.rules import (
     recommend_elements,
     validate,
 )
-from haradaer.core.rules.tables import LINE_FREE, RECOMMENDATION_ORDER
+from haradaer.core.rules.tables import RECOMMENDATION_ORDER
 from haradaer.feedback import Tipo, issue_url, system_description
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
 from haradaer.gui.messages import MessagesPanel
-from haradaer.gui.palette import CONNECTIONS, ELEMENTS
+from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
 from haradaer.gui.properties import PropertiesPanel
+from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.scene.items import WARNING_COLOR
 from haradaer.gui.schema_panel import SchemaPanel, schema_file, write_schema_file
@@ -426,6 +430,9 @@ class DocumentWindow(QMainWindow):
         self.tool_strip.add_separator()
         for tag, nome in CONNECTIONS:
             adicionar(Tool("connect", tag), nome)
+        self.tool_strip.add_separator()
+        for tag, nome in TEXTS:
+            adicionar(Tool("create", tag), nome)
         self.tool_strip.finish()
         self._tool_actions[SELECT].setChecked(True)
 
@@ -444,7 +451,7 @@ class DocumentWindow(QMainWindow):
     def _tool_changed(self, tool: Tool) -> None:
         self._tool_actions[tool].setChecked(True)
         self.tool_strip.ensure_visible(self._tool_actions[tool])
-        if tool.kind == "connect" and tool.tag != LINE_FREE:
+        if tool.kind == "connect":
             self.statusBar().showMessage(
                 _("Liga: {pares}").format(pares=pairs_text(recommend_elements(tool.tag)))
             )
@@ -535,13 +542,85 @@ class DocumentWindow(QMainWindow):
                 self, _("Não foi possível abrir o arquivo"), f"{caminho.name}\n\n{erro}"
             )
             return False
+        livres = remove_free_connections(documento)  # RF-25: antes de mostrar o modelo
+        textos = convert_free_texts(documento, QtMeasurer())  # RF-27
         self._attach(documento, caminho)
         self.recent.add(caminho)
+        if livres or textos:
+            self._editor.history.mark_dirty()
+        if livres:
+            self._report_free_connections(livres)
+        if textos:
+            self._report_converted_texts(textos)
         self._fix_invalid_attribute_types()
         self.view.zoom_actual()
         self.view.horizontalScrollBar().setValue(self.view.horizontalScrollBar().minimum())
         self.view.verticalScrollBar().setValue(self.view.verticalScrollBar().minimum())
         return True
+
+    def _report_free_connections(self, pontas: list[tuple[Element | None, Element | None]]) -> None:
+        """RF-25: as conexões livres já foram apagadas; o aviso diz quantas e entre o quê."""
+
+        def ponta(figura: Element | None) -> str:
+            if figura is None:
+                return _("ponta solta")
+            return f"{display_name(figura)} ({name_of(figura.tag)})"
+
+        linhas = [f"• {ponta(a)} ↔ {ponta(b)}" for a, b in pontas[:10]]
+        if len(pontas) > 10:
+            linhas.append(_("... e mais {n}").format(n=len(pontas) - 10))
+        QMessageBox.information(
+            self,
+            _("Conexões livres apagadas"),
+            (
+                _(
+                    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+                    " Foi apagada 1 deste arquivo, entre:"
+                )
+                if len(pontas) == 1
+                else _(
+                    "O HaradaER não usa a conexão livre, que não tem significado no modelo ER."
+                    " Foram apagadas {n} deste arquivo, entre:"
+                ).format(n=len(pontas))
+            )
+            + "\n\n"
+            + "\n".join(linhas)
+            + "\n\n"
+            + _("O arquivo em disco só muda quando você salvar."),
+        )
+
+    def _report_converted_texts(self, textos: list[tuple[str, str]]) -> None:
+        """RF-27: os textos soltos do TerraER já viraram Texto; o aviso diz quantos e quais."""
+        origem = {"t": N_("texto"), "tn": N_("texto em negrito"), "ti": N_("papel")}
+
+        def linha(tag: str, texto: str) -> str:
+            resumo = " ".join(texto.split())
+            if len(resumo) > 40:
+                resumo = resumo[:39] + "…"
+            return f"• “{resumo}” ({_(origem[tag])})"
+
+        linhas = [linha(tag, texto) for tag, texto in textos[:10]]
+        if len(textos) > 10:
+            linhas.append(_("... e mais {n}").format(n=len(textos) - 10))
+        QMessageBox.information(
+            self,
+            _("Textos convertidos"),
+            (
+                _(
+                    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+                    " 1 texto deste arquivo virou Texto, no mesmo lugar e com a mesma fonte:"
+                )
+                if len(textos) == 1
+                else _(
+                    "O HaradaER tem um só tipo de texto, o Texto (a Área de Texto do TerraER)."
+                    " {n} textos deste arquivo viraram Texto, no mesmo lugar e com a mesma fonte:"
+                ).format(n=len(textos))
+            )
+            + "\n\n"
+            + "\n".join(linhas)
+            + "\n\n"
+            + _("O arquivo em disco só muda quando você salvar."),
+        )
 
     def _fix_invalid_attribute_types(self) -> None:
         """RNF-16: tipo de atributo inválido vira o tipo padrão, com aviso (o TerraER abriria o

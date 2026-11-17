@@ -6,10 +6,12 @@ Depois disso o `Document` avisa o que mudou e a cena se atualiza.
 
 from __future__ import annotations
 
+from haradaer.core.appearance.markdown import toggle_task
 from haradaer.core.commands import (
     History,
     add_bend_command,
     add_node_command,
+    add_text_area_command,
     align_command,
     bring_to_front_command,
     can_group,
@@ -20,6 +22,7 @@ from haradaer.core.commands import (
     duplicate_command,
     group_command,
     min_node_size,
+    min_text_area_size,
     move_bend_command,
     move_command,
     new_node,
@@ -29,11 +32,14 @@ from haradaer.core.commands import (
     remove_command,
     rename_command,
     resize_command,
+    resize_text_area_command,
     send_to_back_command,
     set_attribute_type_command,
     set_generalization_label_command,
     set_nullable_command,
+    set_text_command,
     straighten_command,
+    text_of,
     ungroup_command,
 )
 from haradaer.core.errors import ArquivoInvalidoError
@@ -80,11 +86,39 @@ class Editor:
     def end_move(self) -> None:
         self.history.end_macro()
 
-    def min_size(self, no: NodeFigure) -> tuple[float, float]:
-        return min_node_size(no, self.measurer)
+    def min_size(self, figura: Element) -> tuple[float, float]:
+        if isinstance(figura, NodeFigure):
+            return min_node_size(figura, self.measurer)
+        return min_text_area_size(figura, self.measurer)
 
-    def resize(self, no: NodeFigure, rect: tuple[float, float, float, float]) -> None:
-        self.history.execute(resize_command(self.document, no, rect, self.measurer))
+    def resize(self, figura: Element, rect: tuple[float, float, float, float]) -> None:
+        if isinstance(figura, NodeFigure):
+            comando = resize_command(self.document, figura, rect, self.measurer)
+        else:
+            comando = resize_text_area_command(self.document, figura, rect, self.measurer)
+        self.history.execute(comando)
+
+    def add_text(self, rect: tuple[float, float, float, float], conteudo: str) -> Element:
+        """Cria um Texto (RF-26) na caixa dada."""
+        comando, texto = add_text_area_command(self.document, rect, conteudo, self.measurer)
+        self.history.execute(comando)
+        return texto
+
+    def toggle_task(self, texto: Element, linha: int) -> None:
+        """Marca ou desmarca a tarefa dessa linha do Texto (RF-28); pode ser desfeito."""
+        conteudo = text_of(texto)
+        novo = toggle_task(conteudo, linha)
+        if novo != conteudo:
+            comando = set_text_command(self.document, texto, novo, self.measurer)
+            comando.label = N_("Marcar tarefa")
+            self.history.execute(comando)
+
+    def set_text(self, texto: Element, conteudo: str) -> None:
+        """Troca o conteúdo de um Texto; vazio, o Texto é excluído."""
+        if not conteudo.strip():
+            self.delete([texto])
+        elif conteudo != text_of(texto):
+            self.history.execute(set_text_command(self.document, texto, conteudo, self.measurer))
 
     def align(self, figuras: list[Element], modo: str) -> None:
         comando = align_command(self.document, figuras, modo)
@@ -149,7 +183,9 @@ class Editor:
     def paste(self, texto: str, deslocamento: float) -> list[Element] | None:
         """Cola o texto da área de transferência; `None` se não for um pedaço de modelo."""
         try:
-            comando, novas = paste_command(self.document, texto, deslocamento, deslocamento)
+            comando, novas = paste_command(
+                self.document, texto, deslocamento, deslocamento, self.measurer
+            )
         except ArquivoInvalidoError:
             return None
         self.history.execute(comando)

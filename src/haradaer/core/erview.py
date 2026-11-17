@@ -8,7 +8,9 @@ from __future__ import annotations
 import unicodedata
 from dataclasses import dataclass
 
+from haradaer.core.appearance.markdown import plain_text
 from haradaer.core.commands.edit import all_nodes
+from haradaer.core.commands.text import all_text_areas, text_of
 from haradaer.core.figures.tags import TYPED_ATTRIBUTE_TAGS
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
@@ -211,3 +213,9 @@ def _key_owners(documento: Document):
     for no in all_nodes(documento):
         if no.tag in _CHAVES and id(no) in donos:
             yield no, donos[id(no)]
+
+def find_texts(documento: Document, texto: str) -> list[Element]:
+    """Textos (RF-26) cujo conteúdo, sem os marcadores do Markdown (RF-28), contém o texto
+    procurado, na ordem do desenho."""
+    procurado = normalize(texto.strip())
+    return [t for t in all_text_areas(documento) if procurado in normalize(plain_text(text_of(t)))]

@@ -193,9 +193,31 @@ A interface só converte as operações em pintura; todo o conhecimento do Terra
 - `recommend_connections(origem, destino)` devolve os tipos de conexão válidos para o par, sem a conexão livre; `recommend_elements(conexao)` devolve os pares (origem, destino) em que o tipo vale. Os dois usam a mesma tabela da validação (`INVESTIGACOES.md` seção 12).
 - **Teste de regressão contra o TerraER.** A tabela (`rules/tables.py`) é conferida par a par contra `matriz-validacao.txt`, e cada conexão dos arquivos de referência é conferida contra o que o próprio TerraER pinta de vermelho (`validacao-por-arquivo.txt`, gerado por `harness/ValidaArquivo.java`; JDK só para regenerar).
 
+### 4.3.1 Sem conexão livre (RF-25, 1.2.2)
+
+A conexão livre (`llabel`) não existe no HaradaER: nada a cria, e a que vier num arquivo ou na área de transferência é apagada. O leitor continua reconhecendo a tag, só para isso: sem ela, um arquivo com conexão livre daria erro ao abrir (RNF-14). Evidência no TerraER: `INVESTIGACOES.md` seção 18.
+
+- `core/commands/edit.py`, `remove_free_connections(documento)`: tira as conexões livres, também as de dentro de grupos, e devolve as pontas de cada uma (`None` na ponta solta). Fica fora do histórico, para desfazer não trazê-las de volta. `connect_command` e `change_connection_type_command` recusam o tipo `llabel`.
+- `paste_command` (`core/commands/clipboard.py`) chama a mesma função no pedaço colado.
+- `gui/window.py`, `load`: apaga antes de mostrar o modelo; se apagou alguma, marca o documento como modificado (`History.mark_dirty`, que não cria passo de desfazer) e mostra um aviso no molde do RNF-16, com as pontas de até 10 conexões ("Cliente (Entidade) ↔ ponta solta"). O arquivo em disco só muda ao salvar.
+- A ferramenta saiu da paleta, dos ícones, do painel de propriedades e da tecla `C` da Edição rápida.
+- `LINE_FREE` continua na tabela de regras (`rules/tables.py`), porque a tabela é a medida do TerraER e é conferida contra `matriz-validacao.txt`; como nenhum documento aberto tem conexão livre, a exceção dela na verificação não tem mais efeito.
+
+### 4.3.2 Texto (RF-26, RF-27, RF-28, 1.3.0)
+
+O HaradaER tem um só texto livre, o **Texto**, gravado como a Área de Texto do TerraER (`ta`), para o arquivo continuar abrindo nele (RNF-01). No TerraER, a figura é a `TextAreaFigure`: quebra o texto pela largura da caixa e, num clique sem arrastar, cria 40 × 40 (`CreationTool`, conferido no `.jar`).
+
+- `core/appearance/describe.py`: `wrap_text` quebra entre palavras, sempre no `\n`, e corta a palavra mais larga que a caixa; `text_area_layout` dá as linhas e a altura de que a caixa precisa. O desenho da `ta` passa a quebrar pela largura (antes só quebrava no `\n`).
+- `core/figures/factory.py`, `create_text_area`: a `ta` com `x`, `y`, `w`, `h` e o texto no bloco `<a>`; `TEXT_AREA_SIZE` é a caixa de um clique (120 × 60).
+- `core/commands/text.py`: criar (`add_text_area_command`), trocar o texto (`set_text_command`, que cria a entrada do texto numa Área de Texto vazia do TerraER) e redimensionar (`resize_text_area_command`). Nos três, a largura é a pedida e a altura cresce até caber o texto; nunca encolhe sozinha.
+- `convert_free_texts(documento, medidor)`: troca cada `t`, `tn` e `ti` soltos (também dentro de grupos) por uma `ta` com as mesmas entradas de estilo, mais `fontBold` (`tn`) ou `fontItalic` (`ti`); a caixa fica 5 para fora do texto (a margem interna), para o texto não sair do lugar, e larga o bastante para cada linha caber. Não desce nos elementos ER, então os nomes não mudam. Fica fora do histórico, como o RF-25; `load` (`gui/window.py`) e `paste_command` a chamam.
+- `core/erview.py`, `find_texts`: a busca pelo conteúdo, sem diferenciar maiúsculas nem acentos; o inspetor ganha a categoria Textos e procura neles pelo texto todo.
+- **Markdown (RF-28):** `core/appearance/markdown.py` configura o markdown-it-py no modo CommonMark com `breaks` (Enter = linha nova, desvio declarado) e `tasklists` (as listas de tarefas do GitHub, que o leitor marca no `meta` do item), e as regras de citação, linha separadora, título sublinhado e HTML desligadas, que viram texto literal. A regra da imagem fica ligada só para ela não virar "!" seguido de um link: o token volta a ser escrito como `![legenda](arquivo)`. Os links levam o destino em cada pedaço; o markdown-it-py já recusa `javascript:`, `file:` e `data:`, e a vista só abre `http`, `https` e `mailto` (Ctrl+clique, `DiagramView.link_at`/`open_link`). As tarefas desenham uma caixinha (e um tique) no lugar do marcador; a caixinha (`ShapeOp.task`) leva a linha do item no texto, e o Ctrl+clique troca `[ ]` e `[x]` nessa linha (`toggle_task`), como uma edição do texto, que pode ser desfeita. No tema escuro, o Texto fica fora do clareamento das linhas pretas (`FigureItem._themed_ops`), porque tudo nele é desenhado sobre a caixa branca. Os tokens viram blocos (título, parágrafo, código, linha em branco) com pedaços de texto e estilo; o `map` de cada bloco (as linhas de origem) devolve as linhas em branco que o CommonMark juntaria; só contam as linhas vazias, para a definição de um link por referência continuar sumindo. `describe.py` monta as linhas: pedaços de fontes diferentes, quebra entre palavras (uma palavra com troca de fonte no meio não quebra), recuo e marcador das listas (`•`, `◦`, `▪`, números), código em `Monospaced` com fundo cinza, e o bloco de código quebrando por caractere. O negrito/itálico da caixa (`fontBold`/`fontItalic`) é a base. `plain_text` dá o texto sem marcadores para o Localizar; `escape_literal` escapa, ao converter um texto solto, só o que mudaria a aparência (`1. item` → `1\. item`).
+- Interface: a ferramenta `Tool("create", "ta")` fica no fim da faixa e na tecla `T`. No editor, Ctrl+B e Ctrl+I põem `**` e `*` em volta da seleção. A vista cria o Texto só ao confirmar o editor (`InlineTextEdit`, em `gui/inline_edit.py`), então cancelar ou confirmar vazio não deixa nada no histórico. As alças de redimensionar valem para elementos e Textos (`figure_box`).
+
 ### 4.4 Esquema lógico (`relational`) e DDL
 
-O passo 2 do desenho abaixo, o esquema relacional, está feito desde a 1.3.0 (RF-23): `core/relational/` calcula o esquema do diagrama (`map_schema`), seguindo o mapeamento de Elmasri e Navathe (regras em `CONCEITOS.md`, seção 3), e o escreve em Markdown (`schema_markdown`). O passo 3, o texto SQL, continua adiado (RF-13); quando vier, é só uma outra forma de escrever o mesmo `Schema`.
+O passo 2 do desenho abaixo, o esquema relacional, está implementado na branch do esquema lógico (RF-23; 1.5.0 planejada): `core/relational/` calcula o esquema do diagrama (`map_schema`), seguindo o mapeamento de Elmasri e Navathe (regras em `CONCEITOS.md`, seção 3), e o escreve em Markdown (`schema_markdown`). O passo 3, o texto SQL, continua adiado (RF-13); quando vier, é só uma outra forma de escrever o mesmo `Schema`.
 
 - `core/erview.py` ganhou `participants` (cardinalidade e participação de cada entidade em cada relacionamento) e `generalizations` (superclasse, subclasses, total).
 - O esquema nunca vai para o `.xml` (RNF-01). Os avisos saem como códigos (`SCHEMA_CODES`), e `gui/schema_panel.py` os põe em palavras (D-09); os títulos do Markdown usam `_()`, como os nomes padrão.
@@ -314,11 +336,21 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 ### 5.9 Aviso de versão nova (RF-22)
 
 - `haradaer/updates.py` lê a versão mais recente em `api.github.com/repos/PedroHarada/HaradaER/releases/latest` (as pré-versões ficam de fora) e a compara com `haradaer.__version__` por número; uma pré-versão vem antes da final de mesmo número. Resposta estranha, erro do GitHub ou falta de rede viram `OSError`.
+- A API aceita só 60 consultas por hora por IP sem login, e redes que dividem o IP esgotam o limite. Com 403 ou 429, `fetch_latest` pede a página `github.com/PedroHarada/HaradaER/releases/latest` (sem esse limite) e tira a versão do endereço para onde ela redireciona, `.../releases/tag/vX.Y.Z` (`latest_from_url`, desde a 1.3.1).
 - `gui/updates.py` (`UpdateChecker`) consulta numa linha de execução à parte e devolve o resultado por sinal do Qt: a janela nunca espera pela rede (limite de 5 s).
 - Ao abrir, no máximo uma vez por dia (`atualizacoes/ultima-verificacao`), e só se Ajuda › Verificar ao abrir estiver ligado (padrão). Sem novidade ou sem rede, fica quieto. Ajuda › Verificar atualizações sempre responde.
-- Só avisa: **Baixar** abre a página Releases. O programa não baixa nem troca a si mesmo (decisão do autor, 2026-10-22). A única coisa que sai do computador é essa consulta, sem nada pessoal.
+- **Baixar** abre a página Releases. Até a 1.3.1, o programa só avisava (decisão do autor, 2026-10-22); desde a 1.4.0, também se atualiza quando a pessoa pede (abaixo). Nada pessoal sai do computador: só as consultas e os downloads da página pública de versões.
 - A conexão usa o contexto TLS padrão mais o arquivo de certificados do sistema (`SYSTEM_CA_FILES`): o executável do Linux leva o OpenSSL do Ubuntu, que os procura em `/usr/lib/ssl`, e falhava no Arch (corrigido na 1.1.2).
 - Os testes nunca usam a rede: o `tests/conftest.py` troca a consulta por uma falha.
+- **Atualizar e reiniciar (1.4.0).** `haradaer/selfupdate.py`, sem Qt, faz o trabalho; `gui/updates.py` (`UpdateInstaller`) mostra o andamento e decide quando trocar.
+  - O botão só aparece no programa empacotado (`sys.frozen`), com pacote para o sistema e o processador (Linux x86_64, Windows x64, macOS arm64) e pasta com permissão de gravação. No macOS, um app aberto de uma cópia translocada (`/AppTranslocation/`) pede para ser movido para Aplicativos. Nos outros casos fica só o **Baixar**.
+  - `prepare`, numa linha de execução à parte: baixa o `SHA256SUMS` e o pacote de `github.com/PedroHarada/HaradaER/releases/download/vX.Y.Z/` (fora do limite da API) para `.HaradaER-atualizacao/`, ao lado do programa (mesmo disco); confere o SHA-256; descompacta (`tarfile` com `filter="data"`; `zipfile` recusando caminho absoluto ou `..`; no macOS, `ditto`, que mantém os links simbólicos do `.app`); e roda o `--autoteste` do programa novo, que precisa passar e dizer `versão: X.Y.Z`. Falta de arquivo, hash diferente ou autoteste falho apagam o preparo e não tocam no instalado.
+  - `apply`, no `aboutToQuit`, com nenhum documento aberto: o atual (executável, ou o `HaradaER.app` inteiro no macOS) vira `.old` e o novo entra no lugar, só renomeando; se o segundo passo falhar, o atual volta. Trocar só ao fechar evita que o `.app` em uso, já renomeado, carregue plugins da versão nova. **Reiniciar agora** fecha as janelas pelo caminho normal (cada uma pergunta se salva) e reabre o programa (`open -n` no macOS).
+  - Na abertura seguinte, `cleanup_old` apaga o `.old` e um preparo que ficou pela metade.
+  - Os processos filhos (autoteste e reabertura) recebem `PYINSTALLER_RESET_ENVIRONMENT=1`: sem isso, o filho de um executável de arquivo único usaria a pasta descompactada do pai.
+  - `HaradaER --atualizar` (`selfupdate.main`, chamado por `packaging/entrada.py`) faz o mesmo no terminal e troca na hora. No Windows não escreve nada, porque o `.exe` não tem console.
+  - Sem chave de assinatura (decisão do autor, 2026-11-15): o SHA-256 pega download corrompido ou pela metade, mas não um pacote trocado por quem tomar a conta do GitHub. A segurança é a mesma do download pelo navegador.
+  - O workflow de versão publica o `SHA256SUMS`, recusa etiqueta diferente de `__version__` e roda `packaging/teste_atualizacao.py` nos três sistemas: uma cópia "instalada" do executável se atualiza com o pacote recém-gerado, servido localmente (variáveis `HARADAER_ATUALIZACAO_BASE` e `HARADAER_ATUALIZACAO_VERSAO`, só para esse teste).
 
 ## 6. Fluxos principais
 
@@ -381,10 +413,11 @@ Os fixtures são cópias dos arquivos em `docs/referencia-terraer/`.
 |---|---|---|
 | Python | Linguagem: 3.14 (QA-12) | Sim |
 | PySide6 | Interface (Qt 6): 6.12 | Sim, só para `gui` |
+| `markdown-it-py` 4.2.0 e `mdurl` 0.1.2 | Markdown do Texto (RF-28, D-13), versão exata | Sim, no núcleo (só Python, sem Qt) |
 | `pytest`, `pytest-qt` | Testes | Só desenvolvimento |
 | JDK | Regenerar amostras e a matriz de validação; teste de ida e volta | Só desenvolvimento |
 
-O núcleo usa somente a biblioteca padrão.
+O núcleo usa a biblioteca padrão e, desde a 1.3.0, o markdown-it-py (D-13).
 
 ## 9. Decisões
 
@@ -404,6 +437,7 @@ Estado: **Decidida** = confirmada pelo autor.
 | D-10 | Tabelas de dados para tags, regras e estilos | Código condicional | Fácil de validar contra o TerraER | **Decidida** |
 | D-11 | Idioma por catálogo próprio, com o texto em português como chave | `tr()` com `.ts`/`.qm` do Qt | Sem passo de compilação; o núcleo usa sem Qt (RNF-08); testável sem tela | **Decidida** (aceita pelo autor em 2026-10-22) |
 | D-12 | Versões `x.y.z` pelo efeito para quem usa (seção 13) | Subir o `x` por acúmulo de versões | Critério que dá para conferir; segue o Versionamento Semântico | **Decidida** (aceita pelo autor em 2026-10-22) |
+| D-13 | Markdown do Texto pelo `markdown-it-py`, na versão exata (4.2.0) | Analisador próprio; `QTextDocument.setMarkdown` do Qt | Segue o CommonMark 0.31.2 (passa nos exemplos oficiais), devolve tokens para o nosso desenho, deixa desligar o que não usamos e fica no núcleo sem Qt. O do Qt devolve um documento do Qt e não cabe no núcleo; o próprio seria muito código para as regras de ênfase e de listas. Versão exata porque uma atualização muda o desenho | **Decidida** (aceita pelo autor em 2026-11-06) |
 
 ## 10. Riscos
 
@@ -484,7 +518,7 @@ Regras:
 - Pré-versões levam hífen (`1.1.0-rc1`) e saem como pré-lançamento.
 - Uma versão publicada não muda: se sair com erro, a correção é a versão seguinte (a 1.0.0 virou a 1.0.1).
 - Mudança só na documentação do repositório, que não altera os pacotes, não gera versão; entra na próxima.
-- Uma funcionalidade nova pode sair como versão **em avaliação**: o `CHANGELOG` diz isso, e as melhorias e alterações que o uso pedir saem como `z` da mesma linha, mesmo que mudem o comportamento dela. Foi o caso da Edição rápida e da troca de tipo na 1.2.0 (decisão do autor, 2026-10-25): ajustes nas 1.2.x. Uma versão só vira a `y` nova quando a branch dela entra na `main`; a branch `atalhos-novos` virou a 1.2.0 ao entrar na `main`, e a `esquema-logico-relacional` vira a 1.3.0.
+- Uma funcionalidade nova pode sair como versão **em avaliação**: o `CHANGELOG` diz isso, e as melhorias e alterações que o uso pedir saem como `z` da mesma linha, mesmo que mudem o comportamento dela. Foi o caso da Edição rápida e da troca de tipo na 1.2.0 (decisão do autor, 2026-10-25): ajustes nas 1.2.x, e o autor a aprovou como está em 2026-11-09. Uma versão só vira a `y` nova quando a branch dela entra na `main`; a branch `atalhos-novos` virou a 1.2.0 ao entrar na `main`.
 
 Exemplos de `z`:
 

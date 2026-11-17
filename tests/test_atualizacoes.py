@@ -7,6 +7,9 @@ import pytest
 
 from haradaer import updates
 
+# A real: o `sem_rede` do conftest troca `updates.fetch_latest` em cada teste.
+FETCH_LATEST = updates.fetch_latest
+
 
 @pytest.mark.parametrize(
     ("nova", "atual", "esperado"),
@@ -34,6 +37,67 @@ def test_le_a_etiqueta_do_github():
 def test_resposta_estranha_e_falha_de_rede(dados):
     with pytest.raises(OSError):
         updates.latest_from_json(dados)
+
+
+def test_le_a_versao_do_redirecionamento():
+    url = "https://github.com/PedroHarada/HaradaER/releases/tag/v1.3.0"
+    assert updates.latest_from_url(url) == "1.3.0"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://github.com/PedroHarada/HaradaER/releases",  # nenhuma versão publicada
+        "https://github.com/PedroHarada/HaradaER/releases/tag/nightly",
+    ],
+)
+def test_redirecionamento_estranho_e_falha(url):
+    with pytest.raises(OSError):
+        updates.latest_from_url(url)
+
+
+class _Resposta:
+    def __init__(self, url):
+        self.url = url
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+    def geturl(self):
+        return self.url
+
+
+@pytest.mark.parametrize("codigo", [403, 429])
+def test_limite_da_api_usa_a_pagina_de_versoes(monkeypatch, codigo):
+    from urllib import request
+    from urllib.error import HTTPError
+
+    pedidos = []
+
+    def abrir(pedido, timeout, context):
+        pedidos.append(pedido.full_url)
+        if pedido.full_url == updates.API:
+            raise HTTPError(updates.API, codigo, "rate limit exceeded", {}, None)
+        return _Resposta("https://github.com/PedroHarada/HaradaER/releases/tag/v9.9.9")
+
+    monkeypatch.setattr(request, "urlopen", abrir)
+    assert FETCH_LATEST() == "9.9.9"
+    assert pedidos == [updates.API, updates.RELEASES]
+
+
+def test_outro_erro_da_api_nao_tenta_a_pagina(monkeypatch):
+    from urllib import request
+    from urllib.error import HTTPError
+
+    def abrir(pedido, timeout, context):
+        raise HTTPError(pedido.full_url, 500, "Server Error", {}, None)
+
+    monkeypatch.setattr(request, "urlopen", abrir)
+    with pytest.raises(HTTPError):
+        FETCH_LATEST()
 
 
 def test_uma_vez_por_dia():
