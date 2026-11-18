@@ -119,7 +119,8 @@ Aplicaciones). También puede arrastrar la versión nueva a Aplicaciones y elegi
 ## Después de abrir
 
 El uso es el mismo en cualquier sistema. HaradaER se abre en el idioma del sistema (portugués,
-inglés o español); para cambiarlo, use **Ver › Idioma** y abra el programa de nuevo. Para
+inglés o español); para cambiarlo, use **Preferencias › Apariencia › Idioma** (con el botón Menú, en el
+extremo izquierdo de la barra de arriba) y abra el programa de nuevo. Para
 empezar:
 
 1. Elija **Entidad** en la franja de arriba y haga clic en el dibujo; escriba el nombre y pulse
@@ -128,10 +129,10 @@ empezar:
 3. Seleccione la relación y una entidad (Ctrl + clic; en Mac, Cmd + clic): las conexiones que
    sirven para el par se resaltan en azul en la franja. Haga clic en una de ellas para unir los
    dos.
-4. **Archivo › Guardar** escribe un `.xml` que también se abre en TerraER 3.14.
+4. **Guardar**, en la barra de arriba, escribe un `.xml` que también se abre en TerraER 3.14.
 
 Los contornos naranjas y el panel **Mensajes** señalan lo que falta en el modelo, como una
-entidad sin atributo clave. Puede desactivarlos en **Ver › Avisos de estructura**.
+entidad sin atributo clave. Puede desactivarlos en **Preferencias › Verificación**.
 
 HaradaER no usa la conexión libre de TerraER, que no tiene significado en el modelo. Si un
 archivo tiene alguna, se borra al abrirlo, con un aviso que dice entre qué elementos estaba; el
@@ -159,11 +160,12 @@ marcadores aparecen tal como se escribieron.
 
 Cada Enter es una línea nueva.
 
-¿Encontró un problema o tiene una idea? **Ayuda › Informar de un problema** y **Ayuda › Sugerir
-una mejora** abren la página de GitHub ya rellenada (hace falta una cuenta en GitHub).
+¿Encontró un problema o tiene una idea? **Menú › Ayuda › Informar de un problema** y **Menú › Ayuda ›
+Sugerir una mejora** abren la página de GitHub ya rellenada (hace falta una cuenta en GitHub).
 
 Una vez al día, al abrir, HaradaER comprueba en GitHub si hay versión nueva y avisa; no se
-descarga nada solo. Para desactivarlo, desmarque **Ayuda › Buscar al abrir**.
+descarga nada solo. Para desactivarlo, desmarque
+**Preferencias › Actualizaciones › Buscar al abrir**.
 
 Todos los comandos están en [Como usar](../README.md#como-usar), en el README (en portugués).
 
@@ -171,7 +173,8 @@ Todos los comandos están en [Como usar](../README.md#como-usar), en el README (
 
 ## Atajos de teclado
 
-La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Los atajos de una tecla
+La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Alt solo o F10
+abre el botón Menú. Los atajos de una tecla
 funcionan con **Editar › Edición rápida** activada (Ctrl+Shift+E, o el botón de la barra de
 estado). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
 (por ejemplo, A en un atributo lo convierte en clave).
@@ -205,6 +208,7 @@ estado). Con Seleccionar activo y un elemento seleccionado, la letra de su famil
 | Buscar | `Ctrl+F` |
 | Copiar como imagen | `Ctrl+Shift+C` |
 | Edición rápida | `Ctrl+Shift+E` |
+| Preferencias | `Ctrl+,` |
 
 **Organizar**
 

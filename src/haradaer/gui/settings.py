@@ -71,7 +71,7 @@ def window_layout() -> tuple[QByteArray | None, QByteArray | None]:
 
 
 def structure_warnings_enabled() -> bool:
-    """Os avisos de estrutura (Exibir › Avisos de estrutura) começam ligados."""
+    """Os avisos de estrutura (Preferências › Verificação) começam ligados."""
     return str(settings().value(STRUCTURE_KEY, "true")).lower() == "true"
 
 
@@ -93,7 +93,7 @@ def set_quick_edit_enabled(ligado: bool) -> None:
 
 
 def saved_language() -> str | None:
-    """O idioma escolhido em Exibir › Idioma (RNF-06); `None` se nunca foi escolhido."""
+    """O idioma escolhido em Preferências › Aparência (RNF-06); `None` se nunca foi escolhido."""
     valor = settings().value(LANGUAGE_KEY)
     return str(valor) if valor else None
 

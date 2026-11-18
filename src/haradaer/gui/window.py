@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import errno
+import sys
 from pathlib import Path
 
 import shiboken6
-from PySide6.QtCore import QMimeData, Qt, QUrl, Signal
+from PySide6.QtCore import QEvent, QMimeData, QObject, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QToolBar,
     QToolButton,
@@ -43,11 +45,13 @@ from haradaer.core.rules import (
 )
 from haradaer.core.rules.tables import RECOMMENDATION_ORDER
 from haradaer.feedback import Tipo, issue_url, system_description
+from haradaer.gui.command_icons import COMMAND_ICON_SIZE, command_icon
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
 from haradaer.gui.messages import MessagesPanel
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
+from haradaer.gui.preferences_dialog import PreferencesDialog
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene import DiagramScene
@@ -65,7 +69,7 @@ from haradaer.gui.settings import (
     update_check_enabled,
     window_layout,
 )
-from haradaer.gui.shortcuts import key_of, next_tool, position
+from haradaer.gui.shortcuts import FAMILIES, key_of, next_tool, position
 from haradaer.gui.shortcuts_dialog import ShortcutsDialog
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
@@ -99,6 +103,45 @@ _SAVE_ERRORS = {
     errno.ENOSPC: N_("Não há espaço livre no disco."),
     errno.EROFS: N_("O disco é somente leitura."),
 }
+
+
+class _AltFilter(QObject):
+    """Alt apertado e solto sozinho no desenho, sem outra tecla nem clique no meio, abre o Menu
+    da janela. Fica só no desenho, onde está o foco quase sempre: um filtro no programa todo
+    passaria cada evento pelo Python e deixaria tudo mais lento."""
+
+    def __init__(self, janela: DocumentWindow) -> None:
+        super().__init__(janela)
+        self._janela = janela
+        self._sozinho = False
+
+    def eventFilter(self, objeto: QObject, evento: QEvent) -> bool:  # noqa: N802 (nome do Qt)
+        tipo = evento.type()
+        if tipo == QEvent.Type.KeyPress and not evento.isAutoRepeat():
+            self._sozinho = evento.key() == Qt.Key.Key_Alt
+        elif tipo in (QEvent.Type.MouseButtonPress, QEvent.Type.Wheel, QEvent.Type.FocusOut):
+            self._sozinho = False
+        elif (
+            tipo == QEvent.Type.KeyRelease
+            and not evento.isAutoRepeat()
+            and evento.key() == Qt.Key.Key_Alt
+            and self._sozinho
+        ):
+            self._sozinho = False
+            if not self._janela.main_menu.isVisible():
+                self._janela._show_main_menu()
+        return False
+
+
+def _menu_actions(barra) -> list[QAction]:
+    """Todas as ações com atalho dos menus, inclusive dos submenus."""
+    acoes = []
+    for acao in barra.actions():
+        if acao.menu() is not None:
+            acoes += _menu_actions(acao.menu())
+        elif not acao.shortcut().isEmpty():
+            acoes.append(acao)
+    return acoes
 
 
 def save_error_text(erro: OSError) -> str:
@@ -151,6 +194,7 @@ class DocumentWindow(QMainWindow):
         self._build_docks()
         self.update_checker = UpdateChecker(self)  # aviso de versão nova (RF-22)
         self._build_menus()
+        self._build_command_bar()
         self._build_toolbar()
         self._quick_edit_button = QToolButton()  # indicador clicável na barra de status
         self._quick_edit_button.setDefaultAction(self.action_quick_edit)
@@ -171,6 +215,7 @@ class DocumentWindow(QMainWindow):
 
     def _build_menus(self) -> None:
         arquivo = self.menuBar().addMenu(_("&Arquivo"))
+        self.file_menu = arquivo
         self.action_new = self._action(
             _("&Novo"), QKeySequence.StandardKey.New, self.new_requested.emit
         )
@@ -189,12 +234,13 @@ class DocumentWindow(QMainWindow):
         arquivo.addSeparator()
         arquivo.addActions([self.action_save, self.action_save_as])
         arquivo.addSeparator()
-        self.action_export = self._action(_("&Exportar desenho..."), "Ctrl+E", self.export)
+        self.action_export = self._action(_("Exportar &desenho..."), "Ctrl+E", self.export)
         arquivo.addAction(self.action_export)
         arquivo.addSeparator()
         arquivo.addActions([self.action_close, self.action_quit])
 
         editar = self.menuBar().addMenu(_("&Editar"))
+        self.edit_menu = editar
         self.action_undo = self._action(_("&Desfazer"), QKeySequence.StandardKey.Undo, self._undo)
         self.action_redo = self._action(_("&Refazer"), QKeySequence.StandardKey.Redo, self._redo)
         self.action_delete = self._action(
@@ -233,12 +279,18 @@ class DocumentWindow(QMainWindow):
         self.action_quick_edit.setCheckable(True)
         self.action_quick_edit.setChecked(quick_edit_enabled())
         self.action_quick_edit.setStatusTip(
-            _("Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)")
+            _("Atalhos de uma tecla para as ferramentas ({teclas})").format(
+                teclas=", ".join(tecla for tecla, _ferramentas in FAMILIES)  # nunca desatualiza
+            )
         )
         self.action_quick_edit.toggled.connect(self._quick_edit_toggled)
         editar.addAction(self.action_quick_edit)
+        editar.addSeparator()
+        self.action_preferences = self._action(_("&Preferências…"), "Ctrl+,", self.show_preferences)
+        editar.addAction(self.action_preferences)
 
         organizar = self.menuBar().addMenu(_("&Organizar"))
+        self.arrange_menu = organizar
         self.action_front = self._action(_("&Trazer para a frente"), "Ctrl+]", self._bring_to_front)
         self.action_back = self._action(_("&Enviar para trás"), "Ctrl+[", self._send_to_back)
         organizar.addActions([self.action_front, self.action_back])
@@ -257,6 +309,7 @@ class DocumentWindow(QMainWindow):
                 alinhar.addSeparator()
 
         exibir = self.menuBar().addMenu(_("E&xibir"))
+        self.view_menu = exibir
         self.action_zoom_in = self._action(
             _("&Ampliar"), QKeySequence.StandardKey.ZoomIn, self.view.zoom_in
         )
@@ -292,8 +345,7 @@ class DocumentWindow(QMainWindow):
         self.action_grid.setShortcut("Ctrl+'")
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
-        exibir.addActions([self.action_validate, self.action_structure, self.action_grid])
-        tema = exibir.addMenu(_("&Tema"))
+        exibir.addAction(self.action_grid)  # as outras opções ficam nas Preferências
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
         for opcao in available_themes():
@@ -305,10 +357,8 @@ class DocumentWindow(QMainWindow):
                 lambda _=False, n=nome: apply_theme(theme_named(n) or current_theme())
             )
             temas.addAction(acao)
-            tema.addAction(acao)
             self.theme_actions[nome] = acao
         theme_manager().changed.connect(self._theme_changed)
-        idioma = exibir.addMenu(_("&Idioma"))
         idiomas = QActionGroup(self)
         self.language_actions: dict[str, QAction] = {}
         escolhido = saved_language() or language()
@@ -317,7 +367,6 @@ class DocumentWindow(QMainWindow):
             acao.setChecked(codigo == escolhido)
             acao.triggered.connect(lambda _x=False, c=codigo: self._language_chosen(c))
             idiomas.addAction(acao)
-            idioma.addAction(acao)
             self.language_actions[codigo] = acao
         exibir.addSeparator()
         exibir.addActions(
@@ -329,6 +378,7 @@ class DocumentWindow(QMainWindow):
         )
 
         ajuda = self.menuBar().addMenu(_("Aj&uda"))
+        self.help_menu = ajuda
         self.shortcuts_action = self._action(
             _("Atalhos do &teclado…"), QKeySequence.StandardKey.HelpContents, self.show_shortcuts
         )
@@ -341,10 +391,84 @@ class DocumentWindow(QMainWindow):
         ajuda.addSeparator()
         self.check_updates_action = ajuda.addAction(_("Verificar &atualizações…"))
         self.check_updates_action.triggered.connect(lambda: self.update_checker.check(manual=True))
-        self.auto_updates_action = ajuda.addAction(_("Verificar ao a&brir"))
+        self.auto_updates_action = QAction(_("Verificar ao a&brir"), self)
         self.auto_updates_action.setCheckable(True)
         self.auto_updates_action.setChecked(update_check_enabled())
         self.auto_updates_action.toggled.connect(set_update_check_enabled)
+
+    def _build_command_bar(self) -> None:
+        """No lugar da barra de menus, uma linha de botões com Novo, Abrir e Salvar e o botão
+        Menu, que abre o resto (Editar, Organizar, Exibir e Ajuda viram submenus dele).
+
+        A barra de menus continua montada, escondida: é dela que saem os atalhos (F1) e, no
+        macOS, ela fica no alto da tela, como em todo programa do sistema. As ações também
+        entram na janela, para os atalhos de teclado valerem com a barra escondida.
+        """
+        self.main_menu = QMenu(_("Menu"), self)
+        self.main_menu.addActions([self.action_new, self.action_open])
+        self.main_menu.addMenu(self.recent_menu)
+        self.main_menu.addActions([self.action_save_as, self.action_export])
+        self.main_menu.addSeparator()
+        for menu in (self.edit_menu, self.arrange_menu, self.view_menu):
+            self.main_menu.addMenu(menu)
+        self.main_menu.addSeparator()
+        self.main_menu.addAction(self.action_preferences)
+        self.main_menu.addMenu(self.help_menu)
+        self.main_menu.addSeparator()
+        self.main_menu.addActions([self.action_close, self.action_quit])
+
+        barra = QToolBar(_("Comandos"), self)
+        barra.setObjectName("barra-comandos")
+        barra.setMovable(False)
+        barra.setFloatable(False)
+        barra.toggleViewAction().setEnabled(False)
+        barra.setIconSize(COMMAND_ICON_SIZE)
+        barra.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.menu_button = QToolButton()
+        self.menu_button.setText(_("Menu"))
+        self.menu_button.setToolTip(_("Menu"))
+        # abre o menu pelo clique, sem `setMenu`: assim o botão não ganha a setinha de menu
+        self.menu_button.clicked.connect(self._show_main_menu)
+        self.menu_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        self.menu_button.setAutoRaise(True)
+        self.menu_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)  # como os outros botões da barra
+        self._menu_button_action = barra.addWidget(self.menu_button)
+        barra.addSeparator()
+        self._command_icons: dict[QAction | QToolButton, str] = {self.menu_button: "menu"}
+        for acao, icone in (
+            (self.action_new, "novo"),
+            (self.action_open, "abrir"),
+            (self.action_save, "salvar"),
+        ):
+            barra.addAction(acao)
+            self._command_icons[acao] = icone
+        self._refresh_command_icons()
+        self.command_bar = barra  # entra na janela em `_restore_layout`, acima da faixa
+
+        if sys.platform == "darwin":
+            self._menu_button_action.setVisible(False)  # a barra do sistema já tem tudo
+        else:
+            self.menuBar().hide()
+            # Sem a barra de menus, Alt sozinho e F10 abrem o Menu, como a barra fazia
+            self.action_main_menu = self._action(_("Menu"), "F10", self._show_main_menu)
+            self.addAction(self.action_main_menu)
+            self._alt_filter = _AltFilter(self)
+            self.view.installEventFilter(self._alt_filter)
+        self.addActions(_menu_actions(self.menuBar()))
+
+    def _show_main_menu(self) -> None:
+        botao = self.menu_button
+        self.main_menu.popup(botao.mapToGlobal(botao.rect().bottomLeft()))
+
+    def _refresh_command_icons(self) -> None:
+        for alvo, nome in self._command_icons.items():
+            alvo.setIcon(command_icon(nome))
+
+    def show_preferences(self) -> PreferencesDialog:
+        dialogo = PreferencesDialog(self)
+        dialogo.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialogo.show()
+        return dialogo
 
     def _build_docks(self) -> None:
         """Painéis acopláveis à direita do desenho (RNF-09)."""
@@ -425,6 +549,7 @@ class DocumentWindow(QMainWindow):
         if tema.name in self.theme_actions:
             self.theme_actions[tema.name].setChecked(True)
         self.tool_strip.refresh_style()
+        self._refresh_command_icons()
         for tool, acao in self._tool_actions.items():
             if tool.kind == "create":
                 acao.setIcon(element_icon(tool.tag))
@@ -747,6 +872,15 @@ class DocumentWindow(QMainWindow):
             self.restoreGeometry(geometria)
         if estado is not None:
             self.restoreState(estado)
+        # Uma disposição salva antes da barra de comandos põe a barra nova ao lado da faixa de
+        # ferramentas. As duas voltam sempre para o lugar: comandos em cima, faixa embaixo.
+        for barra in (self.command_bar, self.tool_bar):
+            self.removeToolBar(barra)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.command_bar)
+        self.addToolBarBreak(Qt.ToolBarArea.TopToolBarArea)
+        self.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.tool_bar)
+        for barra in (self.command_bar, self.tool_bar):
+            barra.show()
 
     def _selection_changed(self) -> None:
         if not shiboken6.isValid(self.diagram_scene) or not shiboken6.isValid(self.inspector):

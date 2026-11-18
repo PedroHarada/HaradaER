@@ -80,7 +80,7 @@ def all_rows(
     barra: QMenuBar, nome_da_ferramenta, *, nativo: bool = True
 ) -> list[tuple[str, str, str]]:
     """(grupo, ação, atalho): os menus, a Edição rápida e o mouse. Sem `nativo`, as teclas saem
-    iguais em qualquer sistema (Ctrl, e não ⌘), como nos manuais."""
+    iguais em qualquer sistema (Ctrl, e não Cmd), como nos manuais."""
     linhas: list[tuple[str, str, str]] = list(menu_shortcuts(barra, nativo=nativo))
     grupo = _("Edição rápida (Editar › Edição rápida)")
     linhas += [(grupo, a, t) for a, t in quick_edit_rows(nome_da_ferramenta)]

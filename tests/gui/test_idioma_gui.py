@@ -34,7 +34,7 @@ def test_janela_em_ingles(qtbot):
     set_language("en")
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&File", "&Edit", "&Arrange", "&View", "&Help"]
+    assert _menus(janela) == ["&File", "&Edit", "Arran&ge", "&View", "&Help"]
     assert janela.report_action.text() == "&Report a problem…"
     assert janela.windowTitle() == "Untitled[*] - HaradaER"
     assert janela.action_save.text() == "&Save"

@@ -95,7 +95,7 @@ QT_TRANSLATIONS = {"pt": "qtbase_pt_BR", "es": "qtbase_es"}
 
 
 def choose_language() -> str:
-    """O idioma escolhido em Exibir › Idioma ou, na primeira vez, o do sistema (RNF-06).
+    """O idioma escolhido nas Preferências ou, na primeira vez, o do sistema (RNF-06).
 
     Vale até fechar o programa: trocar no menu só tem efeito ao reabrir.
     """

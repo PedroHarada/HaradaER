@@ -58,7 +58,7 @@ ES: dict[str, str] = {
     "Abrir &recente": "Abrir &reciente",
     "&Salvar": "&Guardar",
     "Salvar &como...": "Guardar co&mo...",
-    "&Exportar desenho...": "&Exportar dibujo...",
+    "Exportar &desenho...": "Exportar &dibujo...",
     "&Fechar": "&Cerrar",
     "&Sair": "&Salir",
     "Nenhum arquivo recente": "Ningún archivo reciente",
@@ -98,11 +98,9 @@ ES: dict[str, str] = {
     " relacionamento com um participante só...)": "Naranja: lo que la teoría del modelo ER pide"
     " además de los enlaces (entidad sin clave, relación con un solo participante...)",
     "&Grade": "&Cuadrícula",
-    "&Tema": "T&ema",
     "&Claro": "&Claro",
     "&Escuro": "&Oscuro",
     "Do &sistema (qt6ct)": "Del &sistema (qt6ct)",
-    "&Idioma": "&Idioma",
     "Idioma": "Idioma",
     "O idioma muda quando o HaradaER for fechado e aberto de novo.": "El idioma cambia cuando"
     " HaradaER se cierre y se vuelva a abrir.",
@@ -131,8 +129,8 @@ ES: dict[str, str] = {
     "Elemento": "Elemento",
     "Mensagem": "Mensaje",
     "Nenhum problema no modelo.": "Ningún problema en el modelo.",
-    "A verificação está desligada (Exibir › Verificar modelo).": "La verificación está"
-    " desactivada (Ver › Verificar modelo).",
+    "A verificação está desligada (Preferências › Verificação).": "La verificación está"
+    " desactivada (Preferencias › Verificación).",
     "{erros} erro(s), {avisos} aviso(s)": "{erros} error(es), {avisos} aviso(s)",
     "Tipo:": "Tipo:",
     "Nome:": "Nombre:",
@@ -382,9 +380,8 @@ ES: dict[str, str] = {
     "Não foi possível verificar agora ({erro}).": "No se pudo comprobar ahora ({erro}).",
     # Edição rápida
     "Edição rápid&a": "Edición rápid&a",
-    "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (
-        "Atajos de una tecla para las herramientas (E, R, A, G, 1, N, L, H, C, V)"
-    ),
+    "Atalhos de uma tecla para as ferramentas ({teclas})": "Atajos de una tecla para las"
+    " herramientas ({teclas})",
     "Espaço cria um elemento: escolha antes um elemento.": (
         "Espacio crea un elemento: elija antes un elemento."
     ),
@@ -429,4 +426,27 @@ ES: dict[str, str] = {
     ),
     "a instrução SQL do atributo derivado": "la instrucción SQL del atributo derivado",
     "o tipo SQL e a anulabilidade do atributo": "el tipo SQL y la nulabilidad del atributo",
+    # Preferências e barra de comandos
+    "&Preferências…": "Pre&ferencias…",
+    "Preferências": "Preferencias",
+    "Menu": "Menú",
+    "Comandos": "Comandos",
+    "Aparência": "Apariencia",
+    "Tema": "Tema",
+    "Desenho": "Dibujo",
+    "Mostrar a &grade": "Mostrar la &cuadrícula",
+    "Vale quando o HaradaER for fechado e aberto de novo.": (
+        "Se aplica cuando HaradaER se cierre y se vuelva a abrir."
+    ),
+    "Verificação": "Verificación",
+    "Marca em vermelho as conexões que o tipo não aceita.": (
+        "Marca en rojo las conexiones que su tipo no acepta."
+    ),
+    "Edição": "Edición",
+    "Edição rápida": "Edición rápida",
+    "Arquivos": "Archivos",
+    "Arquivos recentes": "Archivos recientes",
+    "Verificar &agora": "Comprobar &ahora",
+    "Você tem a {atual}.": "Usted tiene la {atual}.",
+    "No máximo uma vez por dia, no GitHub.": "Como máximo una vez al día, en GitHub.",
 }

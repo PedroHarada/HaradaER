@@ -58,7 +58,7 @@ EN: dict[str, str] = {
     "Abrir &recente": "Open &recent",
     "&Salvar": "&Save",
     "Salvar &como...": "Save &as...",
-    "&Exportar desenho...": "&Export drawing...",
+    "Exportar &desenho...": "Export &drawing...",
     "&Fechar": "&Close",
     "&Sair": "&Quit",
     "Nenhum arquivo recente": "No recent files",
@@ -75,7 +75,7 @@ EN: dict[str, str] = {
     "Selecionar do &mesmo tipo": "Select same &kind",
     "&Localizar...": "&Find...",
     "Copiar como &imagem": "Copy as &image",
-    "&Organizar": "&Arrange",
+    "&Organizar": "Arran&ge",
     "&Trazer para a frente": "Bring to &front",
     "&Enviar para trás": "Send to &back",
     "A&grupar": "&Group",
@@ -98,11 +98,9 @@ EN: dict[str, str] = {
     " relacionamento com um participante só...)": "Orange: what ER model theory asks for beyond"
     " the links (entity without a key, relationship with a single participant...)",
     "&Grade": "&Grid",
-    "&Tema": "T&heme",
     "&Claro": "&Light",
     "&Escuro": "&Dark",
     "Do &sistema (qt6ct)": "&System (qt6ct)",
-    "&Idioma": "&Language",
     "Idioma": "Language",
     "O idioma muda quando o HaradaER for fechado e aberto de novo.": "The language changes"
     " when HaradaER is closed and opened again.",
@@ -131,8 +129,8 @@ EN: dict[str, str] = {
     "Elemento": "Element",
     "Mensagem": "Message",
     "Nenhum problema no modelo.": "No problems in the model.",
-    "A verificação está desligada (Exibir › Verificar modelo).": "Checking is off"
-    " (View › Check model).",
+    "A verificação está desligada (Preferências › Verificação).": "Checking is off"
+    " (Preferences › Checking).",
     "{erros} erro(s), {avisos} aviso(s)": "{erros} error(s), {avisos} warning(s)",
     "Tipo:": "Kind:",
     "Nome:": "Name:",
@@ -384,9 +382,8 @@ EN: dict[str, str] = {
     "Não foi possível verificar agora ({erro}).": "Couldn't check right now ({erro}).",
     # Edição rápida
     "Edição rápid&a": "Quick edit&ing",
-    "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (
-        "One-key shortcuts for the tools (E, R, A, G, 1, N, L, H, C, V)"
-    ),
+    "Atalhos de uma tecla para as ferramentas ({teclas})": "One-key shortcuts for the tools"
+    " ({teclas})",
     "Espaço cria um elemento: escolha antes um elemento.": (
         "Space creates an element: choose an element first."
     ),
@@ -431,4 +428,27 @@ EN: dict[str, str] = {
     ),
     "a instrução SQL do atributo derivado": "the derived attribute's SQL statement",
     "o tipo SQL e a anulabilidade do atributo": "the attribute's SQL type and nullability",
+    # Preferências e barra de comandos
+    "&Preferências…": "Preference&s…",
+    "Preferências": "Preferences",
+    "Menu": "Menu",
+    "Comandos": "Commands",
+    "Aparência": "Appearance",
+    "Tema": "Theme",
+    "Desenho": "Drawing",
+    "Mostrar a &grade": "Show the &grid",
+    "Vale quando o HaradaER for fechado e aberto de novo.": (
+        "Takes effect when HaradaER is closed and opened again."
+    ),
+    "Verificação": "Checking",
+    "Marca em vermelho as conexões que o tipo não aceita.": (
+        "Marks in red the connections their type doesn't accept."
+    ),
+    "Edição": "Editing",
+    "Edição rápida": "Quick editing",
+    "Arquivos": "Files",
+    "Arquivos recentes": "Recent files",
+    "Verificar &agora": "Check &now",
+    "Você tem a {atual}.": "You have {atual}.",
+    "No máximo uma vez por dia, no GitHub.": "At most once a day, on GitHub.",
 }

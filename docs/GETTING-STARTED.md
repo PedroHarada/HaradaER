@@ -116,16 +116,17 @@ Applications). You can also drag the new version to Applications and choose **Re
 ## After opening
 
 Use is the same on every system. HaradaER starts in the system's language (Portuguese,
-English or Spanish); to change it, use **View › Language** and open the program again. To get started:
+English or Spanish); to change it, use **Preferences › Appearance › Language** (through the Menu button, at the
+left end of the top bar) and open the program again. To get started:
 
 1. Choose **Entity** in the top strip and click the drawing; type the name and press Enter.
 2. Create a **Relationship** and another entity the same way.
 3. Select the relationship and an entity (Ctrl-click; on a Mac, Cmd-click): the connections that
    fit the pair are highlighted in blue in the strip. Click one of them to link the two.
-4. **File › Save** writes an `.xml` that also opens in TerraER 3.14.
+4. **Save**, on the top bar, writes an `.xml` that also opens in TerraER 3.14.
 
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
-without a key attribute. You can turn them off in **View › Structure warnings**.
+without a key attribute. You can turn them off in **Preferences › Checking**.
 
 HaradaER doesn't use TerraER's free connection, which has no meaning in the model. If a file has
 any, they are deleted when it opens, with a notice saying which elements they connected; the file
@@ -153,11 +154,12 @@ show as typed.
 
 Each Enter is a new line.
 
-Found a problem or have an idea? **Help › Report a problem** and **Help › Suggest an
+Found a problem or have an idea? **Menu › Help › Report a problem** and **Menu › Help › Suggest an
 improvement** open the GitHub page already filled in (a GitHub account is needed).
 
 Once a day, when opening, HaradaER checks GitHub for a new version and lets you know; nothing
-is downloaded by itself. To turn it off, uncheck **Help › Check when opening**.
+is downloaded by itself. To turn it off, uncheck
+**Preferences › Updates › Check when opening**.
 
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).
 
@@ -165,7 +167,8 @@ All commands are in [Como usar](../README.md#como-usar), in the README (in Portu
 
 ## Keyboard shortcuts
 
-The same list is in **Help › Keyboard shortcuts** (F1), with search. The one-key shortcuts work
+The same list is in **Help › Keyboard shortcuts** (F1), with search. Alt alone or F10
+opens the Menu button. The one-key shortcuts work
 with **Edit › Quick editing** on (Ctrl+Shift+E, or the button on the status bar). With Select
 active and one element selected, its family letter changes its type (for example, A on an
 attribute makes it a key).
@@ -199,6 +202,7 @@ attribute makes it a key).
 | Find | `Ctrl+F` |
 | Copy as image | `Ctrl+Shift+C` |
 | Quick editing | `Ctrl+Shift+E` |
+| Preferences | `Ctrl+,` |
 
 **Arrange**
 
