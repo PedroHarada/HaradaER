@@ -1,4 +1,4 @@
-"""Cada pacote leva só o manual do próprio sistema, em português e em inglês
+"""Cada pacote leva só o manual do próprio sistema, em português, em inglês e em espanhol
 (packaging/manual_do_sistema.py)."""
 
 import importlib.util
@@ -42,12 +42,19 @@ def test_manuais_com_as_mesmas_secoes():
     }
     assert secoes["pt"] == ["Linux", "Windows", "macOS", "Depois de abrir", "Atalhos do teclado"]
     assert secoes["en"] == ["Linux", "Windows", "macOS", "After opening", "Keyboard shortcuts"]
+    assert secoes["es"] == ["Linux", "Windows", "macOS", "Después de abrir", "Atajos de teclado"]
 
 
 def test_grava_o_manual_em_ingles(tmp_path):
     saida = tmp_path / "GETTING-STARTED.txt"
     assert modulo.main(["x", "linux", str(saida), "en"]) == 0
     assert saida.read_text(encoding="utf-8").startswith("# Getting started")
+
+
+def test_grava_o_manual_em_espanhol(tmp_path):
+    saida = tmp_path / "PRIMEROS-PASOS.txt"
+    assert modulo.main(["x", "linux", str(saida), "es"]) == 0
+    assert saida.read_text(encoding="utf-8").startswith("# Primeros pasos")
 
 
 def test_sem_idioma_e_portugues(tmp_path):

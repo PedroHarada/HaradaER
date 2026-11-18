@@ -2,7 +2,8 @@
 
 Como baixar, abrir e instalar o HaradaER em cada sistema. Este manual só traz o que já funciona
 em cada versão; ele é atualizado conforme o programa for testado em mais lugares. A versão em
-inglês é o [Getting started](GETTING-STARTED.md).
+inglês é o [Getting started](GETTING-STARTED.md), e a em espanhol, o
+[Primeros pasos](PRIMEROS-PASOS.md).
 
 Os arquivos ficam na página **Releases** do repositório, na versão mais recente. Não é preciso
 instalar Python nem nada mais.
@@ -116,7 +117,7 @@ Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolh
 
 ## Depois de abrir
 
-O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português ou inglês);
+O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português, inglês ou espanhol);
 para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
 
 1. Escolha **Entidade** na faixa de cima e clique no desenho; digite o nome e Enter.

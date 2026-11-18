@@ -316,12 +316,13 @@ Tratados em `DiagramView.viewportEvent`, com base no teste feito em Linux/Waylan
 
 ### 5.7 Idiomas (RNF-06)
 
-- Catálogo próprio em `haradaer/i18n/` (D-11), sem Qt, como o `Labels_pt`/`Labels_en` do TerraER. O texto em português é a chave, como no gettext: `_("Salvar")` devolve "Salvar" ou "Save". As traduções ficam em `i18n/en.py`; texto sem tradução sai em português.
+- Catálogo próprio em `haradaer/i18n/` (D-11), sem Qt, como o `Labels_pt`/`Labels_en` do TerraER. O texto em português é a chave, como no gettext: `_("Salvar")` devolve "Salvar", "Save" ou "Guardar". As traduções ficam em `i18n/en.py` e `i18n/es.py`; texto sem tradução sai em português.
 - `N_("...")` marca um texto de tabela criada ao importar (nomes da faixa, avisos, nomes dos passos de desfazer) para ser traduzido só ao mostrar, com `_()`.
-- O idioma é escolhido uma vez, em `gui/app.py` (`choose_language`), antes de criar as janelas: o gravado em Exibir › Idioma ou, na primeira vez, o do sistema (`QLocale`). Trocar no menu grava a escolha e avisa, no idioma novo, que vale ao reabrir. O tradutor `qtbase_pt_BR` dos botões do Qt só é carregado em português.
-- A verificação continua devolvendo códigos (D-09), postos em palavras por `gui/verification.py`. O núcleo usa `_()` em dois lugares: as mensagens de `ArquivoInvalidoError`, que vão direto para a tela, e o nome padrão dos elementos novos (`Entidade` ou `Entity`, `característica` ou `characteristic`), que vai para o arquivo como qualquer nome digitado (RNF-01 não muda).
+- O idioma é escolhido uma vez, em `gui/app.py` (`choose_language`), antes de criar as janelas: o gravado em Exibir › Idioma ou, na primeira vez, o do sistema (`QLocale`). Trocar no menu grava a escolha e avisa, no idioma novo, que vale ao reabrir. O tradutor dos botões do Qt é carregado em português (`qtbase_pt_BR`) e em espanhol (`qtbase_es`); em inglês o Qt já fala a língua dele.
+- A verificação continua devolvendo códigos (D-09), postos em palavras por `gui/verification.py`. O núcleo usa `_()` em dois lugares: as mensagens de `ArquivoInvalidoError`, que vão direto para a tela, e o nome padrão dos elementos novos (`Entidade`, `Entity` ou `Entidad`; `característica` ou `characteristic`), que vai para o arquivo como qualquer nome digitado (RNF-01 não muda).
 - Termos em inglês: os do TerraER (`Labels_en`), exceto "Associative entity" (o TerraER diz "Entity Relationship") e "Multivalued attribute" (o TerraER diz "Multivalue Attribute"), aceitos pelo autor.
-- `tests/test_idioma.py` confere que todo texto marcado tem tradução, que os campos `{...}` e as letras de atalho `&` batem, e procura texto na tela que escapou do `_()`.
+- Termos em espanhol: os da tradução de Elmasri e Navathe ("Entidad débil", "Atributo multivalor", "Clave parcial"), com "Relación" para relacionamento.
+- `tests/test_idioma.py` confere, nos dois catálogos, que todo texto marcado tem tradução, que os campos `{...}` e as letras de atalho `&` batem, e procura texto na tela que escapou do `_()`.
 
 ### 5.8 Relatar e sugerir (RF-21)
 

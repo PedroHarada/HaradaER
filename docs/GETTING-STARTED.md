@@ -2,7 +2,8 @@
 
 How to download, open and install HaradaER on each system. This manual only covers what already
 works in each version; it is updated as the program is tested in more places. The Portuguese
-version is [Primeiros passos](PRIMEIROS-PASSOS.md).
+version is [Primeiros passos](PRIMEIROS-PASSOS.md), and the Spanish one is
+[Primeros pasos](PRIMEROS-PASOS.md).
 
 The files are on the repository's **Releases** page, in the latest version. You don't need to
 install Python or anything else.
@@ -114,8 +115,8 @@ Applications). You can also drag the new version to Applications and choose **Re
 
 ## After opening
 
-Use is the same on every system. HaradaER starts in the system's language (Portuguese or
-English); to change it, use **View › Language** and open the program again. To get started:
+Use is the same on every system. HaradaER starts in the system's language (Portuguese,
+English or Spanish); to change it, use **View › Language** and open the program again. To get started:
 
 1. Choose **Entity** in the top strip and click the drawing; type the name and press Enter.
 2. Create a **Relationship** and another entity the same way.

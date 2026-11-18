@@ -4,6 +4,15 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## Não lançado
+
+### Adicionado
+
+- **Espanhol:** a interface inteira em espanhol, em **Exibir › Idioma › Español** (na primeira
+  vez, vale o idioma do sistema), com os botões e diálogos do Qt também em espanhol e os nomes
+  padrão dos elementos novos no idioma. Manual `docs/PRIMEROS-PASOS.md`, que vai nos pacotes
+  como `PRIMEROS-PASOS.txt`.
+
 ## 1.4.0 — 2026-11-15
 
 ### Adicionado

@@ -17,6 +17,9 @@ from haradaer.i18n import (
     translate,
 )
 from haradaer.i18n.en import EN
+from haradaer.i18n.es import ES
+
+CATALOGOS = {"en": EN, "es": ES}
 
 FONTE = Path(__file__).resolve().parents[1] / "src" / "haradaer"
 
@@ -49,20 +52,27 @@ def _campos(texto: str) -> set[str]:
     return {nome for _, nome, _, _ in string.Formatter().parse(texto) if nome}
 
 
-def test_todo_texto_marcado_tem_traducao():
-    faltando = {t: str(a.relative_to(FONTE)) for t, a in _textos_marcados().items() if t not in EN}
+@pytest.mark.parametrize("codigo", sorted(CATALOGOS))
+def test_todo_texto_marcado_tem_traducao(codigo):
+    catalogo = CATALOGOS[codigo]
+    textos = _textos_marcados().items()
+    faltando = {t: str(a.relative_to(FONTE)) for t, a in textos if t not in catalogo}
     assert faltando == {}
 
 
-def test_catalogo_sem_texto_que_o_programa_nao_usa():
-    assert set(EN) - set(_textos_marcados()) == set()
+@pytest.mark.parametrize("codigo", sorted(CATALOGOS))
+def test_catalogo_sem_texto_que_o_programa_nao_usa(codigo):
+    assert set(CATALOGOS[codigo]) - set(_textos_marcados()) == set()
 
 
-@pytest.mark.parametrize("texto", sorted(EN))
-def test_traducao_tem_os_mesmos_campos(texto):
-    assert _campos(EN[texto]) == _campos(texto)
-    assert EN[texto].count("&") == texto.count("&")  # letra de atalho nos menus
-    assert EN[texto].strip()
+@pytest.mark.parametrize(
+    ("codigo", "texto"), [(c, t) for c, catalogo in sorted(CATALOGOS.items()) for t in catalogo]
+)
+def test_traducao_tem_os_mesmos_campos(codigo, texto):
+    traducao = CATALOGOS[codigo][texto]
+    assert _campos(traducao) == _campos(texto)
+    assert traducao.count("&") == texto.count("&")  # letra de atalho nos menus
+    assert traducao.strip()
 
 
 def test_nenhum_texto_da_tela_sem_traducao():
@@ -101,7 +111,16 @@ def test_traduzir_para_outro_idioma_sem_trocar_o_escolhido():
 
 @pytest.mark.parametrize(
     ("local", "idioma"),
-    [("en_US", "en"), ("en-GB", "en"), ("pt_BR", "pt"), ("de_DE", "pt"), ("C", "pt"), ("", "pt")],
+    [
+        ("en_US", "en"),
+        ("en-GB", "en"),
+        ("es_MX", "es"),
+        ("es-ES", "es"),
+        ("pt_BR", "pt"),
+        ("de_DE", "pt"),
+        ("C", "pt"),
+        ("", "pt"),
+    ],
 )
 def test_idioma_do_sistema(local, idioma):
     assert language_for_locale(local) == idioma

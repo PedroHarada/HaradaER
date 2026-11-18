@@ -85,7 +85,8 @@ está em `docs/REQUISITOS.md` (seção 10).
 ## Documentação
 
 - [Primeiros passos](docs/PRIMEIROS-PASSOS.md): baixar, abrir e instalar em cada sistema
-  (em inglês: [Getting started](docs/GETTING-STARTED.md))
+  (em inglês: [Getting started](docs/GETTING-STARTED.md); em espanhol:
+  [Primeros pasos](docs/PRIMEROS-PASOS.md))
 - [Requisitos](docs/REQUISITOS.md)
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)

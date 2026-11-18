@@ -1,8 +1,8 @@
 """Ajuda › Atalhos do teclado: a lista sai das ações dos menus, então um atalho novo entra nela
 sozinho e segue o idioma da interface. Só a parte da Edição rápida e a do mouse são escritas.
 
-A mesma lista vai para os manuais (`docs/PRIMEIROS-PASSOS.md` e `docs/GETTING-STARTED.md`),
-entre os marcadores `MARK_BEGIN` e `MARK_END`. Para atualizá-los:
+A mesma lista vai para os manuais (`docs/PRIMEIROS-PASSOS.md`, `docs/GETTING-STARTED.md` e
+`docs/PRIMEROS-PASOS.md`), entre os marcadores `MARK_BEGIN` e `MARK_END`. Para atualizá-los:
 `python -m haradaer.gui.shortcuts_dialog`; `tests/gui/test_atalhos_manual.py` falha se ficarem
 diferentes do programa.
 """
@@ -114,7 +114,11 @@ def replace_block(texto: str, bloco: str) -> str:
     return texto[:inicio] + "\n\n" + bloco + "\n" + texto[fim:]
 
 
-MANUALS = {"pt": "docs/PRIMEIROS-PASSOS.md", "en": "docs/GETTING-STARTED.md"}
+MANUALS = {
+    "pt": "docs/PRIMEIROS-PASSOS.md",
+    "en": "docs/GETTING-STARTED.md",
+    "es": "docs/PRIMEROS-PASOS.md",
+}
 
 
 def manual_block(idioma: str) -> str:

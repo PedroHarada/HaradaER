@@ -1,8 +1,9 @@
-"""Idioma da interface (RNF-06): português, o padrão, ou inglês.
+"""Idioma da interface (RNF-06): português, o padrão, inglês ou espanhol.
 
 O texto em português é a própria chave, como no gettext: `_("Salvar")` devolve "Salvar" em
-português e "Save" em inglês. As traduções ficam em `en.py`. Um texto sem tradução sai em
-português; o teste `test_idioma.py` confere que todos os `_("...")` do código têm uma.
+português, "Save" em inglês e "Guardar" em espanhol. As traduções ficam em `en.py` e
+`es.py`. Um texto sem tradução sai em português; o teste `test_idioma.py` confere que todos
+os `_("...")` do código têm uma.
 
 O idioma é escolhido uma vez, ao abrir o programa (`set_language`), antes de criar as janelas;
 trocar no menu só vale ao reabrir. Não importa nada de Qt: o núcleo também usa (RNF-08).
@@ -11,10 +12,11 @@ trocar no menu só vale ao reabrir. Não importa nada de Qt: o núcleo também u
 from __future__ import annotations
 
 from haradaer.i18n.en import EN
+from haradaer.i18n.es import ES
 
 DEFAULT = "pt"
-LANGUAGES = {"pt": "Português", "en": "English"}
-_CATALOGS = {"en": EN}
+LANGUAGES = {"pt": "Português", "en": "English", "es": "Español"}
+_CATALOGS = {"en": EN, "es": ES}
 
 _language = DEFAULT
 

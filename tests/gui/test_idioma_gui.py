@@ -1,10 +1,11 @@
-"""Idioma da interface (RNF-06): a janela em inglês e a troca pelo menu Exibir › Idioma."""
+"""Idioma da interface (RNF-06): a janela em inglês e em espanhol e a troca pelo menu
+Exibir › Idioma."""
 
 import pytest
-from PySide6.QtCore import QLocale
+from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
 from PySide6.QtWidgets import QMessageBox
 
-from haradaer.gui.app import choose_language, install_translator
+from haradaer.gui.app import QT_TRANSLATIONS, choose_language, install_translator
 from haradaer.gui.settings import saved_language, set_saved_language
 from haradaer.gui.window import DocumentWindow
 from haradaer.i18n import language, set_language
@@ -59,8 +60,10 @@ def test_menu_idioma_marca_o_atual(qtbot):
     assert {c: a.isChecked() for c, a in janela.language_actions.items()} == {
         "pt": True,
         "en": False,
+        "es": False,
     }
     assert janela.language_actions["en"].text() == "English"  # cada idioma no próprio nome
+    assert janela.language_actions["es"].text() == "Español"
 
 
 def test_trocar_idioma_grava_e_avisa_no_idioma_novo(qtbot, avisos):
@@ -100,3 +103,41 @@ def test_na_primeira_vez_vale_o_idioma_do_sistema(monkeypatch):
 def test_tradutor_do_qt_so_em_portugues(qapp):
     set_language("en")
     assert not install_translator(qapp)
+
+
+def test_tradutor_do_qt_em_espanhol_existe():
+    pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    assert QTranslator().load(QT_TRANSLATIONS["es"], pasta)
+
+
+def test_janela_em_espanhol(qtbot, monkeypatch):
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Discard)
+    set_language("es")
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert _menus(janela) == ["&Archivo", "&Editar", "&Organizar", "&Ver", "Ay&uda"]
+    no = janela.editor.create("ent", 0, 0)
+    assert no.name == "Entidad"
+
+
+def _letras_repetidas(menu) -> list[str]:
+    vistas: dict[str, str] = {}
+    repetidas = []
+    for acao in menu.actions():
+        if acao.menu() is not None:
+            repetidas += _letras_repetidas(acao.menu())
+        texto = acao.text()
+        if "&" not in texto:
+            continue
+        letra = texto[texto.index("&") + 1].lower()
+        if letra in vistas:
+            repetidas.append(f"{vistas[letra]} / {texto}")
+        vistas[letra] = texto
+    return repetidas
+
+
+def test_menus_em_espanhol_sem_letra_de_atalho_repetida(qtbot):
+    set_language("es")
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert _letras_repetidas(janela.menuBar()) == []

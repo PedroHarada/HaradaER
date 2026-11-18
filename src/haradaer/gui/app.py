@@ -91,6 +91,9 @@ class WindowManager(QObject):
             self.open_path(Path(arquivo))
 
 
+QT_TRANSLATIONS = {"pt": "qtbase_pt_BR", "es": "qtbase_es"}
+
+
 def choose_language() -> str:
     """O idioma escolhido em Exibir › Idioma ou, na primeira vez, o do sistema (RNF-06).
 
@@ -103,13 +106,14 @@ def choose_language() -> str:
 def install_translator(app: QApplication) -> bool:
     """Traduz os textos do próprio Qt (botões Salvar/Descartar/Cancelar, diálogos de arquivo).
 
-    Só em português: em inglês o Qt já fala a língua dele.
+    Em inglês o Qt já fala a língua dele.
     """
-    if language() != "pt":
+    arquivo = QT_TRANSLATIONS.get(language())
+    if arquivo is None:
         return False
     tradutor = QTranslator(app)
     pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
-    if not tradutor.load("qtbase_pt_BR", pasta):
+    if not tradutor.load(arquivo, pasta):
         return False
     return app.installTranslator(tradutor)
 
