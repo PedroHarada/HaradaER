@@ -31,7 +31,7 @@ def _menu(janela) -> QMenu:
 
 def test_sem_selecao_so_colar_e_selecionar_tudo(janela):
     itens = _textos(_menu(janela))
-    assert itens["C&olar"] and itens["Selecionar &tudo"]
+    assert itens["C&olar"] and itens["&Selecionar tudo"]
     assert not itens["&Copiar"] and not itens["E&xcluir"]
     assert "&Alinhar" not in itens
 

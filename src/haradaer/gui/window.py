@@ -227,7 +227,7 @@ class DocumentWindow(QMainWindow):
         # Qt troca Ctrl por Cmd sozinho.
         self.action_close = self._action(_("&Fechar"), None, self.close)
         self.action_close.setShortcuts([QKeySequence("Ctrl+W"), QKeySequence("Ctrl+F4")])
-        self.action_quit = self._action(_("&Sair"), "Ctrl+Q", self._quit)
+        self.action_quit = self._action(_("Sa&ir"), "Ctrl+Q", self._quit)
         arquivo.addActions([self.action_new, self.action_open])
         self.recent_menu = arquivo.addMenu(_("Abrir &recente"))
         self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
@@ -236,7 +236,7 @@ class DocumentWindow(QMainWindow):
         arquivo.addSeparator()
         self.action_export = self._action(_("Exportar &desenho..."), "Ctrl+E", self.export)
         self.action_copy_image = self._action(
-            _("Copiar como &imagem"), "Ctrl+Shift+C", self.copy_image
+            _("Copiar como ima&gem"), "Ctrl+Shift+C", self.copy_image
         )
         arquivo.addActions([self.action_export, self.action_copy_image])
         arquivo.addSeparator()
@@ -266,7 +266,7 @@ class DocumentWindow(QMainWindow):
         editar.addAction(self.action_delete)
         editar.addSeparator()
         self.action_select_all = self._action(
-            _("Selecionar &tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
+            _("&Selecionar tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
         )
         self.action_select_same = self._action(
             # Ctrl+Alt+A, como o "selecionar iguais" do Figma: Ctrl+Shift+A é Desmarcar tudo

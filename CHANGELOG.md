@@ -4,6 +4,14 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## Não lançado
+
+### Corrigido
+
+- Letras de acesso repetidas nos menus (Alt+letra): em Arquivo, Sair passa à letra **I** e
+  Copiar como imagem à **G**; em Editar, Selecionar tudo passa à **S**; em inglês, Duplicate
+  passa à **I**. Um teste confere as letras nos três idiomas.
+
 ## 1.5.1 — 2026-11-19
 
 ### Mudado

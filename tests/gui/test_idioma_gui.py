@@ -150,8 +150,9 @@ def _letras_repetidas(menu) -> list[str]:
     return repetidas
 
 
-def test_menus_em_espanhol_sem_letra_de_atalho_repetida(qtbot):
-    set_language("es")
+@pytest.mark.parametrize("idioma", ["pt", "en", "es"])
+def test_menus_sem_letra_de_atalho_repetida(qtbot, idioma):
+    set_language(idioma)
     janela = DocumentWindow()
     qtbot.addWidget(janela)
     assert _letras_repetidas(janela.menuBar()) == []
