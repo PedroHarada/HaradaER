@@ -175,7 +175,8 @@ Todos los comandos están en [Como usar](../README.md#como-usar), en el README (
 
 ## Atajos de teclado
 
-La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Los atajos de una tecla
+La misma lista está en **Ayuda › Atajos de teclado**, con búsqueda; F1 abre este manual
+(**Ayuda › Manual de HaradaER**). Los atajos de una tecla
 funcionan con la **Edición rápida** activada (Ctrl+Shift+E, el botón de la barra de
 estado o **Configuración › Edición rápida**). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
 (por ejemplo, A en un atributo lo convierte en clave).
@@ -241,7 +242,7 @@ estado o **Configuración › Edición rápida**). Con Seleccionar activo y un e
 
 | Acción | Atajo |
 |---|---|
-| Atajos de teclado | `F1` |
+| Manual de HaradaER | `F1` |
 
 **Edición rápida (Ctrl+Shift+E)**
 

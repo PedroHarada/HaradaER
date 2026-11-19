@@ -171,7 +171,8 @@ Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
 ## Atalhos do teclado
 
-A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Os atalhos de uma tecla
+A mesma lista está em **Ajuda › Atalhos do teclado**, com busca; o F1 abre este manual
+(**Ajuda › Manual do HaradaER**). Os atalhos de uma tecla
 valem com a **Edição rápida** ligada (Ctrl+Shift+E, o botão na barra de status ou
 **Configurações › Edição rápida**).
 Com Selecionar ativo e um elemento selecionado, a letra da família dele troca o tipo (por
@@ -238,7 +239,7 @@ exemplo, A num atributo o faz virar chave).
 
 | Ação | Atalho |
 |---|---|
-| Atalhos do teclado | `F1` |
+| Manual do HaradaER | `F1` |
 
 **Edição rápida (Ctrl+Shift+E)**
 

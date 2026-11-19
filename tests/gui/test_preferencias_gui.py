@@ -172,3 +172,9 @@ def test_menu_configuracoes_como_no_kde(janela):
     assert janela.statusBar().isHidden() and not status_bar_enabled()
     janela.action_show_status.setChecked(True)
     assert status_bar_enabled()
+
+
+def test_ajuda_comeca_pelo_manual_com_f1(janela):
+    assert janela.help_menu.actions()[0] is janela.manual_action
+    assert janela.manual_action.shortcut().toString() in ("F1", "Ctrl+?")
+    assert janela.shortcuts_action.shortcut().isEmpty()

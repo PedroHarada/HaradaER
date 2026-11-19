@@ -169,7 +169,8 @@ All commands are in [Como usar](../README.md#como-usar), in the README (in Portu
 
 ## Keyboard shortcuts
 
-The same list is in **Help › Keyboard shortcuts** (F1), with search. The one-key shortcuts work
+The same list is in **Help › Keyboard shortcuts**, with search; F1 opens this manual
+(**Help › HaradaER Handbook**). The one-key shortcuts work
 with **Quick editing** on (Ctrl+Shift+E, the button on the status bar, or
 **Settings › Quick editing**). With Select
 active and one element selected, its family letter changes its type (for example, A on an
@@ -236,7 +237,7 @@ attribute makes it a key).
 
 | Action | Shortcut |
 |---|---|
-| Keyboard shortcuts | `F1` |
+| HaradaER Handbook | `F1` |
 
 **Quick editing (Ctrl+Shift+E)**
 

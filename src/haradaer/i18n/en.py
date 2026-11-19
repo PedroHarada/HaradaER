@@ -467,4 +467,10 @@ EN: dict[str, str] = {
         " defaults? The language and recent files don't change."
     ),
     "Trocar o &idioma…": "Switch application &language…",
+    "&Manual do HaradaER": "HaradaER &Handbook",
+    "Manual do HaradaER": "HaradaER Handbook",
+    "Buscar no manual…": "Search the handbook…",
+    "&Anterior": "&Previous",
+    "Pró&ximo": "&Next",
+    "{atual} de {total}": "{atual} of {total}",
 }

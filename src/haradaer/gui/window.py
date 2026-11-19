@@ -48,6 +48,7 @@ from haradaer.feedback import REPOSITORIO, Tipo, issue_url, system_description
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
+from haradaer.gui.manual_dialog import ManualDialog, manual_path
 from haradaer.gui.messages import OFF_TEXT, MessagesPanel
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
 from haradaer.gui.preferences_dialog import PreferencesDialog
@@ -71,7 +72,7 @@ from haradaer.gui.settings import (
     window_layout,
 )
 from haradaer.gui.shortcuts import FAMILIES, key_of, next_tool, position
-from haradaer.gui.shortcuts_dialog import ShortcutsDialog
+from haradaer.gui.shortcuts_dialog import MANUALS, ShortcutsDialog
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
@@ -158,6 +159,7 @@ class DocumentWindow(QMainWindow):
         self.setCentralWidget(self.view)
         self.resize(960, 640)
         self._tool_actions: dict[Tool, QAction] = {}
+        self._manual: ManualDialog | None = None
 
         # Zoom que se digita (como no Inkscape): Enter aplica, Esc volta ao valor atual
         self._zoom_field = _ZoomField("100%")
@@ -414,10 +416,12 @@ class DocumentWindow(QMainWindow):
 
         ajuda = self.menuBar().addMenu(_("Aj&uda"))
         self.help_menu = ajuda
-        self.shortcuts_action = self._action(
-            _("Atalhos do &teclado…"), QKeySequence.StandardKey.HelpContents, self.show_shortcuts
+        # Como no menu Ajuda padrão do KDE: o manual primeiro, com F1
+        self.manual_action = self._action(
+            _("&Manual do HaradaER"), QKeySequence.StandardKey.HelpContents, self.open_manual
         )
-        ajuda.addAction(self.shortcuts_action)
+        self.shortcuts_action = self._action(_("Atalhos do &teclado…"), None, self.show_shortcuts)
+        ajuda.addActions([self.manual_action, self.shortcuts_action])
         ajuda.addSeparator()
         self.report_action = ajuda.addAction(_("&Relatar um problema…"))
         self.report_action.triggered.connect(lambda: self._open_issue("bug"))
@@ -1091,6 +1095,25 @@ class DocumentWindow(QMainWindow):
             translate(N_("Idioma"), codigo),
             translate(N_("O idioma muda quando o HaradaER for fechado e aberto de novo."), codigo),
         )
+
+    def open_manual(self) -> ManualDialog | None:
+        """Ajuda › Manual: o manual instalado, numa janela (KDE e Apple). Sem ele no pacote,
+        abre o do repositório no navegador; sem navegador, mostra o endereço para copiar."""
+        if manual_path(language()) is not None:
+            if self._manual is None:
+                self._manual = ManualDialog(self, language())
+            self._manual.show()
+            self._manual.raise_()
+            self._manual.activateWindow()
+            return self._manual
+        url = f"{REPOSITORIO}/blob/main/{MANUALS[language()]}"
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.information(
+                self,
+                _("Abrir no navegador"),
+                _("Não foi possível abrir o navegador. Copie este endereço:") + f"\n\n{url}",
+            )
+        return None
 
     def _open_issue(self, tipo: Tipo) -> None:
         """Abre no navegador a issue já preenchida (RF-21). Sem navegador, mostra o endereço."""

@@ -15,6 +15,11 @@ para mudanças que quebram algo que já funcionava.
 - **Menus mais curtos:** Copiar como imagem fica em Arquivo. Menu **Configurações**, antes de
   Ajuda, como no KDE: Tema, Mostrar faixa de ferramentas, Mostrar barra de status, Verificar
   modelo, Avisos de estrutura, Edição rápida e Preferências.
+- **Ajuda › Manual do HaradaER** (F1; no macOS, Cmd+?), como no KDE e na Apple: o manual vai
+  dentro do pacote e abre numa janela do próprio programa, no idioma escolhido, sem internet,
+  com busca (Ctrl+F; Enter e F3 andam nos resultados) e tamanho do texto (Ctrl++,
+  Ctrl+-, Ctrl+0). Atalhos do teclado continua
+  em Ajuda, sem o F1.
 - **Ajuda › Sobre o HaradaER** (versão, licença e repositório), **Ajuda › Trocar o idioma…**
   (como no KDE; abre as Preferências) e **Exibir › Tela cheia** (F11).
 - **Os mesmos menus nos três sistemas:** no macOS, Preferências, Sobre e Sair ficam nos mesmos

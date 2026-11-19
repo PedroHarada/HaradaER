@@ -466,4 +466,10 @@ ES: dict[str, str] = {
         " archivos recientes no cambian."
     ),
     "Trocar o &idioma…": "Cambiar el idio&ma…",
+    "&Manual do HaradaER": "Ma&nual de HaradaER",
+    "Manual do HaradaER": "Manual de HaradaER",
+    "Buscar no manual…": "Buscar en el manual…",
+    "&Anterior": "&Anterior",
+    "Pró&ximo": "&Siguiente",
+    "{atual} de {total}": "{atual} de {total}",
 }
