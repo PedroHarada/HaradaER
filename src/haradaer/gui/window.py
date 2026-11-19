@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -48,7 +49,7 @@ from haradaer.feedback import REPOSITORIO, Tipo, issue_url, system_description
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
-from haradaer.gui.messages import MessagesPanel
+from haradaer.gui.messages import OFF_TEXT, MessagesPanel
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
 from haradaer.gui.preferences_dialog import PreferencesDialog
 from haradaer.gui.properties import PropertiesPanel
@@ -80,8 +81,8 @@ from haradaer.gui.tool_icons import (
 )
 from haradaer.gui.tool_strip import ToolStrip
 from haradaer.gui.updates import UpdateChecker
-from haradaer.gui.verification import name_of, pairs_text, summary_text
-from haradaer.gui.view import SELECT, DiagramView, Tool
+from haradaer.gui.verification import issue_count, name_of, pairs_text, summary_text
+from haradaer.gui.view import INVALID_COLOR, SELECT, DiagramView, Tool
 from haradaer.i18n import LANGUAGES, N_, _, language, translate
 
 TITLE = "HaradaER"
@@ -102,6 +103,16 @@ _SAVE_ERRORS = {
     errno.ENOSPC: N_("Não há espaço livre no disco."),
     errno.EROFS: N_("O disco é somente leitura."),
 }
+
+
+class _ZoomField(QLineEdit):
+    """Campo do zoom na barra de status: Esc desiste do que foi digitado."""
+
+    def keyPressEvent(self, evento) -> None:  # noqa: N802 (nome do Qt)
+        if evento.key() == Qt.Key.Key_Escape:
+            self.clearFocus()  # `editingFinished` reescreve o zoom atual
+            return
+        super().keyPressEvent(evento)
 
 
 def _menu_actions(barra) -> list[QAction]:
@@ -147,16 +158,24 @@ class DocumentWindow(QMainWindow):
         self.resize(960, 640)
         self._tool_actions: dict[Tool, QAction] = {}
 
-        self._zoom_label = QLabel("100%")
-        self._verification_label = QLabel()  # resumo dos erros e avisos; some sem nenhum
-        self._verification_label.setStyleSheet(f"color: {WARNING_COLOR.name()};")
-        self._verification_label.hide()
-        self.statusBar().addPermanentWidget(self._verification_label)
+        # Zoom que se digita (como no Inkscape): Enter aplica, Esc volta ao valor atual
+        self._zoom_field = _ZoomField("100%")
+        self._zoom_field.setAlignment(Qt.AlignmentFlag.AlignRight)
+        largura = self._zoom_field.fontMetrics().horizontalAdvance("88888%")
+        self._zoom_field.setFixedWidth(largura + 12)
+        self._zoom_field.setToolTip(_("Zoom: digite a porcentagem e tecle Enter"))
+        self._zoom_field.returnPressed.connect(self._zoom_typed)
+        self._zoom_field.editingFinished.connect(lambda: self._show_zoom(self.view.zoom))
+        # Erros e avisos à esquerda, sempre à vista, e o clique abre o painel Mensagens
+        # (como no VS Code); o resumo detalhado fica na dica
+        self.issues_button = QToolButton()
+        self.issues_button.setAutoRaise(True)
+        self.issues_button.clicked.connect(self.show_messages)
         self._recommendation_label = QLabel()
         self._recommendation_label.setStyleSheet("font-weight: bold;")
         self._recommendation_label.hide()
         self.statusBar().addPermanentWidget(self._recommendation_label)  # mensagens não a cobrem
-        self.statusBar().addPermanentWidget(self._zoom_label)
+        self.statusBar().addPermanentWidget(self._zoom_field)
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
         self.view.tool_changed.connect(self._tool_changed)
@@ -172,6 +191,7 @@ class DocumentWindow(QMainWindow):
         self._quick_edit_button.setDefaultAction(self.action_quick_edit)
         self._quick_edit_button.setAutoRaise(True)
         self.statusBar().insertPermanentWidget(0, self._quick_edit_button)
+        self.statusBar().insertPermanentWidget(0, self.issues_button)
         self._quick_edit_toggled(self.action_quick_edit.isChecked())
         self._restore_layout()
         self._attach(Document.new(), None)
@@ -317,7 +337,7 @@ class DocumentWindow(QMainWindow):
         self.action_grid.toggled.connect(self.view.set_grid)
         # Opções com atalho que só ficam nas Preferências; o menu solto só serve à lista do F1
         opcoes = QMenu(_("Preferências"), self)
-        opcoes.addActions([self.action_quick_edit, self.action_grid])
+        opcoes.addActions([self.action_quick_edit])
         self.extra_menus = [opcoes]
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
@@ -349,6 +369,9 @@ class DocumentWindow(QMainWindow):
                 self.messages_dock.toggleViewAction(),
             ]
         )
+        # A grade mostra ou esconde parte da vista: fica em Exibir e nas Preferências (Apple)
+        exibir.insertAction(self.inspector_dock.toggleViewAction(), self.action_grid)
+        exibir.insertSeparator(self.inspector_dock.toggleViewAction())
         exibir.addSeparator()
         # O Qt só tem o atalho padrão de tela cheia em alguns sistemas (no Linux, nenhum): F11
         tela_cheia = QKeySequence.StandardKey.FullScreen
@@ -1006,9 +1029,28 @@ class DocumentWindow(QMainWindow):
         self.diagram_scene.show_issues(problemas)
         self.diagram_scene.show_warnings(avisos)
         self.messages.show_messages(problemas, avisos, ligada)
-        resumo = summary_text(problemas, avisos, display_name)
-        self._verification_label.setText(resumo)
-        self._verification_label.setVisible(bool(resumo))
+        self._show_issue_counts(ligada, problemas, avisos)
+
+    def _show_issue_counts(self, ligada: bool, problemas: list, avisos: list) -> None:
+        botao = self.issues_button
+        if not ligada:
+            botao.setText(_("Verificação desligada"))
+            botao.setToolTip(_(OFF_TEXT))
+            cor = None
+        else:
+            erros = issue_count(len(problemas), N_("erro"), N_("erros"))
+            alertas = issue_count(len(avisos), N_("aviso"), N_("avisos"))
+            botao.setText(f"{erros}  {alertas}")
+            botao.setToolTip(
+                summary_text(problemas, avisos, display_name) or _("Nenhum problema no modelo.")
+            )
+            cor = INVALID_COLOR if problemas else WARNING_COLOR if avisos else None
+        botao.setStyleSheet(f"color: {cor.name()};" if cor is not None else "")
+
+    def show_messages(self) -> None:
+        """Traz o painel Mensagens para a frente, mesmo atrás de outra aba ou fechado."""
+        self.messages_dock.show()
+        self.messages_dock.raise_()
 
     def _language_chosen(self, codigo: str) -> None:
         """Guarda o idioma para a próxima vez que o programa abrir (RNF-06) e avisa, já no
@@ -1117,7 +1159,21 @@ class DocumentWindow(QMainWindow):
         self.setWindowModified(self._editor.history.is_dirty)
 
     def _show_zoom(self, zoom: float) -> None:
-        self._zoom_label.setText(f"{round(zoom * 100)}%")
+        if not self._zoom_field.hasFocus():
+            self._zoom_field.setText(f"{round(zoom * 100)}%")
+
+    def _zoom_typed(self) -> None:
+        """Aplica a porcentagem digitada (137, 137% ou 137,5); um texto inválido volta ao atual."""
+        texto = self._zoom_field.text().replace("%", "").replace(",", ".").strip()
+        try:
+            valor = float(texto)
+        except ValueError:
+            valor = None
+        if valor is not None and valor > 0:
+            self.view.set_zoom(valor / 100)
+        self._zoom_field.clearFocus()
+        self._show_zoom(self.view.zoom)
+        self.view.setFocus()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._editor.history.is_dirty and not self._confirm_discard():

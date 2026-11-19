@@ -227,6 +227,7 @@ estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento se
 | Alejar | `Ctrl+-` |
 | Tamaño real | `Ctrl+0` |
 | Ajustar a la ventana | `Ctrl+9` |
+| Cuadrícula | `Ctrl+'` |
 | Pantalla completa | `F11` |
 
 **Ayuda**
@@ -240,7 +241,6 @@ estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento se
 | Acción | Atajo |
 |---|---|
 | Edición rápida | `Ctrl+Shift+E` |
-| Cuadrícula | `Ctrl+'` |
 
 **Edición rápida (Ctrl+Shift+E)**
 

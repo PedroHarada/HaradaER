@@ -27,8 +27,8 @@ from PySide6.QtWidgets import (
 )
 
 import haradaer
-from haradaer.gui.settings import saved_language
-from haradaer.gui.theme import available_themes
+from haradaer.gui.settings import preferences_tab, saved_language, set_preferences_tab
+from haradaer.gui.theme import LIGHT, available_themes
 from haradaer.i18n import LANGUAGES, _, language
 
 if TYPE_CHECKING:
@@ -87,12 +87,62 @@ class PreferencesDialog(QDialog):
         self.tabs.addTab(self._edicao(janela), _("Edição"))
         self.tabs.addTab(self._arquivos(janela), _("Arquivos"))
         self.tabs.addTab(self._atualizacoes(janela), _("Atualizações"))
+        # Reabre na aba vista por último, com o nome dela no título (guia da Apple)
+        self.tabs.currentChanged.connect(self._tab_changed)
+        self.tabs.setCurrentIndex(min(preferences_tab(), self.tabs.count() - 1))
+        self._tab_changed(self.tabs.currentIndex())
+        self._janela = janela
+        self.restore_button = QPushButton(_("&Restaurar padrões de todas as abas"))
+        self.restore_button.clicked.connect(self._ask_restore)
+        # A confirmação fica na própria janela, sem outra caixa por cima
+        self.confirm_label = QLabel(
+            _("Voltar todas as abas ao padrão? O idioma e os arquivos recentes não mudam.")
+        )
+        self.confirm_label.setWordWrap(True)
+        self.confirm_button = QPushButton(_("Restaurar"))
+        self.confirm_button.clicked.connect(self.restore_defaults)
+        self.cancel_button = QPushButton(_("Cancelar"))
+        self.cancel_button.clicked.connect(self._hide_confirm)
+        self.confirm_row = QWidget()
+        linha = QHBoxLayout(self.confirm_row)
+        linha.setContentsMargins(0, 0, 0, 0)
+        linha.addWidget(self.confirm_label, 1)
+        linha.addWidget(self.confirm_button)
+        linha.addWidget(self.cancel_button)
+        self.confirm_row.hide()
         botoes = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
         botoes.rejected.connect(self.reject)
+        botoes.addButton(self.restore_button, QDialogButtonBox.ButtonRole.ResetRole)
         layout = QVBoxLayout(self)
         layout.addWidget(self.tabs)
+        layout.addWidget(self.confirm_row)
         layout.addWidget(botoes)
-        self.resize(460, 380)
+        self.resize(480, 400)
+
+    def _tab_changed(self, indice: int) -> None:
+        self.setWindowTitle(_("Preferências › {aba}").format(aba=self.tabs.tabText(indice)))
+        set_preferences_tab(indice)
+
+    def _ask_restore(self) -> None:
+        self.confirm_row.show()
+        self.cancel_button.setFocus()
+
+    def _hide_confirm(self) -> None:
+        self.confirm_row.hide()
+
+    def restore_defaults(self) -> None:
+        """Tema claro, grade desligada, verificação e avisos ligados, Edição rápida desligada,
+        painéis à vista e verificação de atualizações ao abrir. Idioma e recentes ficam."""
+        janela = self._janela
+        janela.theme_actions[LIGHT.name].trigger()
+        janela.action_grid.setChecked(False)
+        janela.action_validate.setChecked(True)
+        janela.action_structure.setChecked(True)
+        janela.action_quick_edit.setChecked(False)
+        janela.auto_updates_action.setChecked(True)
+        for dock in (janela.inspector_dock, janela.properties_dock, janela.messages_dock):
+            dock.toggleViewAction().setChecked(True)
+        self._hide_confirm()
 
     def _aparencia(self, janela: DocumentWindow) -> QWidget:
         self.theme_buttons: dict[str, QRadioButton] = {}

@@ -462,4 +462,18 @@ ES: dict[str, str] = {
     "&Janela": "&Ventana",
     "&Minimizar": "&Minimizar",
     "&Zoom": "&Zoom",
+    # Zoom digitado, contagem de erros e Restaurar padrões
+    "Zoom: digite a porcentagem e tecle Enter": "Zoom: escriba el porcentaje y pulse Enter",
+    "erro": "error",
+    "erros": "errores",
+    "aviso": "aviso",
+    "avisos": "avisos",
+    "Verificação desligada": "Verificación desactivada",
+    "&Restaurar padrões de todas as abas": "&Restablecer valores de todas las pestañas",
+    "Voltar todas as abas ao padrão? O idioma e os arquivos recentes não mudam.": (
+        "¿Volver todas las pestañas a los valores predeterminados? El idioma y los archivos"
+        " recientes no cambian."
+    ),
+    "Restaurar": "Restablecer",
+    "Preferências › {aba}": "Preferencias › {aba}",
 }

@@ -21,9 +21,14 @@ para mudanças que quebram algo que já funcionava.
   interrogação, disquete, lixeira, X).
 - **Preferências** (Arquivo › Preferências, Ctrl+,): tema, idioma, grade, verificação, avisos de
   estrutura, Edição rápida, arquivos recentes e atualizações numa janela só, em abas. Tema,
-  Idioma, Verificar modelo, Avisos de estrutura, Verificar ao abrir, Verificar atualizações,
-  Grade e Edição rápida saem dos menus (os atalhos continuam); os painéis ficam nos dois
+  Idioma, Verificar modelo, Avisos de estrutura, Verificar ao abrir, Verificar atualizações e
+  Edição rápida saem dos menus (os atalhos continuam); a Grade e os painéis ficam nos dois
   lugares.
+- **Barra de status:** a contagem de erros e avisos fica sempre à vista, à esquerda, e o clique
+  abre o painel Mensagens; o zoom virou um campo onde se digita a porcentagem (Enter aplica,
+  Esc desiste).
+- **Preferências:** botão Restaurar padrões de todas as abas (o idioma e os recentes não mudam);
+  reabrem na última aba usada, com o nome dela no título. A Grade volta a Exibir.
 - **Botão direito** no desenho com as ações sobre a seleção: recortar, copiar, colar, duplicar,
   excluir, trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar, com o atalho
   ao lado; o que não se aplica fica cinza. Clicar num elemento já selecionado mantém a seleção.

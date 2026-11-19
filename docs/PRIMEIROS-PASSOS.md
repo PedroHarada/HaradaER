@@ -224,6 +224,7 @@ exemplo, A num atributo o faz virar chave).
 | Reduzir | `Ctrl+-` |
 | Tamanho real | `Ctrl+0` |
 | Ajustar à janela | `Ctrl+9` |
+| Grade | `Ctrl+'` |
 | Tela cheia | `F11` |
 
 **Ajuda**
@@ -237,7 +238,6 @@ exemplo, A num atributo o faz virar chave).
 | Ação | Atalho |
 |---|---|
 | Edição rápida | `Ctrl+Shift+E` |
-| Grade | `Ctrl+'` |
 
 **Edição rápida (Ctrl+Shift+E)**
 

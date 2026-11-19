@@ -222,6 +222,7 @@ attribute makes it a key).
 | Zoom out | `Ctrl+-` |
 | Actual size | `Ctrl+0` |
 | Fit to window | `Ctrl+9` |
+| Grid | `Ctrl+'` |
 | Full screen | `F11` |
 
 **Help**
@@ -235,7 +236,6 @@ attribute makes it a key).
 | Action | Shortcut |
 |---|---|
 | Quick editing | `Ctrl+Shift+E` |
-| Grid | `Ctrl+'` |
 
 **Quick editing (Ctrl+Shift+E)**
 

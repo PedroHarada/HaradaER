@@ -80,6 +80,11 @@ def _contagem(n: int, singular: str, plural: str) -> str:
     return f"{n} {_(singular) if n == 1 else _(plural)}"
 
 
+def issue_count(n: int, singular: str, plural: str) -> str:
+    """ "1 erro", "3 avisos": a contagem curta da barra de status."""
+    return _contagem(n, singular, plural)
+
+
 def _lista(nomes: list[str]) -> str:
     if len(nomes) == 1:
         return nomes[0]

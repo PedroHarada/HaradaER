@@ -30,7 +30,6 @@ def test_barra_de_menus_enxuta(janela):
         janela.action_structure,
         janela.auto_updates_action,
         janela.check_updates_action,
-        janela.action_grid,
         janela.action_quick_edit,
         janela.action_preferences,
         janela.action_copy_image,
@@ -40,11 +39,11 @@ def test_barra_de_menus_enxuta(janela):
     assert janela.action_copy_image in janela.file_menu.actions()
     assert janela.action_preferences.shortcut().toString() == "Ctrl+,"
     assert janela.inspector_dock.toggleViewAction() in janela.view_menu.actions()
+    assert janela.action_grid in janela.view_menu.actions()  # parte da vista (Apple)
 
 
 def test_atalhos_das_opcoes_continuam_e_aparecem_no_f1(janela, qtbot):
-    for acao in (janela.action_grid, janela.action_quick_edit):
-        assert acao in janela.actions()
+    assert janela.action_quick_edit in janela.actions()
     dialogo = janela.show_shortcuts()
     qtbot.addWidget(dialogo)
     linhas = dialogo.visible_rows()
@@ -163,3 +162,45 @@ def test_menu_janela_do_macos(janela):
     acoes = janela.window_menu.actions()
     assert janela.action_minimize in acoes and janela.action_zoom_window in acoes
     assert janela.action_minimize.shortcut().toString() == "Ctrl+M"
+
+
+def test_restaurar_padroes_de_todas_as_abas(janela, monkeypatch):
+    from haradaer.gui.settings import saved_language
+    from haradaer.gui.theme import current_theme
+
+    monkeypatch.setattr(QMessageBox, "information", lambda *a: None)
+    janela.theme_actions["escuro"].trigger()
+    janela.action_grid.setChecked(True)
+    janela.action_structure.setChecked(False)
+    janela.action_quick_edit.setChecked(True)
+    janela.auto_updates_action.setChecked(False)
+    janela._language_chosen("es")
+    dialogo = PreferencesDialog(janela)
+    assert "todas as abas" in dialogo.restore_button.text()
+    dialogo.restore_button.click()
+    assert dialogo.confirm_row.isVisibleTo(dialogo)
+    dialogo.confirm_button.click()
+    assert current_theme().name == "claro"
+    assert not janela.action_grid.isChecked()
+    assert janela.action_structure.isChecked()
+    assert not janela.action_quick_edit.isChecked()
+    assert janela.auto_updates_action.isChecked()
+    assert saved_language() == "es"  # o idioma não muda
+    assert not dialogo.confirm_row.isVisibleTo(dialogo)
+
+
+def test_cancelar_nao_restaura(janela):
+    janela.action_grid.setChecked(True)
+    dialogo = PreferencesDialog(janela)
+    dialogo.restore_button.click()
+    dialogo.cancel_button.click()
+    assert janela.action_grid.isChecked()
+
+
+def test_preferencias_reabrem_na_ultima_aba_com_o_nome_no_titulo(janela):
+    dialogo = PreferencesDialog(janela)
+    dialogo.tabs.setCurrentIndex(2)
+    assert dialogo.windowTitle() == "Preferências › Edição"
+    outro = PreferencesDialog(janela)
+    assert outro.tabs.currentIndex() == 2
+    outro.tabs.setCurrentIndex(0)

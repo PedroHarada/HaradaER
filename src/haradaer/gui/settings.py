@@ -18,6 +18,7 @@ QUICK_EDIT_KEY = "edicao/edicao-rapida"
 LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
+PREFERENCES_TAB_KEY = "preferencias/aba"
 
 
 def settings() -> QSettings:
@@ -123,4 +124,18 @@ def last_update_check() -> str | None:
 def set_last_update_check(dia: str) -> None:
     config = settings()
     config.setValue(LAST_CHECK_KEY, dia)
+    config.sync()
+
+
+def preferences_tab() -> int:
+    """A aba das Preferências vista por último, para reabrir nela (guia da Apple)."""
+    try:
+        return int(settings().value(PREFERENCES_TAB_KEY, 0))
+    except TypeError, ValueError:
+        return 0
+
+
+def set_preferences_tab(indice: int) -> None:
+    config = settings()
+    config.setValue(PREFERENCES_TAB_KEY, indice)
     config.sync()

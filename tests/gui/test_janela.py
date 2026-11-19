@@ -67,11 +67,31 @@ def test_zoom_aparece_na_barra_de_status(qtbot, referencia):
     qtbot.addWidget(janela)
     janela.load(referencia / "amostra-basica.xml")
     janela.action_zoom_in.trigger()
-    assert janela._zoom_label.text() == "125%"
+    assert janela._zoom_field.text() == "125%"
     janela.action_zoom_actual.trigger()
-    assert janela._zoom_label.text() == "100%"
+    assert janela._zoom_field.text() == "100%"
     janela.action_zoom_out.trigger()
-    assert janela._zoom_label.text() == "80%"
+    assert janela._zoom_field.text() == "80%"
+
+
+@pytest.mark.parametrize(
+    ("digitado", "esperado"), [("137", 1.37), ("137%", 1.37), ("62,5", 0.625), ("abc", 1.0)]
+)
+def test_zoom_digitado(qtbot, digitado, esperado):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela._zoom_field.setText(digitado)
+    janela._zoom_field.returnPressed.emit()
+    assert janela.view.zoom == pytest.approx(esperado)
+    assert janela._zoom_field.text() == f"{round(esperado * 100)}%"
+
+
+def test_zoom_digitado_respeita_os_limites(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela._zoom_field.setText("99999")
+    janela._zoom_field.returnPressed.emit()
+    assert janela._zoom_field.text() == "2000%"
 
 
 def test_uma_janela_por_documento(gerenciador, referencia):
