@@ -350,8 +350,12 @@ class DocumentWindow(QMainWindow):
             ]
         )
         exibir.addSeparator()
+        # O Qt só tem o atalho padrão de tela cheia em alguns sistemas (no Linux, nenhum): F11
+        tela_cheia = QKeySequence.StandardKey.FullScreen
         self.action_full_screen = self._action(
-            _("Tela c&heia"), QKeySequence.StandardKey.FullScreen, self._toggle_full_screen
+            _("Tela c&heia"),
+            tela_cheia if QKeySequence.keyBindings(tela_cheia) else "F11",
+            self._toggle_full_screen,
         )
         self.action_full_screen.setCheckable(True)
         exibir.addAction(self.action_full_screen)

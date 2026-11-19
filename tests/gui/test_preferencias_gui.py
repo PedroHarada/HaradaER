@@ -150,7 +150,7 @@ def test_tela_cheia_em_exibir(janela):
     acao = janela.action_full_screen
     assert acao in janela.view_menu.actions()
     assert acao.isCheckable()
-    assert not acao.shortcut().isEmpty()
+    assert not acao.shortcut().isEmpty()  # F11 onde o sistema não tem atalho padrão
 
 
 @pytest.mark.skipif(sys.platform == "darwin", reason="no macOS o menu Janela existe")
