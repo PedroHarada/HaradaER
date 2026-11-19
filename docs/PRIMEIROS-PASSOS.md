@@ -205,17 +205,18 @@ exemplo, A num atributo o faz virar chave).
 | Duplicar | `Ctrl+D` |
 | Excluir | `Del` |
 | Selecionar tudo | `Ctrl+A` |
-| Selecionar do mesmo tipo | `Ctrl+Shift+A` |
+| Desmarcar tudo | `Ctrl+Shift+A` |
+| Selecionar do mesmo tipo | `Ctrl+Alt+A` |
 | Localizar | `Ctrl+F` |
 
 **Organizar**
 
 | Ação | Atalho |
 |---|---|
-| Trazer para a frente | `Ctrl+]` |
-| Enviar para trás | `Ctrl+[` |
-| Agrupar | `Ctrl+G` |
-| Desagrupar | `Ctrl+Shift+G` |
+| Trazer para a frente | `Home` `Ctrl+Alt+Shift+F` |
+| Enviar para trás | `End` `Ctrl+Alt+Shift+B` |
+| Agrupar | `Ctrl+Alt+G` |
+| Desagrupar | `Ctrl+Alt+Shift+G` |
 
 **Exibir**
 

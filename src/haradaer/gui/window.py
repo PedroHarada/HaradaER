@@ -269,9 +269,16 @@ class DocumentWindow(QMainWindow):
             _("Selecionar &tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
         )
         self.action_select_same = self._action(
-            _("Selecionar do &mesmo tipo"), "Ctrl+Shift+A", self._select_same_kind
+            # Ctrl+Alt+A, como o "selecionar iguais" do Figma: Ctrl+Shift+A é Desmarcar tudo
+            # na Apple e no KDE
+            _("Selecionar do &mesmo tipo"),
+            "Ctrl+Alt+A",
+            self._select_same_kind,
         )
-        editar.addActions([self.action_select_all, self.action_select_same])
+        self.action_deselect = self._action(
+            _("D&esmarcar tudo"), "Ctrl+Shift+A", self.diagram_scene.clearSelection
+        )
+        editar.addActions([self.action_select_all, self.action_deselect, self.action_select_same])
         editar.addSeparator()
         self.action_find = self._action(
             _("&Localizar..."), QKeySequence.StandardKey.Find, self._find
@@ -289,12 +296,23 @@ class DocumentWindow(QMainWindow):
 
         organizar = self.menuBar().addMenu(_("&Organizar"))  # e também no botão direito
         self.arrange_menu = organizar
-        self.action_front = self._action(_("&Trazer para a frente"), "Ctrl+]", self._bring_to_front)
-        self.action_back = self._action(_("&Enviar para trás"), "Ctrl+[", self._send_to_back)
+        # Atalhos iguais nos três sistemas, sem colidir com a Apple nem com o KDE (2026-11-19):
+        # Home e End, como no Inkscape (Fn+setas nos notebooks e no Mac), e uma combinação de
+        # letras para teclados sem nenhum jeito de mandar Home e End. Só valem no desenho: num
+        # campo de texto, Home e End continuam indo ao começo e ao fim da linha.
+        self.action_front = self._action(_("&Trazer para a frente"), None, self._bring_to_front)
+        self.action_front.setShortcuts([QKeySequence("Home"), QKeySequence("Ctrl+Alt+Shift+F")])
+        self.action_back = self._action(_("&Enviar para trás"), None, self._send_to_back)
+        self.action_back.setShortcuts([QKeySequence("End"), QKeySequence("Ctrl+Alt+Shift+B")])
+        for acao in (self.action_front, self.action_back):
+            acao.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            acao.setProperty("todos_os_atalhos", True)  # a lista do F1 mostra os dois
+            self.view.addAction(acao)
         organizar.addActions([self.action_front, self.action_back])
         organizar.addSeparator()
-        self.action_group = self._action(_("A&grupar"), "Ctrl+G", self.group)
-        self.action_ungroup = self._action(_("&Desagrupar"), "Ctrl+Shift+G", self.ungroup)
+        # Como no Keynote e no Pages: Ctrl+G e Ctrl+Shift+G são buscar o próximo e o anterior
+        self.action_group = self._action(_("A&grupar"), "Ctrl+Alt+G", self.group)
+        self.action_ungroup = self._action(_("&Desagrupar"), "Ctrl+Alt+Shift+G", self.ungroup)
         organizar.addActions([self.action_group, self.action_ungroup])
         organizar.addSeparator()
         alinhar = organizar.addMenu(_("&Alinhar"))
@@ -329,7 +347,7 @@ class DocumentWindow(QMainWindow):
         self.action_validate.setCheckable(True)
         self.action_validate.setChecked(True)
         self.action_validate.toggled.connect(self._refresh_issues)
-        self.action_structure = QAction(_("&Avisos de estrutura"), self)
+        self.action_structure = QAction(_("Avisos de &estrutura"), self)
         self.action_structure.setCheckable(True)
         self.action_structure.setChecked(structure_warnings_enabled())
         self.action_structure.setToolTip(

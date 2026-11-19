@@ -93,7 +93,7 @@ EN: dict[str, str] = {
     "&Tamanho real": "&Actual size",
     "A&justar à janela": "&Fit to window",
     "&Verificar modelo": "&Check model",
-    "&Avisos de estrutura": "&Structure warnings",
+    "Avisos de &estrutura": "St&ructure warnings",
     "Laranja: o que a teoria do modelo ER pede além das ligações (entidade sem chave,"
     " relacionamento com um participante só...)": "Orange: what ER model theory asks for beyond"
     " the links (entity without a key, relationship with a single participant...)",
@@ -473,4 +473,5 @@ EN: dict[str, str] = {
     "&Anterior": "&Previous",
     "Pró&ximo": "&Next",
     "{atual} de {total}": "{atual} of {total}",
+    "D&esmarcar tudo": "Dese&lect all",
 }

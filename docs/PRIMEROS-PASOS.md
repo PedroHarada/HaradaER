@@ -208,17 +208,18 @@ estado o **Configuración › Edición rápida**). Con Seleccionar activo y un e
 | Duplicar | `Ctrl+D` |
 | Eliminar | `Del` |
 | Seleccionar todo | `Ctrl+A` |
-| Seleccionar del mismo tipo | `Ctrl+Shift+A` |
+| Deseleccionar todo | `Ctrl+Shift+A` |
+| Seleccionar del mismo tipo | `Ctrl+Alt+A` |
 | Buscar | `Ctrl+F` |
 
 **Organizar**
 
 | Acción | Atajo |
 |---|---|
-| Traer al frente | `Ctrl+]` |
-| Enviar al fondo | `Ctrl+[` |
-| Agrupar | `Ctrl+G` |
-| Desagrupar | `Ctrl+Shift+G` |
+| Traer al frente | `Home` `Ctrl+Alt+Shift+F` |
+| Enviar al fondo | `End` `Ctrl+Alt+Shift+B` |
+| Agrupar | `Ctrl+Alt+G` |
+| Desagrupar | `Ctrl+Alt+Shift+G` |
 
 **Ver**
 

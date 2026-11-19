@@ -203,17 +203,18 @@ attribute makes it a key).
 | Duplicate | `Ctrl+D` |
 | Delete | `Del` |
 | Select all | `Ctrl+A` |
-| Select same kind | `Ctrl+Shift+A` |
+| Deselect all | `Ctrl+Shift+A` |
+| Select same kind | `Ctrl+Alt+A` |
 | Find | `Ctrl+F` |
 
 **Arrange**
 
 | Action | Shortcut |
 |---|---|
-| Bring to front | `Ctrl+]` |
-| Send to back | `Ctrl+[` |
-| Group | `Ctrl+G` |
-| Ungroup | `Ctrl+Shift+G` |
+| Bring to front | `Home` `Ctrl+Alt+Shift+F` |
+| Send to back | `End` `Ctrl+Alt+Shift+B` |
+| Group | `Ctrl+Alt+G` |
+| Ungroup | `Ctrl+Alt+Shift+G` |
 
 **View**
 

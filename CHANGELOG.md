@@ -4,6 +4,22 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## Não lançado
+
+### Mudado
+
+- **Atalhos que colidiam com os padrões da Apple e do KDE**, agora iguais nos três sistemas:
+  Agrupar **Ctrl+Alt+G** e Desagrupar **Ctrl+Alt+Shift+G** (como no Keynote e no Pages);
+  Trazer para a frente **Home** e Enviar para trás **End** (como no Inkscape; também
+  Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B, para teclados sem Home e End); Selecionar do mesmo
+  tipo **Ctrl+Alt+A** (como o "selecionar iguais" do Figma). No macOS, Ctrl é Cmd e Alt é
+  Option.
+
+### Adicionado
+
+- **Editar › Desmarcar tudo** (Ctrl+Shift+A), o atalho padrão da Apple e do KDE.
+- Teste que confere os atalhos contra os reservados pela Apple e pelo KDE.
+
 ## 1.5.0 — 2026-11-19
 
 ### Adicionado

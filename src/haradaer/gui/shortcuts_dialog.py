@@ -55,9 +55,10 @@ def menu_shortcuts(
                 pilha[0:0] = acao.menu().actions()
                 continue
             formato = QKeySequence.SequenceFormat
-            atalho = acao.shortcut().toString(
-                formato.NativeText if nativo else formato.PortableText
-            )
+            tipo = formato.NativeText if nativo else formato.PortableText
+            # só o primeiro atalho, salvo quando a ação pede todos (Home e a combinação de letras)
+            teclas = acao.shortcuts() if acao.property("todos_os_atalhos") else [acao.shortcut()]
+            atalho = ", ".join(t.toString(tipo) for t in teclas if not t.isEmpty())
             if atalho:
                 linhas.append((_plain(menu.title()), _plain(acao.text()), atalho))
     return linhas

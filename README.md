@@ -39,7 +39,8 @@ cp docs/referencia-terraer/criados-no-haradaer/todos-os-tipos.xml /tmp/
 | Excluir | Delete (leva junto as conexões ligadas) |
 | Copiar, recortar, colar | Ctrl+C, Ctrl+X, Ctrl+V (também de uma janela para outra); as conexões vão junto quando os dois elementos ligados são copiados |
 | Duplicar | Ctrl+D |
-| Agrupar e desagrupar | Ctrl+G e Ctrl+Shift+G (as conexões continuam ligadas aos elementos de dentro) |
+| Agrupar e desagrupar | Ctrl+Alt+G e Ctrl+Alt+Shift+G (as conexões continuam ligadas aos elementos de dentro) |
+| Trazer para a frente e enviar para trás | Home e End, com o desenho em foco (ou Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B) |
 | Desfazer e refazer | Ctrl+Z e Ctrl+Shift+Z |
 
 **Linhas das conexões** (com a conexão selecionada)
