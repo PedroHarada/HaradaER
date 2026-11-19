@@ -13,6 +13,17 @@ def referencia() -> Path:
 
 
 @pytest.fixture(autouse=True)
+def manuais_do_repositorio(monkeypatch):
+    """Os manuais de `docs/` valem nos testes mesmo com o HaradaER instalado pelo pip."""
+    try:
+        from haradaer.gui import manual_dialog
+    except ImportError:  # sem PySide6
+        return
+    docs = Path(__file__).resolve().parents[1] / "docs"
+    monkeypatch.setattr(manual_dialog, "MANUAL_DIRS", [*manual_dialog.MANUAL_DIRS, docs])
+
+
+@pytest.fixture(autouse=True)
 def idioma_portugues():
     """Todo teste começa e termina em português, o padrão, qualquer que seja o do sistema."""
     from haradaer.i18n import set_language

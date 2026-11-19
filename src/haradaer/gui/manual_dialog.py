@@ -40,12 +40,18 @@ MANUAL_FILES = {
 }
 
 
+_PACOTE = Path(haradaer.__file__).parent
+# Onde procurar os manuais: no pacote (`haradaer/manuais`, posto pelo PyInstaller) ou, rodando
+# do código, em `docs/`. Os testes acrescentam a pasta `docs/` do repositório, para valerem
+# também com o HaradaER instalado pelo pip (como no workflow de versão).
+MANUAL_DIRS: list[Path] = [_PACOTE / "manuais", _PACOTE.parents[1] / "docs"]
+
+
 def manual_path(idioma: str) -> Path | None:
-    """O manual do idioma: no pacote (`haradaer/manuais`, posto pelo PyInstaller) ou, rodando
-    do código, em `docs/`. `None` se não estiver em nenhum dos dois."""
+    """O manual do idioma, na primeira pasta de `MANUAL_DIRS` que o tiver; `None` se não estiver
+    em nenhuma."""
     nome = MANUAL_FILES.get(idioma, MANUAL_FILES["pt"])
-    pacote = Path(haradaer.__file__).parent
-    for pasta in (pacote / "manuais", pacote.parents[1] / "docs"):
+    for pasta in MANUAL_DIRS:
         if (pasta / nome).is_file():
             return pasta / nome
     return None

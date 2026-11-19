@@ -2,6 +2,7 @@
 
 import pytest
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QMessageBox
 
 from haradaer.gui.preferences_dialog import PreferencesDialog
@@ -42,7 +43,8 @@ def test_atalhos_das_opcoes_aparecem_no_f1(janela, qtbot):
     dialogo = janela.show_shortcuts()
     qtbot.addWidget(dialogo)
     linhas = dialogo.visible_rows()
-    assert ("Grade", "Ctrl+'") in linhas
+    grade = QKeySequence("Ctrl+'").toString(QKeySequence.SequenceFormat.NativeText)
+    assert ("Grade", grade) in linhas  # "Ctrl+'", ou "⌘'" no macOS
     assert any(acao == "Edição rápida" for acao, _tecla in linhas)
 
 

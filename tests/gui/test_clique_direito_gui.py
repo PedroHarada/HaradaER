@@ -1,7 +1,7 @@
 """Botão direito no desenho: as ações sobre a seleção (o antigo menu Organizar e a edição)."""
 
 import pytest
-from PySide6.QtGui import QContextMenuEvent
+from PySide6.QtGui import QContextMenuEvent, QKeySequence
 from PySide6.QtWidgets import QMenu
 
 from haradaer.gui.view import figure_box
@@ -63,7 +63,8 @@ def test_atalho_escrito_ao_lado(janela):
     janela.diagram_scene.select_only(no)
     menu = _menu(janela)
     copiar = next(a for a in menu.actions() if a.text().startswith("&Copiar"))
-    assert copiar.text().endswith("\tCtrl+C")
+    tecla = QKeySequence("Ctrl+C").toString(QKeySequence.SequenceFormat.NativeText)
+    assert copiar.text().endswith(f"\t{tecla}")  # "Ctrl+C", ou "⌘C" no macOS
 
 
 def test_acao_do_menu_age_na_selecao(janela):
