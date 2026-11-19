@@ -116,7 +116,7 @@ Applications). You can also drag the new version to Applications and choose **Re
 ## After opening
 
 Use is the same on every system. HaradaER starts in the system's language (Portuguese,
-English or Spanish); to change it, use **File › Preferences › Appearance › Language** and open the program again. To get started:
+English or Spanish); to change it, use **Settings › Preferences** and open the program again. To get started:
 
 1. Choose **Entity** in the top strip and click the drawing; type the name and press Enter.
 2. Create a **Relationship** and another entity the same way.
@@ -128,7 +128,7 @@ Right-clicking the drawing or the selection shows copy, paste, duplicate, delete
 (front and back), group and align.
 
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
-without a key attribute. You can turn them off in **File › Preferences › Checking**.
+without a key attribute. You can turn them off in **Settings › Structure warnings**.
 
 HaradaER doesn't use TerraER's free connection, which has no meaning in the model. If a file has
 any, they are deleted when it opens, with a notice saying which elements they connected; the file
@@ -161,7 +161,7 @@ improvement** open the GitHub page already filled in (a GitHub account is needed
 
 Once a day, when opening, HaradaER checks GitHub for a new version and lets you know; nothing
 is downloaded by itself. To turn it off, uncheck
-**File › Preferences › Updates › Check when opening**.
+**Settings › Preferences › Check when opening**.
 
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).
 
@@ -171,7 +171,7 @@ All commands are in [Como usar](../README.md#como-usar), in the README (in Portu
 
 The same list is in **Help › Keyboard shortcuts** (F1), with search. The one-key shortcuts work
 with **Quick editing** on (Ctrl+Shift+E, the button on the status bar, or
-**Preferences › Editing**). With Select
+**Settings › Quick editing**). With Select
 active and one element selected, its family letter changes its type (for example, A on an
 attribute makes it a key).
 
@@ -187,15 +187,15 @@ attribute makes it a key).
 | Save as | `Ctrl+Shift+S` |
 | Export drawing | `Ctrl+E` |
 | Copy as image | `Ctrl+Shift+C` |
-| Preferences | `Ctrl+,` |
-| Close | `Ctrl+F4` |
+| Close | `Ctrl+W` |
+| Quit | `Ctrl+Q` |
 
 **Edit**
 
 | Action | Shortcut |
 |---|---|
 | Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Y` |
+| Redo | `Ctrl+Shift+Z` |
 | Cut | `Ctrl+X` |
 | Copy | `Ctrl+C` |
 | Paste | `Ctrl+V` |
@@ -225,17 +225,18 @@ attribute makes it a key).
 | Grid | `Ctrl+'` |
 | Full screen | `F11` |
 
+**Settings**
+
+| Action | Shortcut |
+|---|---|
+| Quick editing | `Ctrl+Shift+E` |
+| Preferences | `Ctrl+,` |
+
 **Help**
 
 | Action | Shortcut |
 |---|---|
 | Keyboard shortcuts | `F1` |
-
-**Preferences**
-
-| Action | Shortcut |
-|---|---|
-| Quick editing | `Ctrl+Shift+E` |
 
 **Quick editing (Ctrl+Shift+E)**
 

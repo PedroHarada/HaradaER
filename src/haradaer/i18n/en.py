@@ -129,8 +129,6 @@ EN: dict[str, str] = {
     "Elemento": "Element",
     "Mensagem": "Message",
     "Nenhum problema no modelo.": "No problems in the model.",
-    "A verificação está desligada (Preferências › Verificação).": "Checking is off"
-    " (Preferences › Checking).",
     "{erros} erro(s), {avisos} aviso(s)": "{erros} error(s), {avisos} warning(s)",
     "Tipo:": "Kind:",
     "Nome:": "Name:",
@@ -394,8 +392,6 @@ EN: dict[str, str] = {
     "Atalhos do teclado": "Keyboard shortcuts",
     "Buscar atalho…": "Search shortcuts…",
     "Edição rápida (Ctrl+Shift+E)": "Quick editing (Ctrl+Shift+E)",
-    "Atalho: {tecla}": "Shortcut: {tecla}",
-    "Painéis": "Panels",
     "Ação": "Action",
     "Trocar o tipo do elemento selecionado (com Selecionar)": (
         "Change the selected element's type (with Select)"
@@ -433,21 +429,9 @@ EN: dict[str, str] = {
     # Preferências e barra de comandos
     "&Preferências…": "Preference&s…",
     "Preferências": "Preferences",
-    "Aparência": "Appearance",
-    "Tema": "Theme",
-    "Desenho": "Drawing",
-    "Mostrar a &grade": "Show the &grid",
     "Vale quando o HaradaER for fechado e aberto de novo.": (
         "Takes effect when HaradaER is closed and opened again."
     ),
-    "Verificação": "Checking",
-    "Marca em vermelho as conexões que o tipo não aceita.": (
-        "Marks in red the connections their type doesn't accept."
-    ),
-    "Edição": "Editing",
-    "Edição rápida": "Quick editing",
-    "Arquivos": "Files",
-    "Arquivos recentes": "Recent files",
     "Verificar &agora": "Check &now",
     "Você tem a {atual}.": "You have {atual}.",
     "No máximo uma vez por dia, no GitHub.": "At most once a day, on GitHub.",
@@ -461,9 +445,6 @@ EN: dict[str, str] = {
         "Free software, under the GNU GPL version 3 license."
     ),
     "Tela c&heia": "Full &screen",
-    "&Janela": "&Window",
-    "&Minimizar": "&Minimize",
-    "&Zoom": "&Zoom",
     # Zoom digitado, contagem de erros e Restaurar padrões
     "Zoom: digite a porcentagem e tecle Enter": "Zoom: type the percentage and press Enter",
     "erro": "error",
@@ -471,10 +452,19 @@ EN: dict[str, str] = {
     "aviso": "warning",
     "avisos": "warnings",
     "Verificação desligada": "Checking off",
-    "&Restaurar padrões de todas as abas": "&Restore defaults for all tabs",
-    "Voltar todas as abas ao padrão? O idioma e os arquivos recentes não mudam.": (
-        "Reset all tabs to the defaults? The language and recent files don't change."
-    ),
     "Restaurar": "Restore",
-    "Preferências › {aba}": "Preferences › {aba}",
+    "&Configurações": "&Settings",
+    "&Tema": "T&heme",
+    "Mostrar &faixa de ferramentas": "Show &tool strip",
+    "Mostrar &barra de status": "Show status &bar",
+    "&Restaurar todos os padrões": "&Restore all defaults",
+    "A verificação está desligada (Configurações › Verificar modelo).": (
+        "Checking is off (Settings › Check model)."
+    ),
+    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
+    " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam.": (
+        "Reset the theme, bars, grid, panels, checking, Quick editing and updates to the"
+        " defaults? The language and recent files don't change."
+    ),
+    "Trocar o &idioma…": "Switch application &language…",
 }

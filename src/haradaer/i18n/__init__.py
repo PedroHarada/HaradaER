@@ -16,6 +16,7 @@ from haradaer.i18n.es import ES
 
 DEFAULT = "pt"
 LANGUAGES = {"pt": "Português", "en": "English", "es": "Español"}
+LOCALES = {"pt": "pt_BR", "en": "en_US", "es": "es_ES"}  # o idioma, para o Qt (QLocale)
 _CATALOGS = {"en": EN, "es": ES}
 
 _language = DEFAULT
@@ -25,6 +26,16 @@ def language_for_locale(nome: str) -> str:
     """O idioma para um local do sistema ("en_US" -> "en"); o padrão para os outros."""
     codigo = nome.split("_")[0].split("-")[0].lower()
     return codigo if codigo in LANGUAGES else DEFAULT
+
+
+def language_for_locales(nomes: list[str]) -> str:
+    """O primeiro idioma conhecido de uma lista em ordem de preferência ("de-DE", "es-MX" ->
+    "es"); o padrão se nenhum for conhecido."""
+    for nome in nomes:
+        codigo = nome.split("_")[0].split("-")[0].lower()
+        if codigo in LANGUAGES:
+            return codigo
+    return DEFAULT
 
 
 def set_language(codigo: str) -> None:

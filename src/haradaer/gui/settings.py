@@ -18,7 +18,7 @@ QUICK_EDIT_KEY = "edicao/edicao-rapida"
 LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
-PREFERENCES_TAB_KEY = "preferencias/aba"
+STATUS_BAR_KEY = "janela/barra-de-status"
 
 
 def settings() -> QSettings:
@@ -72,7 +72,7 @@ def window_layout() -> tuple[QByteArray | None, QByteArray | None]:
 
 
 def structure_warnings_enabled() -> bool:
-    """Os avisos de estrutura (Preferências › Verificação) começam ligados."""
+    """Os avisos de estrutura (Configurações › Avisos de estrutura) começam ligados."""
     return str(settings().value(STRUCTURE_KEY, "true")).lower() == "true"
 
 
@@ -83,7 +83,7 @@ def set_structure_warnings_enabled(ligado: bool) -> None:
 
 
 def quick_edit_enabled() -> bool:
-    """A Edição rápida (Preferências › Edição, ou Ctrl+Shift+E) começa desligada."""
+    """A Edição rápida (Configurações › Edição rápida, Ctrl+Shift+E) começa desligada."""
     return str(settings().value(QUICK_EDIT_KEY, "false")).lower() == "true"
 
 
@@ -94,7 +94,8 @@ def set_quick_edit_enabled(ligado: bool) -> None:
 
 
 def saved_language() -> str | None:
-    """O idioma escolhido em Preferências › Aparência (RNF-06); `None` se nunca foi escolhido."""
+    """O idioma escolhido em Configurações › Preferências (RNF-06); `None` se nunca foi
+    escolhido."""
     valor = settings().value(LANGUAGE_KEY)
     return str(valor) if valor else None
 
@@ -127,15 +128,12 @@ def set_last_update_check(dia: str) -> None:
     config.sync()
 
 
-def preferences_tab() -> int:
-    """A aba das Preferências vista por último, para reabrir nela (guia da Apple)."""
-    try:
-        return int(settings().value(PREFERENCES_TAB_KEY, 0))
-    except TypeError, ValueError:
-        return 0
+def status_bar_enabled() -> bool:
+    """Configurações › Mostrar barra de status: ligada por padrão."""
+    return settings().value(STATUS_BAR_KEY, True, type=bool)
 
 
-def set_preferences_tab(indice: int) -> None:
+def set_status_bar_enabled(ligado: bool) -> None:
     config = settings()
-    config.setValue(PREFERENCES_TAB_KEY, indice)
+    config.setValue(STATUS_BAR_KEY, ligado)
     config.sync()

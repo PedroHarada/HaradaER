@@ -13,6 +13,7 @@ from haradaer.i18n import (
     _,
     language,
     language_for_locale,
+    language_for_locales,
     set_language,
     translate,
 )
@@ -143,3 +144,11 @@ def test_erro_ao_abrir_no_idioma_escolhido():
     set_language("en")
     with pytest.raises(ArquivoInvalidoError, match="the file has no elements|Invalid XML"):
         io.loads("")
+
+
+@pytest.mark.parametrize(
+    ("idiomas", "esperado"),
+    [(["es-MX", "pt-BR"], "es"), (["de-DE", "en-US"], "en"), (["de-DE"], "pt"), ([], "pt")],
+)
+def test_idioma_pela_lista_de_preferencia_do_sistema(idiomas, esperado):
+    assert language_for_locales(idiomas) == esperado

@@ -51,7 +51,7 @@ def test_ampliar_reduzir_e_tamanho_real(vista):
     assert vista.zoom == pytest.approx(1.25)
     vista.zoom_out()
     vista.zoom_out()
-    assert vista.zoom == pytest.approx(0.8)
+    assert vista.zoom == pytest.approx(0.75)  # 125 -> 100 -> 75, pelos níveis comuns
     vista.zoom_actual()
     assert vista.zoom == pytest.approx(1.0)
 

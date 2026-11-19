@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import errno
-import sys
 from pathlib import Path
 
 import shiboken6
@@ -63,8 +62,10 @@ from haradaer.gui.settings import (
     saved_language,
     set_quick_edit_enabled,
     set_saved_language,
+    set_status_bar_enabled,
     set_structure_warnings_enabled,
     set_update_check_enabled,
+    status_bar_enabled,
     structure_warnings_enabled,
     update_check_enabled,
     window_layout,
@@ -115,13 +116,13 @@ class _ZoomField(QLineEdit):
         super().keyPressEvent(evento)
 
 
-def _menu_actions(barra) -> list[QAction]:
-    """Todas as ações com atalho dos menus, inclusive dos submenus."""
+def _menu_actions(barra, *, todas: bool = False) -> list[QAction]:
+    """As ações com atalho dos menus (ou todas, com `todas`), inclusive dos submenus."""
     acoes = []
     for acao in barra.actions():
         if acao.menu() is not None:
-            acoes += _menu_actions(acao.menu())
-        elif not acao.shortcut().isEmpty():
+            acoes += _menu_actions(acao.menu(), todas=todas)
+        elif todas or not acao.shortcut().isEmpty():
             acoes.append(acao)
     return acoes
 
@@ -184,6 +185,7 @@ class DocumentWindow(QMainWindow):
         self._build_docks()
         self.update_checker = UpdateChecker(self)  # aviso de versão nova (RF-22)
         self._build_menus()
+        self._same_menus_everywhere()
         self._add_shortcut_actions()
         self.view.context_filler = self._fill_context_menu
         self._build_toolbar()
@@ -218,8 +220,12 @@ class DocumentWindow(QMainWindow):
         self.action_save_as = self._action(
             _("Salvar &como..."), QKeySequence.StandardKey.SaveAs, self.save_as
         )
-        self.action_close = self._action(_("&Fechar"), QKeySequence.StandardKey.Close, self.close)
-        self.action_quit = self._action(_("&Sair"), QKeySequence.StandardKey.Quit, self._quit)
+        # Atalhos fixos onde o padrão do Qt muda de um sistema para outro (e os manuais, gerados
+        # sem tela, mostravam os do Windows): o primeiro é o que aparece no menu. No macOS, o
+        # Qt troca Ctrl por Cmd sozinho.
+        self.action_close = self._action(_("&Fechar"), None, self.close)
+        self.action_close.setShortcuts([QKeySequence("Ctrl+W"), QKeySequence("Ctrl+F4")])
+        self.action_quit = self._action(_("&Sair"), "Ctrl+Q", self._quit)
         arquivo.addActions([self.action_new, self.action_open])
         self.recent_menu = arquivo.addMenu(_("Abrir &recente"))
         self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
@@ -232,18 +238,19 @@ class DocumentWindow(QMainWindow):
         )
         arquivo.addActions([self.action_export, self.action_copy_image])
         arquivo.addSeparator()
-        self.action_preferences = self._action(_("&Preferências…"), "Ctrl+,", self.show_preferences)
-        self.action_preferences.setMenuRole(QAction.MenuRole.PreferencesRole)  # no macOS
-        arquivo.addAction(self.action_preferences)
-        arquivo.addSeparator()
         arquivo.addActions([self.action_close, self.action_quit])
 
         editar = self.menuBar().addMenu(_("&Editar"))
         self.edit_menu = editar
         self.action_undo = self._action(_("&Desfazer"), QKeySequence.StandardKey.Undo, self._undo)
-        self.action_redo = self._action(_("&Refazer"), QKeySequence.StandardKey.Redo, self._redo)
+        self.action_redo = self._action(_("&Refazer"), None, self._redo)
+        self.action_redo.setShortcuts([QKeySequence("Ctrl+Shift+Z"), QKeySequence("Ctrl+Y")])
         self.action_delete = self._action(
-            _("E&xcluir"), QKeySequence.StandardKey.Delete, self._delete
+            # Só Del: no Linux o padrão do Qt inclui Ctrl+D, que é o Duplicar, e um atalho
+            # repetido não faz nada
+            _("E&xcluir"),
+            "Del",
+            self._delete,
         )
         editar.addActions([self.action_undo, self.action_redo])
         editar.addSeparator()
@@ -268,7 +275,6 @@ class DocumentWindow(QMainWindow):
             _("&Localizar..."), QKeySequence.StandardKey.Find, self._find
         )
         editar.addAction(self.action_find)
-        # Edição rápida e Grade são opções: ficam nas Preferências e no teclado (`extra_menus`)
         self.action_quick_edit = self._action(_("Edição rápid&a"), "Ctrl+Shift+E", lambda: None)
         self.action_quick_edit.setCheckable(True)
         self.action_quick_edit.setChecked(quick_edit_enabled())
@@ -335,10 +341,7 @@ class DocumentWindow(QMainWindow):
         self.action_grid.setShortcut("Ctrl+'")
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
-        # Opções com atalho que só ficam nas Preferências; o menu solto só serve à lista do F1
-        opcoes = QMenu(_("Preferências"), self)
-        opcoes.addActions([self.action_quick_edit])
-        self.extra_menus = [opcoes]
+        self.extra_menus: list[QMenu] = []  # menus fora da barra, para os atalhos e o F1
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
         for opcao in available_themes():
@@ -383,8 +386,31 @@ class DocumentWindow(QMainWindow):
         self.action_full_screen.setCheckable(True)
         exibir.addAction(self.action_full_screen)
 
-        if sys.platform == "darwin":
-            self._build_window_menu()
+        # Configurações antes de Ajuda, como o menu padrão do KDE: o tema (o "esquema de
+        # cores" do Kate e do Okular), as barras que se mostram e as Preferências ("Configurar
+        # o aplicativo"). No macOS, o Qt leva as Preferências para o menu do app (Apple).
+        configuracoes = self.menuBar().addMenu(_("&Configurações"))
+        self.settings_menu = configuracoes
+        tema_menu = configuracoes.addMenu(_("&Tema"))
+        tema_menu.addActions(list(self.theme_actions.values()))
+        configuracoes.addSeparator()
+        self.action_show_tools = QAction(_("Mostrar &faixa de ferramentas"), self)
+        self.action_show_tools.setCheckable(True)
+        self.action_show_tools.setChecked(True)
+        self.action_show_tools.toggled.connect(lambda ligado: self.tool_bar.setVisible(ligado))
+        self.action_show_status = QAction(_("Mostrar &barra de status"), self)
+        self.action_show_status.setCheckable(True)
+        self.action_show_status.setChecked(status_bar_enabled())
+        self.action_show_status.toggled.connect(self._status_bar_toggled)
+        configuracoes.addActions([self.action_show_tools, self.action_show_status])
+        configuracoes.addSeparator()
+        # Usados durante o trabalho: ficam no menu, e não na janela (Apple, Settings)
+        configuracoes.addActions(
+            [self.action_validate, self.action_structure, self.action_quick_edit]
+        )
+        configuracoes.addSeparator()
+        self.action_preferences = self._action(_("&Preferências…"), "Ctrl+,", self.show_preferences)
+        configuracoes.addAction(self.action_preferences)
 
         ajuda = self.menuBar().addMenu(_("Aj&uda"))
         self.help_menu = ajuda
@@ -398,8 +424,10 @@ class DocumentWindow(QMainWindow):
         self.suggest_action = ajuda.addAction(_("&Sugerir uma melhoria…"))
         self.suggest_action.triggered.connect(lambda: self._open_issue("melhoria"))
         ajuda.addSeparator()
+        # Como no menu Ajuda padrão do KDE; abre as Preferências, onde está o idioma
+        self.language_action = ajuda.addAction(_("Trocar o &idioma…"))
+        self.language_action.triggered.connect(lambda: self.show_preferences())
         self.about_action = ajuda.addAction(_("S&obre o HaradaER"))
-        self.about_action.setMenuRole(QAction.MenuRole.AboutRole)  # no macOS, no menu do app
         self.about_action.triggered.connect(self.show_about)
         self.check_updates_action = QAction(_("Verificar &atualizações…"), self)  # Preferências
         self.check_updates_action.triggered.connect(lambda: self.update_checker.check(manual=True))
@@ -407,21 +435,6 @@ class DocumentWindow(QMainWindow):
         self.auto_updates_action.setCheckable(True)
         self.auto_updates_action.setChecked(update_check_enabled())
         self.auto_updates_action.toggled.connect(set_update_check_enabled)
-
-    def _build_window_menu(self) -> None:
-        """Menu Janela, só no macOS: a Apple o pede mesmo com uma janela só, para quem usa o
-        Mac pelo teclado (Full Keyboard Access) poder minimizar e dar zoom."""
-        janela = self.menuBar().addMenu(_("&Janela"))
-        self.window_menu = janela
-        self.action_minimize = self._action(_("&Minimizar"), "Ctrl+M", self.showMinimized)
-        self.action_zoom_window = self._action(_("&Zoom"), None, self._toggle_maximized)
-        janela.addActions([self.action_minimize, self.action_zoom_window])
-
-    def _toggle_maximized(self) -> None:
-        if self.isMaximized():
-            self.showNormal()
-        else:
-            self.showMaximized()
 
     def _toggle_full_screen(self) -> None:
         if self.isFullScreen():
@@ -451,6 +464,12 @@ class DocumentWindow(QMainWindow):
         caixa.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         caixa.open()
         return caixa
+
+    def _same_menus_everywhere(self) -> None:
+        """A interface é igual nos três sistemas (decisão do autor): no macOS o Qt não leva
+        Preferências, Sobre e Sair para o menu do app, e cada item fica no seu menu."""
+        for acao in _menu_actions(self.menuBar(), todas=True):
+            acao.setMenuRole(QAction.MenuRole.NoRole)
 
     def _add_shortcut_actions(self) -> None:
         """As ações das opções que só estão nas Preferências também entram na janela, para os
@@ -495,6 +514,10 @@ class DocumentWindow(QMainWindow):
             copia(self.align_actions[modo], onde=alinhar)
             if modo == "right":
                 alinhar.addSeparator()
+
+    def _status_bar_toggled(self, ligado: bool) -> None:
+        self.statusBar().setVisible(ligado)
+        set_status_bar_enabled(ligado)
 
     def show_preferences(self) -> PreferencesDialog:
         dialogo = PreferencesDialog(self)
@@ -903,6 +926,8 @@ class DocumentWindow(QMainWindow):
             self.restoreGeometry(geometria)
         if estado is not None:
             self.restoreState(estado)
+        self.action_show_tools.setChecked(not self.tool_bar.isHidden())
+        self.statusBar().setVisible(self.action_show_status.isChecked())
 
     def _selection_changed(self) -> None:
         if not shiboken6.isValid(self.diagram_scene) or not shiboken6.isValid(self.inspector):

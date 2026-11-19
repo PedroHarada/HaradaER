@@ -118,7 +118,7 @@ Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolh
 ## Depois de abrir
 
 O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português, inglês ou espanhol);
-para trocar, use **Arquivo › Preferências › Aparência › Idioma** e abra o programa de novo. Para começar:
+para trocar, use **Configurações › Preferências** e abra o programa de novo. Para começar:
 
 1. Escolha **Entidade** na faixa de cima e clique no desenho; digite o nome e Enter.
 2. Crie um **Relacionamento** e outra entidade do mesmo jeito.
@@ -130,7 +130,7 @@ Com o botão direito sobre o desenho ou sobre o que está selecionado, aparecem 
 duplicar, excluir, a ordem (frente e trás), agrupar e alinhar.
 
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
-atributo chave. Dá para desligá-los em **Arquivo › Preferências › Verificação**.
+atributo chave. Dá para desligá-los em **Configurações › Avisos de estrutura**.
 
 O HaradaER não usa a conexão livre do TerraER, que não tem significado no modelo. Se um
 arquivo tiver alguma, ela é apagada ao abrir, com um aviso dizendo entre quais elementos estava;
@@ -163,7 +163,7 @@ melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no Git
 
 Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e avisa; nada é
 baixado sozinho. Para desligar, desmarque
-**Arquivo › Preferências › Atualizações › Verificar ao abrir**.
+**Configurações › Preferências › Verificar ao abrir**.
 
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
@@ -173,7 +173,7 @@ Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
 A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Os atalhos de uma tecla
 valem com a **Edição rápida** ligada (Ctrl+Shift+E, o botão na barra de status ou
-**Preferências › Edição**).
+**Configurações › Edição rápida**).
 Com Selecionar ativo e um elemento selecionado, a letra da família dele troca o tipo (por
 exemplo, A num atributo o faz virar chave).
 
@@ -189,15 +189,15 @@ exemplo, A num atributo o faz virar chave).
 | Salvar como | `Ctrl+Shift+S` |
 | Exportar desenho | `Ctrl+E` |
 | Copiar como imagem | `Ctrl+Shift+C` |
-| Preferências | `Ctrl+,` |
-| Fechar | `Ctrl+F4` |
+| Fechar | `Ctrl+W` |
+| Sair | `Ctrl+Q` |
 
 **Editar**
 
 | Ação | Atalho |
 |---|---|
 | Desfazer | `Ctrl+Z` |
-| Refazer | `Ctrl+Y` |
+| Refazer | `Ctrl+Shift+Z` |
 | Recortar | `Ctrl+X` |
 | Copiar | `Ctrl+C` |
 | Colar | `Ctrl+V` |
@@ -227,17 +227,18 @@ exemplo, A num atributo o faz virar chave).
 | Grade | `Ctrl+'` |
 | Tela cheia | `F11` |
 
+**Configurações**
+
+| Ação | Atalho |
+|---|---|
+| Edição rápida | `Ctrl+Shift+E` |
+| Preferências | `Ctrl+,` |
+
 **Ajuda**
 
 | Ação | Atalho |
 |---|---|
 | Atalhos do teclado | `F1` |
-
-**Preferências**
-
-| Ação | Atalho |
-|---|---|
-| Edição rápida | `Ctrl+Shift+E` |
 
 **Edição rápida (Ctrl+Shift+E)**
 

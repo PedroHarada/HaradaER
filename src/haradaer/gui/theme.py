@@ -4,7 +4,7 @@ O PySide6 traz um Qt próprio, sem o plugin do qt6ct que o sistema usa para dar 
 programas Qt (o `QT_QPA_PLATFORMTHEME=qt6ct` não faz efeito nele). Por isso o HaradaER lê a
 configuração do qt6ct por conta própria (`~/.config/qt6ct/qt6ct.conf` e o arquivo de cores para
 onde ela aponta) e acompanha as trocas de tema enquanto está aberto. Os temas claro e escuro
-são paletas próprias sobre o estilo Fusion. A escolha fica em Preferências › Aparência e é lembrada.
+são paletas próprias sobre o estilo Fusion. A escolha fica em Configurações › Tema e é lembrada.
 
 No diagrama, as formas mantêm as cores do TerraER (claras, com texto preto dentro) em qualquer
 tema. Mudam o fundo, a grade, o destaque da seleção e o que fica direto sobre o fundo: linhas

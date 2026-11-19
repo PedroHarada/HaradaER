@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
 
 from haradaer.gui.app import WindowManager
@@ -71,7 +72,7 @@ def test_zoom_aparece_na_barra_de_status(qtbot, referencia):
     janela.action_zoom_actual.trigger()
     assert janela._zoom_field.text() == "100%"
     janela.action_zoom_out.trigger()
-    assert janela._zoom_field.text() == "80%"
+    assert janela._zoom_field.text() == "75%"  # os níveis comuns: 100 -> 75
 
 
 @pytest.mark.parametrize(
@@ -162,3 +163,35 @@ def test_paineis_tem_largura_minima_para_nao_cortar_os_nomes(qtbot):
     qtbot.addWidget(janela)
     assert janela.inspector_dock.minimumWidth() >= 230
     assert janela.properties_dock.minimumWidth() >= 230
+
+
+def test_zoom_pelos_niveis_comuns_mesmo_depois_de_zoom_livre(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela.view.set_zoom(1.37)
+    janela.action_zoom_in.trigger()
+    assert janela.view.zoom == pytest.approx(1.5)
+    janela.view.set_zoom(1.37)
+    janela.action_zoom_out.trigger()
+    assert janela.view.zoom == pytest.approx(1.25)
+    janela.view.set_zoom(20.0)
+    janela.action_zoom_in.trigger()
+    assert janela.view.zoom == pytest.approx(20.0)  # no limite, fica
+
+
+def test_nenhum_atalho_repetido_e_atalhos_fixos(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    vistos: dict[str, str] = {}
+    repetidos = []
+    for acao in janela.findChildren(QAction):
+        for tecla in acao.shortcuts():
+            texto = tecla.toString()
+            if texto in vistos and vistos[texto] != acao.text():
+                repetidos.append(f"{texto}: {vistos[texto]} / {acao.text()}")
+            vistos[texto] = acao.text()
+    assert repetidos == []
+    assert [k.toString() for k in janela.action_delete.shortcuts()] == ["Del"]
+    assert janela.action_close.shortcut().toString() == "Ctrl+W"
+    assert janela.action_quit.shortcut().toString() == "Ctrl+Q"
+    assert janela.action_redo.shortcut().toString() == "Ctrl+Shift+Z"

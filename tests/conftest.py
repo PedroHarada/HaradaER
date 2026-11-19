@@ -20,6 +20,11 @@ def idioma_portugues():
     set_language("pt")
     yield
     set_language("pt")
+    try:  # escolher o idioma também o passa ao Qt (`choose_language`)
+        from PySide6.QtCore import QLocale
+    except ImportError:
+        return
+    QLocale.setDefault(QLocale("pt_BR"))
 
 
 @pytest.hookimpl(hookwrapper=True)

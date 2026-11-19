@@ -69,7 +69,28 @@ from haradaer.i18n import N_, _
 MIN_ZOOM = 0.05
 MAX_ZOOM = 20.0
 WHEEL_ZOOM_PER_NOTCH = 1.0015  # por unidade de angleDelta (120 por "clique" da roda)
-ZOOM_STEP = 1.25
+# Ctrl++ e Ctrl+- param nestes níveis, como no LibreOffice e no Okular; a roda do mouse e o
+# zoom digitado na barra de status continuam livres
+ZOOM_LEVELS = (
+    0.05,
+    0.1,
+    0.25,
+    0.33,
+    0.5,
+    0.67,
+    0.75,
+    1.0,
+    1.25,
+    1.5,
+    2.0,
+    3.0,
+    4.0,
+    6.0,
+    8.0,
+    12.0,
+    16.0,
+    20.0,
+)
 DRAG_THRESHOLD = 3.0  # pixels da tela antes de um clique virar arrasto
 
 GENERALIZATION_LABEL_FONT = FontSpec(size=12.0, italic=True)
@@ -204,10 +225,11 @@ class DiagramView(QGraphicsView):
         self.set_zoom(self.zoom * fator)
 
     def zoom_in(self) -> None:
-        self.zoom_by(ZOOM_STEP)
+        """O próximo nível acima do zoom atual, mesmo depois de um zoom livre (137% -> 150%)."""
+        self.set_zoom(next((n for n in ZOOM_LEVELS if n > self.zoom * 1.001), MAX_ZOOM))
 
     def zoom_out(self) -> None:
-        self.zoom_by(1 / ZOOM_STEP)
+        self.set_zoom(next((n for n in reversed(ZOOM_LEVELS) if n < self.zoom / 1.001), MIN_ZOOM))
 
     def zoom_actual(self) -> None:
         self.set_zoom(1.0)

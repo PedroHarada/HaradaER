@@ -129,8 +129,6 @@ ES: dict[str, str] = {
     "Elemento": "Elemento",
     "Mensagem": "Mensaje",
     "Nenhum problema no modelo.": "Ningún problema en el modelo.",
-    "A verificação está desligada (Preferências › Verificação).": "La verificación está"
-    " desactivada (Preferencias › Verificación).",
     "{erros} erro(s), {avisos} aviso(s)": "{erros} error(es), {avisos} aviso(s)",
     "Tipo:": "Tipo:",
     "Nome:": "Nombre:",
@@ -392,8 +390,6 @@ ES: dict[str, str] = {
     "Atalhos do teclado": "Atajos de teclado",
     "Buscar atalho…": "Buscar atajo…",
     "Edição rápida (Ctrl+Shift+E)": "Edición rápida (Ctrl+Shift+E)",
-    "Atalho: {tecla}": "Atajo: {tecla}",
-    "Painéis": "Paneles",
     "Ação": "Acción",
     "Trocar o tipo do elemento selecionado (com Selecionar)": (
         "Cambiar el tipo del elemento seleccionado (con Seleccionar)"
@@ -431,21 +427,9 @@ ES: dict[str, str] = {
     # Preferências e barra de comandos
     "&Preferências…": "Pre&ferencias…",
     "Preferências": "Preferencias",
-    "Aparência": "Apariencia",
-    "Tema": "Tema",
-    "Desenho": "Dibujo",
-    "Mostrar a &grade": "Mostrar la &cuadrícula",
     "Vale quando o HaradaER for fechado e aberto de novo.": (
         "Se aplica cuando HaradaER se cierre y se vuelva a abrir."
     ),
-    "Verificação": "Verificación",
-    "Marca em vermelho as conexões que o tipo não aceita.": (
-        "Marca en rojo las conexiones que su tipo no acepta."
-    ),
-    "Edição": "Edición",
-    "Edição rápida": "Edición rápida",
-    "Arquivos": "Archivos",
-    "Arquivos recentes": "Archivos recientes",
     "Verificar &agora": "Comprobar &ahora",
     "Você tem a {atual}.": "Usted tiene la {atual}.",
     "No máximo uma vez por dia, no GitHub.": "Como máximo una vez al día, en GitHub.",
@@ -459,9 +443,6 @@ ES: dict[str, str] = {
         "Software libre, bajo la licencia GNU GPL versión 3."
     ),
     "Tela c&heia": "&Pantalla completa",
-    "&Janela": "&Ventana",
-    "&Minimizar": "&Minimizar",
-    "&Zoom": "&Zoom",
     # Zoom digitado, contagem de erros e Restaurar padrões
     "Zoom: digite a porcentagem e tecle Enter": "Zoom: escriba el porcentaje y pulse Enter",
     "erro": "error",
@@ -469,11 +450,20 @@ ES: dict[str, str] = {
     "aviso": "aviso",
     "avisos": "avisos",
     "Verificação desligada": "Verificación desactivada",
-    "&Restaurar padrões de todas as abas": "&Restablecer valores de todas las pestañas",
-    "Voltar todas as abas ao padrão? O idioma e os arquivos recentes não mudam.": (
-        "¿Volver todas las pestañas a los valores predeterminados? El idioma y los archivos"
-        " recientes no cambian."
-    ),
     "Restaurar": "Restablecer",
-    "Preferências › {aba}": "Preferencias › {aba}",
+    "&Configurações": "&Configuración",
+    "&Tema": "&Tema",
+    "Mostrar &faixa de ferramentas": "Mostrar barra de &herramientas",
+    "Mostrar &barra de status": "Mostrar barra de &estado",
+    "&Restaurar todos os padrões": "&Restablecer todos los valores",
+    "A verificação está desligada (Configurações › Verificar modelo).": (
+        "La verificación está desactivada (Configuración › Verificar modelo)."
+    ),
+    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
+    " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam.": (
+        "¿Volver a los valores predeterminados el tema, las barras, la cuadrícula, los"
+        " paneles, la verificación, la Edición rápida y las actualizaciones? El idioma y los"
+        " archivos recientes no cambian."
+    ),
+    "Trocar o &idioma…": "Cambiar el idio&ma…",
 }

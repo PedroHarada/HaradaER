@@ -1,7 +1,5 @@
 """Barra de comandos no lugar da barra de menus, e a janela Preferências."""
 
-import sys
-
 import pytest
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
@@ -22,28 +20,25 @@ def janela(qtbot):
 def test_barra_de_menus_enxuta(janela):
     assert not janela.menuBar().isHidden()
     nomes = [a.text() for a in janela.menuBar().actions()]
-    assert nomes == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "Aj&uda"]
-    nos_menus = janela.view_menu.actions() + janela.help_menu.actions()
-    nos_menus += janela.edit_menu.actions()
+    assert nomes == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "&Configurações", "Aj&uda"]
     for acao in (
+        janela.action_preferences,
         janela.action_validate,
         janela.action_structure,
-        janela.auto_updates_action,
-        janela.check_updates_action,
         janela.action_quick_edit,
-        janela.action_preferences,
-        janela.action_copy_image,
     ):
-        assert acao not in nos_menus
-    assert janela.action_preferences in janela.file_menu.actions()
+        assert acao in janela.settings_menu.actions()
+    nos_menus = janela.view_menu.actions() + janela.help_menu.actions()
+    nos_menus += janela.edit_menu.actions()
+    for acao in (janela.auto_updates_action, janela.check_updates_action):
+        assert acao not in nos_menus  # só na janela Preferências
     assert janela.action_copy_image in janela.file_menu.actions()
     assert janela.action_preferences.shortcut().toString() == "Ctrl+,"
     assert janela.inspector_dock.toggleViewAction() in janela.view_menu.actions()
     assert janela.action_grid in janela.view_menu.actions()  # parte da vista (Apple)
 
 
-def test_atalhos_das_opcoes_continuam_e_aparecem_no_f1(janela, qtbot):
-    assert janela.action_quick_edit in janela.actions()
+def test_atalhos_das_opcoes_aparecem_no_f1(janela, qtbot):
     dialogo = janela.show_shortcuts()
     qtbot.addWidget(dialogo)
     linhas = dialogo.visible_rows()
@@ -51,39 +46,13 @@ def test_atalhos_das_opcoes_continuam_e_aparecem_no_f1(janela, qtbot):
     assert any(acao == "Edição rápida" for acao, _tecla in linhas)
 
 
-def test_paineis_nas_preferencias(janela):
+def test_preferencias_so_idioma_e_atualizacoes(janela):
     dialogo = PreferencesDialog(janela)
-    caixa = dialogo.panel_boxes[0]
-    caixa.setChecked(False)
-    assert not janela.inspector_dock.toggleViewAction().isChecked()
-    caixa.setChecked(True)
-    assert janela.inspector_dock.toggleViewAction().isChecked()
-
-
-def test_preferencias_seguem_as_acoes_nos_dois_sentidos(janela):
-    dialogo = PreferencesDialog(janela)
-    assert dialogo.grid_box.isChecked() == janela.action_grid.isChecked()
-    dialogo.grid_box.setChecked(True)
-    assert janela.action_grid.isChecked()
-    janela.action_grid.setChecked(False)
-    assert not dialogo.grid_box.isChecked()
-    dialogo.structure_box.setChecked(False)
-    assert not janela.action_structure.isChecked()
-    dialogo.validate_box.setChecked(False)
-    assert not janela.action_validate.isChecked()
-    dialogo.quick_edit_box.setChecked(True)
-    assert janela.action_quick_edit.isChecked()
+    assert dialogo.windowTitle() == "Preferências"
     dialogo.auto_updates_box.setChecked(False)
     assert not janela.auto_updates_action.isChecked()
-
-
-def test_tema_nas_preferencias(janela):
-    dialogo = PreferencesDialog(janela)
-    assert dialogo.theme_buttons[current_theme().name].isChecked()
-    dialogo.theme_buttons["escuro"].click()
-    assert current_theme().name == "escuro"
-    janela.theme_actions["claro"].trigger()
-    assert dialogo.theme_buttons["claro"].isChecked()
+    janela.auto_updates_action.setChecked(True)
+    assert dialogo.auto_updates_box.isChecked()
 
 
 def test_idioma_nas_preferencias(janela, monkeypatch):
@@ -96,32 +65,17 @@ def test_idioma_nas_preferencias(janela, monkeypatch):
     assert janela.language_actions["es"].isChecked()
 
 
-def test_limpar_recentes(janela, tmp_path):
-    arquivo = tmp_path / "m.xml"
-    arquivo.write_text("x")
-    janela.recent.add(arquivo)
-    PreferencesDialog(janela).clear_recent_button.click()
-    assert janela.recent.paths() == []
-
-
 def test_atalho_abre_preferencias(janela, qtbot):
     dialogo = janela.show_preferences()
     qtbot.addWidget(dialogo)
     assert dialogo.isVisible()
     assert dialogo.testAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-    assert [dialogo.tabs.tabText(i) for i in range(dialogo.tabs.count())] == [
-        "Aparência",
-        "Verificação",
-        "Edição",
-        "Arquivos",
-        "Atualizações",
-    ]
 
 
 def test_caixas_de_mensagem_e_botoes_sem_desenho(qapp):
     from PySide6.QtWidgets import QStyle
 
-    from haradaer.gui.theme import TextOnlyStyle, apply_theme, current_theme
+    from haradaer.gui.theme import TextOnlyStyle, apply_theme
 
     apply_theme(current_theme(), save=False)
     estilo = qapp.style()
@@ -152,21 +106,26 @@ def test_tela_cheia_em_exibir(janela):
     assert not acao.shortcut().isEmpty()  # F11 onde o sistema não tem atalho padrão
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="no macOS o menu Janela existe")
-def test_menu_janela_so_no_macos(janela):
+def test_sem_menu_janela_e_itens_no_mesmo_lugar_em_todo_sistema(janela):
+    from PySide6.QtGui import QAction
+
+    from haradaer.gui.window import _menu_actions
+
     assert not hasattr(janela, "window_menu")
+    for acao in _menu_actions(janela.menuBar(), todas=True):
+        assert acao.menuRole() == QAction.MenuRole.NoRole  # o macOS não move nada
 
 
-def test_menu_janela_do_macos(janela):
-    janela._build_window_menu()
-    acoes = janela.window_menu.actions()
-    assert janela.action_minimize in acoes and janela.action_zoom_window in acoes
-    assert janela.action_minimize.shortcut().toString() == "Ctrl+M"
+def test_ajuda_trocar_o_idioma_abre_as_preferencias(janela, qtbot, monkeypatch):
+    abertas = []
+    monkeypatch.setattr(janela, "show_preferences", lambda: abertas.append(True))
+    assert janela.language_action in janela.help_menu.actions()
+    janela.language_action.trigger()
+    assert abertas == [True]
 
 
-def test_restaurar_padroes_de_todas_as_abas(janela, monkeypatch):
+def test_restaurar_todos_os_padroes(janela, monkeypatch):
     from haradaer.gui.settings import saved_language
-    from haradaer.gui.theme import current_theme
 
     monkeypatch.setattr(QMessageBox, "information", lambda *a: None)
     janela.theme_actions["escuro"].trigger()
@@ -176,7 +135,8 @@ def test_restaurar_padroes_de_todas_as_abas(janela, monkeypatch):
     janela.auto_updates_action.setChecked(False)
     janela._language_chosen("es")
     dialogo = PreferencesDialog(janela)
-    assert "todas as abas" in dialogo.restore_button.text()
+    janela.action_show_status.setChecked(False)
+    assert "todos os padrões" in dialogo.restore_button.text()
     dialogo.restore_button.click()
     assert dialogo.confirm_row.isVisibleTo(dialogo)
     dialogo.confirm_button.click()
@@ -185,6 +145,7 @@ def test_restaurar_padroes_de_todas_as_abas(janela, monkeypatch):
     assert janela.action_structure.isChecked()
     assert not janela.action_quick_edit.isChecked()
     assert janela.auto_updates_action.isChecked()
+    assert janela.action_show_status.isChecked()
     assert saved_language() == "es"  # o idioma não muda
     assert not dialogo.confirm_row.isVisibleTo(dialogo)
 
@@ -197,10 +158,17 @@ def test_cancelar_nao_restaura(janela):
     assert janela.action_grid.isChecked()
 
 
-def test_preferencias_reabrem_na_ultima_aba_com_o_nome_no_titulo(janela):
-    dialogo = PreferencesDialog(janela)
-    dialogo.tabs.setCurrentIndex(2)
-    assert dialogo.windowTitle() == "Preferências › Edição"
-    outro = PreferencesDialog(janela)
-    assert outro.tabs.currentIndex() == 2
-    outro.tabs.setCurrentIndex(0)
+def test_menu_configuracoes_como_no_kde(janela):
+    from haradaer.gui.settings import status_bar_enabled
+
+    acoes = janela.settings_menu.actions()
+    tema = next(a.menu() for a in acoes if a.menu() is not None)
+    assert janela.theme_actions["claro"] in tema.actions()
+    assert janela.action_show_tools in acoes and janela.action_show_status in acoes
+    assert janela.action_preferences in acoes
+    janela.action_show_tools.setChecked(False)
+    assert janela.tool_bar.isHidden()
+    janela.action_show_status.setChecked(False)
+    assert janela.statusBar().isHidden() and not status_bar_enabled()
+    janela.action_show_status.setChecked(True)
+    assert status_bar_enabled()

@@ -119,7 +119,7 @@ Aplicaciones). También puede arrastrar la versión nueva a Aplicaciones y elegi
 ## Después de abrir
 
 El uso es el mismo en cualquier sistema. HaradaER se abre en el idioma del sistema (portugués,
-inglés o español); para cambiarlo, use **Archivo › Preferencias › Apariencia › Idioma** y abra el programa de nuevo. Para
+inglés o español); para cambiarlo, use **Configuración › Preferencias** y abra el programa de nuevo. Para
 empezar:
 
 1. Elija **Entidad** en la franja de arriba y haga clic en el dibujo; escriba el nombre y pulse
@@ -134,7 +134,7 @@ Con el botón derecho sobre el dibujo o sobre lo seleccionado aparecen copiar, p
 eliminar, el orden (frente y fondo), agrupar y alinear.
 
 Los contornos naranjas y el panel **Mensajes** señalan lo que falta en el modelo, como una
-entidad sin atributo clave. Puede desactivarlos en **Archivo › Preferencias › Verificación**.
+entidad sin atributo clave. Puede desactivarlos en **Configuración › Avisos de estructura**.
 
 HaradaER no usa la conexión libre de TerraER, que no tiene significado en el modelo. Si un
 archivo tiene alguna, se borra al abrirlo, con un aviso que dice entre qué elementos estaba; el
@@ -167,7 +167,7 @@ una mejora** abren la página de GitHub ya rellenada (hace falta una cuenta en G
 
 Una vez al día, al abrir, HaradaER comprueba en GitHub si hay versión nueva y avisa; no se
 descarga nada solo. Para desactivarlo, desmarque
-**Archivo › Preferencias › Actualizaciones › Buscar al abrir**.
+**Configuración › Preferencias › Buscar al abrir**.
 
 Todos los comandos están en [Como usar](../README.md#como-usar), en el README (en portugués).
 
@@ -177,7 +177,7 @@ Todos los comandos están en [Como usar](../README.md#como-usar), en el README (
 
 La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Los atajos de una tecla
 funcionan con la **Edición rápida** activada (Ctrl+Shift+E, el botón de la barra de
-estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
+estado o **Configuración › Edición rápida**). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
 (por ejemplo, A en un atributo lo convierte en clave).
 
 <!-- atalhos: início (gerado por python -m haradaer.gui.shortcuts_dialog) -->
@@ -192,15 +192,15 @@ estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento se
 | Guardar como | `Ctrl+Shift+S` |
 | Exportar dibujo | `Ctrl+E` |
 | Copiar como imagen | `Ctrl+Shift+C` |
-| Preferencias | `Ctrl+,` |
-| Cerrar | `Ctrl+F4` |
+| Cerrar | `Ctrl+W` |
+| Salir | `Ctrl+Q` |
 
 **Editar**
 
 | Acción | Atajo |
 |---|---|
 | Deshacer | `Ctrl+Z` |
-| Rehacer | `Ctrl+Y` |
+| Rehacer | `Ctrl+Shift+Z` |
 | Cortar | `Ctrl+X` |
 | Copiar | `Ctrl+C` |
 | Pegar | `Ctrl+V` |
@@ -230,17 +230,18 @@ estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento se
 | Cuadrícula | `Ctrl+'` |
 | Pantalla completa | `F11` |
 
+**Configuración**
+
+| Acción | Atajo |
+|---|---|
+| Edición rápida | `Ctrl+Shift+E` |
+| Preferencias | `Ctrl+,` |
+
 **Ayuda**
 
 | Acción | Atajo |
 |---|---|
 | Atajos de teclado | `F1` |
-
-**Preferencias**
-
-| Acción | Atajo |
-|---|---|
-| Edición rápida | `Ctrl+Shift+E` |
 
 **Edición rápida (Ctrl+Shift+E)**
 

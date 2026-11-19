@@ -27,14 +27,21 @@ def _menus(janela: DocumentWindow) -> list[str]:
 def test_janela_em_portugues(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "Aj&uda"]
+    assert _menus(janela) == [
+        "&Arquivo",
+        "&Editar",
+        "&Organizar",
+        "E&xibir",
+        "&Configurações",
+        "Aj&uda",
+    ]
 
 
 def test_janela_em_ingles(qtbot):
     set_language("en")
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&File", "&Edit", "Arran&ge", "&View", "&Help"]
+    assert _menus(janela) == ["&File", "&Edit", "Arran&ge", "&View", "&Settings", "&Help"]
     assert janela.report_action.text() == "&Report a problem…"
     assert janela.windowTitle() == "Untitled[*] - HaradaER"
     assert janela.action_save.text() == "&Save"
@@ -115,7 +122,14 @@ def test_janela_em_espanhol(qtbot, monkeypatch):
     set_language("es")
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&Archivo", "&Editar", "&Organizar", "&Ver", "Ay&uda"]
+    assert _menus(janela) == [
+        "&Archivo",
+        "&Editar",
+        "&Organizar",
+        "&Ver",
+        "&Configuración",
+        "Ay&uda",
+    ]
     no = janela.editor.create("ent", 0, 0)
     assert no.name == "Entidad"
 
@@ -141,3 +155,21 @@ def test_menus_em_espanhol_sem_letra_de_atalho_repetida(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
     assert _letras_repetidas(janela.menuBar()) == []
+
+
+def test_idioma_escolhido_vai_para_o_qt(monkeypatch):
+    set_saved_language("es")
+    assert choose_language() == "es"
+    assert QLocale().name() == "es_ES"  # leitores de tela sabem a língua (WCAG2ICT 3.1.1)
+
+
+def test_primeira_vez_usa_a_lista_de_idiomas_do_sistema(monkeypatch):
+    class Sistema:
+        def uiLanguages(self):  # noqa: N802 (nome do Qt)
+            return ["es-MX", "en-US"]
+
+        def name(self):
+            return "pt_BR"  # formato regional brasileiro, interface em espanhol
+
+    monkeypatch.setattr(QLocale, "system", lambda: Sistema())
+    assert choose_language() == "es"

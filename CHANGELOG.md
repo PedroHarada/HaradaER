@@ -8,27 +8,29 @@ para mudanças que quebram algo que já funcionava.
 
 ### Adicionado
 
-- **Espanhol:** a interface inteira em espanhol, em **Arquivo › Preferências › Aparência** (na primeira
+- **Espanhol:** a interface inteira em espanhol, em **Configurações › Preferências** (na primeira
   vez, vale o idioma do sistema), com os botões e diálogos do Qt também em espanhol e os nomes
   padrão dos elementos novos no idioma. Manual `docs/PRIMEROS-PASOS.md`, que vai nos pacotes
   como `PRIMEROS-PASOS.txt`.
-- **Menus mais curtos:** Preferências e Copiar como imagem ficam em Arquivo; as opções saem
-  dos menus e vão para as Preferências.
-- **Ajuda › Sobre o HaradaER** (versão, licença e repositório), **Exibir › Tela cheia** (F11;
-  no macOS, Ctrl+Cmd+F) e, só no macOS, o menu **Janela** com Minimizar (Cmd+M) e Zoom, como
-  pede o guia de interface da Apple.
+- **Menus mais curtos:** Copiar como imagem fica em Arquivo. Menu **Configurações**, antes de
+  Ajuda, como no KDE: Tema, Mostrar faixa de ferramentas, Mostrar barra de status, Verificar
+  modelo, Avisos de estrutura, Edição rápida e Preferências.
+- **Ajuda › Sobre o HaradaER** (versão, licença e repositório), **Ajuda › Trocar o idioma…**
+  (como no KDE; abre as Preferências) e **Exibir › Tela cheia** (F11).
+- **Os mesmos menus nos três sistemas:** no macOS, Preferências, Sobre e Sair ficam nos mesmos
+  menus que no Linux e no Windows, sem ir para o menu do app.
+- **Idioma:** na primeira vez, vale a lista de idiomas da interface do sistema (e não o formato
+  regional), o que respeita o idioma escolhido para o app no macOS e a variável `LANGUAGE` no
+  Linux; o idioma escolhido também vai para o Qt, para os leitores de tela lerem na língua certa.
 - Caixas de mensagem e botões dos diálogos só com texto, sem os desenhos do Qt (ponto de
   interrogação, disquete, lixeira, X).
-- **Preferências** (Arquivo › Preferências, Ctrl+,): tema, idioma, grade, verificação, avisos de
-  estrutura, Edição rápida, arquivos recentes e atualizações numa janela só, em abas. Tema,
-  Idioma, Verificar modelo, Avisos de estrutura, Verificar ao abrir, Verificar atualizações e
-  Edição rápida saem dos menus (os atalhos continuam); a Grade e os painéis ficam nos dois
-  lugares.
+- **Preferências** (Configurações › Preferências, Ctrl+,): só o que muda raramente, numa página:
+  idioma, atualizações (verificar ao abrir e verificar agora) e Restaurar todos os padrões, com
+  confirmação na própria janela (o idioma e os recentes não mudam).
 - **Barra de status:** a contagem de erros e avisos fica sempre à vista, à esquerda, e o clique
   abre o painel Mensagens; o zoom virou um campo onde se digita a porcentagem (Enter aplica,
   Esc desiste).
-- **Preferências:** botão Restaurar padrões de todas as abas (o idioma e os recentes não mudam);
-  reabrem na última aba usada, com o nome dela no título. A Grade volta a Exibir.
+- **Exibir:** a Grade e os painéis ficam em Exibir.
 - **Botão direito** no desenho com as ações sobre a seleção: recortar, copiar, colar, duplicar,
   excluir, trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar, com o atalho
   ao lado; o que não se aplica fica cinza. Clicar num elemento já selecionado mantém a seleção.
