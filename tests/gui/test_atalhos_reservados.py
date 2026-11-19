@@ -67,6 +67,8 @@ KDE = {
 MESMA_FUNCAO = {
     ("Ctrl+,", "Preferências"),
     ("Ctrl+Shift+A", "Desmarcar tudo"),
+    ("Ctrl+Meta+F", "Tela cheia"),  # no macOS, o atalho padrão do sistema
+    ("Ctrl+?", "Manual do HaradaER"),  # no macOS, o Cmd+? da ajuda
 }
 # A ação reservada não existe no HaradaER; o guia da Apple permite reaproveitar o atalho.
 REAPROVEITADOS = {
@@ -145,5 +147,6 @@ def test_lista_do_f1_mostra_os_dois_atalhos_da_ordem(janela, qtbot):
     dialogo = janela.show_shortcuts()
     qtbot.addWidget(dialogo)
     linhas = dict(dialogo.visible_rows())
-    assert linhas["Trazer para a frente"].startswith("Home")
-    assert "F" in linhas["Trazer para a frente"].split(", ")[1]
+    nativo = QKeySequence.SequenceFormat.NativeText  # no macOS, Home pode sair como "↖"
+    esperado = ", ".join(QKeySequence(t).toString(nativo) for t in ("Home", "Ctrl+Alt+Shift+F"))
+    assert linhas["Trazer para a frente"] == esperado
