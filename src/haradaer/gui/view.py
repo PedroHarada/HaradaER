@@ -160,6 +160,7 @@ class DiagramView(QGraphicsView):
         self.quick_edit = False  # Edição rápida: atalhos de uma tecla e a ferramenta fica
         self._attached_owner: NodeFigure | None = None  # volta a ser selecionado depois do nome
         self._inline: InlineEdit | InlineTextEdit | None = None
+        self.context_filler = None  # a janela põe aqui as ações do botão direito
         self._text_drag: tuple[QPointF, bool] | None = None  # Texto: canto inicial e se fica
         self._text_preview: QGraphicsRectItem | None = None
         self._hover_link: str | None = None
@@ -507,29 +508,49 @@ class DiagramView(QGraphicsView):
         self._scene.select_only(no)
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        if self.editor is not None and self._inline is None:
-            no = self._node_at(self.mapToScene(event.pos()))
-            menu = self.node_menu(no) if no is not None else None
-            if menu is not None:
-                self._cancel_interaction()
-                self._scene.select_only(no)
-                menu.exec(event.globalPos())
-                menu.deleteLater()
-                return
-        if self.tool.kind != "select" or self.editor is None:
+        """Botão direito: o menu do que está embaixo (trocar o tipo de um elemento, os vértices
+        de uma conexão) e, depois, as ações sobre a seleção que a janela põe (`context_filler`).
+        Clicar num elemento que já está na seleção mantém a seleção inteira."""
+        if self.editor is None or self._inline is not None:
             super().contextMenuEvent(event)
             return
         pos = self.mapToScene(event.pos())
-        item = self._item_at(pos)
-        conexao = self.editable_connection()
-        if conexao is None or self._connection_handle_at(pos) is None:
-            if item is None or not item.is_connection:
-                super().contextMenuEvent(event)
-                return
-            assert isinstance(item.figure, ConnectionFigure)
-            self._scene.select_only(item.figure)
-            conexao = item.figure
-        self.connection_menu(conexao, pos).exec(event.globalPos())
+        selecao = self._scene.selected_figures()
+        menu: QMenu | None = None
+        no = self._node_at(pos)
+        if no is not None:
+            self._cancel_interaction()
+            if not any(f is no for f in selecao):
+                self._scene.select_only(no)
+            menu = self.node_menu(no)
+        elif self.tool.kind == "select":
+            item = self._item_at(pos)
+            conexao = self.editable_connection()
+            if conexao is None or self._connection_handle_at(pos) is None:
+                conexao = None
+                if item is not None and item.is_connection:
+                    assert isinstance(item.figure, ConnectionFigure)
+                    conexao = item.figure
+            if conexao is not None:
+                if not any(f is conexao for f in selecao):
+                    self._scene.select_only(conexao)
+                menu = self.connection_menu(conexao, pos)
+        elif self.tool.kind != "select":
+            super().contextMenuEvent(event)
+            return
+        if menu is None:
+            menu = QMenu(self)
+        if self.context_filler is not None:
+            self.context_filler(menu)
+        if menu.isEmpty():
+            menu.deleteLater()
+            super().contextMenuEvent(event)
+            return
+        self.show_menu(menu, event.globalPos())
+        menu.deleteLater()
+
+    def show_menu(self, menu: QMenu, onde) -> None:
+        menu.exec(onde)
 
     def _begin_resize(self, alca: str) -> None:
         no = self.resizable()

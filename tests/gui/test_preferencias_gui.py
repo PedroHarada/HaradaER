@@ -19,38 +19,46 @@ def janela(qtbot):
     return janela
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="no macOS a barra de menus é a do sistema")
-def test_barra_de_menus_escondida_e_botao_menu(janela):
-    assert janela.menuBar().isHidden()
-    assert janela.menu_button.menu() is None  # sem a setinha de menu
-    janela.menu_button.click()
-    assert janela.main_menu.isVisible()
-    janela.main_menu.hide()
-    submenus = [a.menu() for a in janela.main_menu.actions() if a.menu() is not None]
-    for menu in (janela.edit_menu, janela.arrange_menu, janela.view_menu, janela.help_menu):
-        assert menu in submenus
-
-
-def test_barra_de_comandos_tem_as_acoes_do_dia_a_dia(janela):
-    acoes = janela.command_bar.actions()
-    for acao in (janela.action_new, janela.action_open, janela.action_save):
-        assert acao in acoes
-    for acao in (janela.action_undo, janela.action_zoom_in, janela.action_preferences):
-        assert acao not in acoes  # ficam no Menu e no teclado
+def test_barra_de_menus_enxuta(janela):
+    assert not janela.menuBar().isHidden()
+    nomes = [a.text() for a in janela.menuBar().actions()]
+    assert nomes == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "Aj&uda"]
+    nos_menus = janela.view_menu.actions() + janela.help_menu.actions()
+    nos_menus += janela.edit_menu.actions()
+    for acao in (
+        janela.action_validate,
+        janela.action_structure,
+        janela.auto_updates_action,
+        janela.check_updates_action,
+        janela.action_grid,
+        janela.action_quick_edit,
+        janela.action_preferences,
+        janela.action_copy_image,
+    ):
+        assert acao not in nos_menus
+    assert janela.action_preferences in janela.file_menu.actions()
+    assert janela.action_copy_image in janela.file_menu.actions()
     assert janela.action_preferences.shortcut().toString() == "Ctrl+,"
+    assert janela.inspector_dock.toggleViewAction() in janela.view_menu.actions()
 
 
-def test_atalhos_valem_com_a_barra_escondida(janela):
-    acoes = janela.actions()
-    for acao in (janela.action_save, janela.action_grid, janela.action_preferences):
-        assert acao in acoes
+def test_atalhos_das_opcoes_continuam_e_aparecem_no_f1(janela, qtbot):
+    for acao in (janela.action_grid, janela.action_quick_edit):
+        assert acao in janela.actions()
+    dialogo = janela.show_shortcuts()
+    qtbot.addWidget(dialogo)
+    linhas = dialogo.visible_rows()
+    assert ("Grade", "Ctrl+'") in linhas
+    assert any(acao == "Edição rápida" for acao, _tecla in linhas)
 
 
-def test_opcoes_saem_dos_menus(janela):
-    textos = [a.text() for a in janela.view_menu.actions() + janela.help_menu.actions()]
-    assert janela.action_grid.text() in textos  # a grade continua em Exibir, com o atalho
-    for acao in (janela.action_validate, janela.action_structure, janela.auto_updates_action):
-        assert acao.text() not in textos
+def test_paineis_nas_preferencias(janela):
+    dialogo = PreferencesDialog(janela)
+    caixa = dialogo.panel_boxes[0]
+    caixa.setChecked(False)
+    assert not janela.inspector_dock.toggleViewAction().isChecked()
+    caixa.setChecked(True)
+    assert janela.inspector_dock.toggleViewAction().isChecked()
 
 
 def test_preferencias_seguem_as_acoes_nos_dois_sentidos(janela):
@@ -111,25 +119,6 @@ def test_atalho_abre_preferencias(janela, qtbot):
     ]
 
 
-def test_barra_de_comandos_fica_acima_da_faixa_mesmo_com_disposicao_antiga(qtbot):
-    from haradaer.gui.settings import save_window_layout
-
-    antiga = DocumentWindow()
-    qtbot.addWidget(antiga)
-    antiga.removeToolBar(antiga.command_bar)  # como numa disposição salva antes da barra nova
-    antiga.addToolBar(Qt.ToolBarArea.TopToolBarArea, antiga.command_bar)
-    antiga.command_bar.show()
-    assert not antiga.toolBarBreak(antiga.tool_bar)
-    save_window_layout(antiga.saveGeometry(), antiga.saveState())
-
-    janela = DocumentWindow()
-    qtbot.addWidget(janela)
-    janela.show()
-    qtbot.waitExposed(janela)
-    assert janela.toolBarBreak(janela.tool_bar)
-    assert janela.command_bar.geometry().bottom() < janela.tool_bar.geometry().top()
-
-
 def test_caixas_de_mensagem_e_botoes_sem_desenho(qapp):
     from PySide6.QtWidgets import QStyle
 
@@ -145,31 +134,32 @@ def test_caixas_de_mensagem_e_botoes_sem_desenho(qapp):
     assert not estilo.standardIcon(QStyle.StandardPixmap.SP_ArrowUp).isNull()
 
 
-@pytest.mark.skipif(sys.platform == "darwin", reason="no macOS a barra de menus é a do sistema")
-def test_alt_sozinho_e_f10_abrem_o_menu(janela, qtbot, monkeypatch):
-    abertos = []
-    monkeypatch.setattr(janela, "_show_main_menu", lambda: abertos.append(True))
-    qtbot.keyPress(janela.view, Qt.Key.Key_Alt)
-    qtbot.keyRelease(janela.view, Qt.Key.Key_Alt)
-    assert abertos == [True]
-    qtbot.keyPress(janela.view, Qt.Key.Key_Alt)  # Alt com outra tecla não abre
-    qtbot.keyPress(janela.view, Qt.Key.Key_S, Qt.KeyboardModifier.AltModifier)
-    qtbot.keyRelease(janela.view, Qt.Key.Key_Alt)
-    assert abertos == [True]
-    assert janela.action_main_menu.shortcut().toString() == "F10"
-    assert janela.action_main_menu in janela.actions()
+def test_sobre_o_haradaer(janela, qtbot):
+    import haradaer
+
+    assert janela.about_action in janela.help_menu.actions()
+    caixa = janela.show_about()
+    qtbot.addWidget(caixa)
+    assert haradaer.__version__ in caixa.text()
+    assert "GPL" in caixa.informativeText()
+    assert "github.com/PedroHarada/HaradaER" in caixa.informativeText()
+    assert caixa.icon() == QMessageBox.Icon.NoIcon  # só texto
 
 
-def test_menu_principal_sem_letra_de_acesso_repetida(qtbot):
-    from haradaer.i18n import set_language
+def test_tela_cheia_em_exibir(janela):
+    acao = janela.action_full_screen
+    assert acao in janela.view_menu.actions()
+    assert acao.isCheckable()
+    assert not acao.shortcut().isEmpty()
 
-    for idioma in ("pt", "en", "es"):
-        set_language(idioma)
-        janela = DocumentWindow()
-        qtbot.addWidget(janela)
-        letras = [
-            a.text()[a.text().index("&") + 1].lower()
-            for a in janela.main_menu.actions()
-            if "&" in a.text()
-        ]
-        assert len(letras) == len(set(letras)), idioma
+
+@pytest.mark.skipif(sys.platform == "darwin", reason="no macOS o menu Janela existe")
+def test_menu_janela_so_no_macos(janela):
+    assert not hasattr(janela, "window_menu")
+
+
+def test_menu_janela_do_macos(janela):
+    janela._build_window_menu()
+    acoes = janela.window_menu.actions()
+    assert janela.action_minimize in acoes and janela.action_zoom_window in acoes
+    assert janela.action_minimize.shortcut().toString() == "Ctrl+M"

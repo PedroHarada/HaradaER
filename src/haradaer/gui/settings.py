@@ -82,7 +82,7 @@ def set_structure_warnings_enabled(ligado: bool) -> None:
 
 
 def quick_edit_enabled() -> bool:
-    """A Edição rápida (Editar › Edição rápida) começa desligada."""
+    """A Edição rápida (Preferências › Edição, ou Ctrl+Shift+E) começa desligada."""
     return str(settings().value(QUICK_EDIT_KEY, "false")).lower() == "true"
 
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -59,6 +59,13 @@ def _dica(texto: str) -> QLabel:
     rotulo.setWordWrap(True)
     rotulo.setEnabled(False)  # cinza, como texto de apoio
     return rotulo
+
+
+def _atalho(acao: QAction) -> str:
+    """O atalho que liga e desliga a opção, que não está mais em nenhum menu."""
+    return _("Atalho: {tecla}").format(
+        tecla=acao.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
+    )
 
 
 def _aba(*grupos: QWidget) -> QWidget:
@@ -111,6 +118,10 @@ class PreferencesDialog(QDialog):
             lambda i: janela._language_chosen(self.language_box.itemData(i))
         )
         self.grid_box = _caixa(janela.action_grid, _("Mostrar a &grade"))
+        self.panel_boxes = [
+            _caixa(dock.toggleViewAction(), dock.windowTitle())
+            for dock in (janela.inspector_dock, janela.properties_dock, janela.messages_dock)
+        ]
         return _aba(
             _grupo(_("Tema"), *temas),
             _grupo(
@@ -118,7 +129,8 @@ class PreferencesDialog(QDialog):
                 self.language_box,
                 _dica(_("Vale quando o HaradaER for fechado e aberto de novo.")),
             ),
-            _grupo(_("Desenho"), self.grid_box),
+            _grupo(_("Desenho"), self.grid_box, _dica(_atalho(janela.action_grid))),
+            _grupo(_("Painéis"), *self.panel_boxes),
         )
 
     def _theme_toggled(self, ligado: bool) -> None:
@@ -146,6 +158,7 @@ class PreferencesDialog(QDialog):
                 _("Edição rápida"),
                 self.quick_edit_box,
                 _dica(janela.action_quick_edit.statusTip()),
+                _dica(_atalho(janela.action_quick_edit)),
             )
         )
 

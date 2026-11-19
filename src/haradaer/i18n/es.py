@@ -391,7 +391,9 @@ ES: dict[str, str] = {
     "Atalhos do &teclado…": "Atajos de &teclado…",
     "Atalhos do teclado": "Atajos de teclado",
     "Buscar atalho…": "Buscar atajo…",
-    "Edição rápida (Editar › Edição rápida)": "Edición rápida (Editar › Edición rápida)",
+    "Edição rápida (Ctrl+Shift+E)": "Edición rápida (Ctrl+Shift+E)",
+    "Atalho: {tecla}": "Atajo: {tecla}",
+    "Painéis": "Paneles",
     "Ação": "Acción",
     "Trocar o tipo do elemento selecionado (com Selecionar)": (
         "Cambiar el tipo del elemento seleccionado (con Seleccionar)"
@@ -429,8 +431,6 @@ ES: dict[str, str] = {
     # Preferências e barra de comandos
     "&Preferências…": "Pre&ferencias…",
     "Preferências": "Preferencias",
-    "Menu": "Menú",
-    "Comandos": "Comandos",
     "Aparência": "Apariencia",
     "Tema": "Tema",
     "Desenho": "Dibujo",
@@ -449,4 +449,17 @@ ES: dict[str, str] = {
     "Verificar &agora": "Comprobar &ahora",
     "Você tem a {atual}.": "Usted tiene la {atual}.",
     "No máximo uma vez por dia, no GitHub.": "Como máximo una vez al día, en GitHub.",
+    # Sobre, tela cheia e menu Janela (macOS)
+    "S&obre o HaradaER": "&Acerca de HaradaER",
+    "Sobre o HaradaER": "Acerca de HaradaER",
+    "Ferramenta de modelagem Entidade-Relacionamento compatível com o TerraER 3.14.": (
+        "Herramienta de modelado Entidad-Relación compatible con TerraER 3.14."
+    ),
+    "Software livre, sob a licença GNU GPL versão 3.": (
+        "Software libre, bajo la licencia GNU GPL versión 3."
+    ),
+    "Tela c&heia": "&Pantalla completa",
+    "&Janela": "&Ventana",
+    "&Minimizar": "&Minimizar",
+    "&Zoom": "&Zoom",
 }

@@ -118,17 +118,19 @@ Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolh
 ## Depois de abrir
 
 O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português, inglês ou espanhol);
-para trocar, use **Preferências › Aparência › Idioma** (pelo botão Menu, no canto
-esquerdo da barra de cima) e abra o programa de novo. Para começar:
+para trocar, use **Arquivo › Preferências › Aparência › Idioma** e abra o programa de novo. Para começar:
 
 1. Escolha **Entidade** na faixa de cima e clique no desenho; digite o nome e Enter.
 2. Crie um **Relacionamento** e outra entidade do mesmo jeito.
 3. Selecione o relacionamento e uma entidade (Ctrl + clique; no Mac, Cmd + clique): as conexões
    que servem para o par ficam destacadas em azul na faixa. Clique numa delas para ligar os dois.
-4. **Salvar**, na barra de cima, grava um `.xml` que também abre no TerraER 3.14.
+4. **Arquivo › Salvar** grava um `.xml` que também abre no TerraER 3.14.
+
+Com o botão direito sobre o desenho ou sobre o que está selecionado, aparecem copiar, colar,
+duplicar, excluir, a ordem (frente e trás), agrupar e alinhar.
 
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
-atributo chave. Dá para desligá-los em **Preferências › Verificação**.
+atributo chave. Dá para desligá-los em **Arquivo › Preferências › Verificação**.
 
 O HaradaER não usa a conexão livre do TerraER, que não tem significado no modelo. Se um
 arquivo tiver alguma, ela é apagada ao abrir, com um aviso dizendo entre quais elementos estava;
@@ -156,12 +158,12 @@ aparecem como foram digitados.
 
 Cada Enter é uma linha nova.
 
-Achou um problema ou tem uma ideia? **Menu › Ajuda › Relatar um problema** e **Menu › Ajuda ›
-Sugerir uma melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
+Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda › Sugerir uma
+melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
 
 Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e avisa; nada é
 baixado sozinho. Para desligar, desmarque
-**Preferências › Atualizações › Verificar ao abrir**.
+**Arquivo › Preferências › Atualizações › Verificar ao abrir**.
 
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
@@ -169,9 +171,9 @@ Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
 ## Atalhos do teclado
 
-A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Alt sozinho ou F10
-abre o botão Menu. Os atalhos de uma tecla
-valem com **Editar › Edição rápida** ligada (Ctrl+Shift+E, ou o botão na barra de status).
+A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Os atalhos de uma tecla
+valem com a **Edição rápida** ligada (Ctrl+Shift+E, o botão na barra de status ou
+**Preferências › Edição**).
 Com Selecionar ativo e um elemento selecionado, a letra da família dele troca o tipo (por
 exemplo, A num atributo o faz virar chave).
 
@@ -186,6 +188,8 @@ exemplo, A num atributo o faz virar chave).
 | Salvar | `Ctrl+S` |
 | Salvar como | `Ctrl+Shift+S` |
 | Exportar desenho | `Ctrl+E` |
+| Copiar como imagem | `Ctrl+Shift+C` |
+| Preferências | `Ctrl+,` |
 | Fechar | `Ctrl+F4` |
 
 **Editar**
@@ -202,9 +206,6 @@ exemplo, A num atributo o faz virar chave).
 | Selecionar tudo | `Ctrl+A` |
 | Selecionar do mesmo tipo | `Ctrl+Shift+A` |
 | Localizar | `Ctrl+F` |
-| Copiar como imagem | `Ctrl+Shift+C` |
-| Edição rápida | `Ctrl+Shift+E` |
-| Preferências | `Ctrl+,` |
 
 **Organizar**
 
@@ -223,7 +224,7 @@ exemplo, A num atributo o faz virar chave).
 | Reduzir | `Ctrl+-` |
 | Tamanho real | `Ctrl+0` |
 | Ajustar à janela | `Ctrl+9` |
-| Grade | `Ctrl+'` |
+| Tela cheia | `F11` |
 
 **Ajuda**
 
@@ -231,7 +232,14 @@ exemplo, A num atributo o faz virar chave).
 |---|---|
 | Atalhos do teclado | `F1` |
 
-**Edição rápida (Editar › Edição rápida)**
+**Preferências**
+
+| Ação | Atalho |
+|---|---|
+| Edição rápida | `Ctrl+Shift+E` |
+| Grade | `Ctrl+'` |
+
+**Edição rápida (Ctrl+Shift+E)**
 
 | Ação | Atalho |
 |---|---|

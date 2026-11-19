@@ -119,8 +119,7 @@ Aplicaciones). También puede arrastrar la versión nueva a Aplicaciones y elegi
 ## Después de abrir
 
 El uso es el mismo en cualquier sistema. HaradaER se abre en el idioma del sistema (portugués,
-inglés o español); para cambiarlo, use **Preferencias › Apariencia › Idioma** (con el botón Menú, en el
-extremo izquierdo de la barra de arriba) y abra el programa de nuevo. Para
+inglés o español); para cambiarlo, use **Archivo › Preferencias › Apariencia › Idioma** y abra el programa de nuevo. Para
 empezar:
 
 1. Elija **Entidad** en la franja de arriba y haga clic en el dibujo; escriba el nombre y pulse
@@ -129,10 +128,13 @@ empezar:
 3. Seleccione la relación y una entidad (Ctrl + clic; en Mac, Cmd + clic): las conexiones que
    sirven para el par se resaltan en azul en la franja. Haga clic en una de ellas para unir los
    dos.
-4. **Guardar**, en la barra de arriba, escribe un `.xml` que también se abre en TerraER 3.14.
+4. **Archivo › Guardar** escribe un `.xml` que también se abre en TerraER 3.14.
+
+Con el botón derecho sobre el dibujo o sobre lo seleccionado aparecen copiar, pegar, duplicar,
+eliminar, el orden (frente y fondo), agrupar y alinear.
 
 Los contornos naranjas y el panel **Mensajes** señalan lo que falta en el modelo, como una
-entidad sin atributo clave. Puede desactivarlos en **Preferencias › Verificación**.
+entidad sin atributo clave. Puede desactivarlos en **Archivo › Preferencias › Verificación**.
 
 HaradaER no usa la conexión libre de TerraER, que no tiene significado en el modelo. Si un
 archivo tiene alguna, se borra al abrirlo, con un aviso que dice entre qué elementos estaba; el
@@ -160,12 +162,12 @@ marcadores aparecen tal como se escribieron.
 
 Cada Enter es una línea nueva.
 
-¿Encontró un problema o tiene una idea? **Menú › Ayuda › Informar de un problema** y **Menú › Ayuda ›
-Sugerir una mejora** abren la página de GitHub ya rellenada (hace falta una cuenta en GitHub).
+¿Encontró un problema o tiene una idea? **Ayuda › Informar de un problema** y **Ayuda › Sugerir
+una mejora** abren la página de GitHub ya rellenada (hace falta una cuenta en GitHub).
 
 Una vez al día, al abrir, HaradaER comprueba en GitHub si hay versión nueva y avisa; no se
 descarga nada solo. Para desactivarlo, desmarque
-**Preferencias › Actualizaciones › Buscar al abrir**.
+**Archivo › Preferencias › Actualizaciones › Buscar al abrir**.
 
 Todos los comandos están en [Como usar](../README.md#como-usar), en el README (en portugués).
 
@@ -173,10 +175,9 @@ Todos los comandos están en [Como usar](../README.md#como-usar), en el README (
 
 ## Atajos de teclado
 
-La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Alt solo o F10
-abre el botón Menú. Los atajos de una tecla
-funcionan con **Editar › Edición rápida** activada (Ctrl+Shift+E, o el botón de la barra de
-estado). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
+La misma lista está en **Ayuda › Atajos de teclado** (F1), con búsqueda. Los atajos de una tecla
+funcionan con la **Edición rápida** activada (Ctrl+Shift+E, el botón de la barra de
+estado o **Preferencias › Edición**). Con Seleccionar activo y un elemento seleccionado, la letra de su familia cambia el tipo
 (por ejemplo, A en un atributo lo convierte en clave).
 
 <!-- atalhos: início (gerado por python -m haradaer.gui.shortcuts_dialog) -->
@@ -190,6 +191,8 @@ estado). Con Seleccionar activo y un elemento seleccionado, la letra de su famil
 | Guardar | `Ctrl+S` |
 | Guardar como | `Ctrl+Shift+S` |
 | Exportar dibujo | `Ctrl+E` |
+| Copiar como imagen | `Ctrl+Shift+C` |
+| Preferencias | `Ctrl+,` |
 | Cerrar | `Ctrl+F4` |
 
 **Editar**
@@ -206,9 +209,6 @@ estado). Con Seleccionar activo y un elemento seleccionado, la letra de su famil
 | Seleccionar todo | `Ctrl+A` |
 | Seleccionar del mismo tipo | `Ctrl+Shift+A` |
 | Buscar | `Ctrl+F` |
-| Copiar como imagen | `Ctrl+Shift+C` |
-| Edición rápida | `Ctrl+Shift+E` |
-| Preferencias | `Ctrl+,` |
 
 **Organizar**
 
@@ -227,7 +227,7 @@ estado). Con Seleccionar activo y un elemento seleccionado, la letra de su famil
 | Alejar | `Ctrl+-` |
 | Tamaño real | `Ctrl+0` |
 | Ajustar a la ventana | `Ctrl+9` |
-| Cuadrícula | `Ctrl+'` |
+| Pantalla completa | `F11` |
 
 **Ayuda**
 
@@ -235,7 +235,14 @@ estado). Con Seleccionar activo y un elemento seleccionado, la letra de su famil
 |---|---|
 | Atajos de teclado | `F1` |
 
-**Edición rápida (Editar › Edición rápida)**
+**Preferencias**
+
+| Acción | Atajo |
+|---|---|
+| Edición rápida | `Ctrl+Shift+E` |
+| Cuadrícula | `Ctrl+'` |
+
+**Edición rápida (Ctrl+Shift+E)**
 
 | Acción | Atajo |
 |---|---|

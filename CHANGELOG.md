@@ -8,18 +8,25 @@ para mudanças que quebram algo que já funcionava.
 
 ### Adicionado
 
-- **Espanhol:** a interface inteira em espanhol, em **Exibir › Idioma › Español** (na primeira
+- **Espanhol:** a interface inteira em espanhol, em **Arquivo › Preferências › Aparência** (na primeira
   vez, vale o idioma do sistema), com os botões e diálogos do Qt também em espanhol e os nomes
   padrão dos elementos novos no idioma. Manual `docs/PRIMEROS-PASOS.md`, que vai nos pacotes
   como `PRIMEROS-PASOS.txt`.
-- **Barra de comandos** no lugar da barra de menus: Menu (com Editar, Organizar, Exibir e Ajuda
-  como submenus), Novo, Abrir e Salvar. Alt sozinho ou F10 abre o Menu. Os atalhos de teclado continuam os mesmos. No macOS, a barra de menus do
-  sistema continua no alto da tela.
+- **Menus mais curtos:** Preferências e Copiar como imagem ficam em Arquivo; as opções saem
+  dos menus e vão para as Preferências.
+- **Ajuda › Sobre o HaradaER** (versão, licença e repositório), **Exibir › Tela cheia** (F11;
+  no macOS, Ctrl+Cmd+F) e, só no macOS, o menu **Janela** com Minimizar (Cmd+M) e Zoom, como
+  pede o guia de interface da Apple.
 - Caixas de mensagem e botões dos diálogos só com texto, sem os desenhos do Qt (ponto de
   interrogação, disquete, lixeira, X).
-- **Preferências** (Editar › Preferências, Ctrl+,): tema, idioma, grade, verificação, avisos de
+- **Preferências** (Arquivo › Preferências, Ctrl+,): tema, idioma, grade, verificação, avisos de
   estrutura, Edição rápida, arquivos recentes e atualizações numa janela só, em abas. Tema,
-  Idioma, Verificar modelo, Avisos de estrutura e Verificar ao abrir saem dos menus.
+  Idioma, Verificar modelo, Avisos de estrutura, Verificar ao abrir, Verificar atualizações,
+  Grade e Edição rápida saem dos menus (os atalhos continuam); os painéis ficam nos dois
+  lugares.
+- **Botão direito** no desenho com as ações sobre a seleção: recortar, copiar, colar, duplicar,
+  excluir, trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar, com o atalho
+  ao lado; o que não se aplica fica cinza. Clicar num elemento já selecionado mantém a seleção.
 
 ## 1.4.0 — 2026-11-15
 
