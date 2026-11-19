@@ -28,7 +28,9 @@ não pode verificar o desenvolvedor: clique com o botão direito no app › **Ab
 O primeiro início pode levar alguns segundos.
 
 Cada pacote traz o `PRIMEIROS-PASSOS.txt` do seu sistema: o passo a passo completo, com o que
-fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
+fazer se não abrir. O `GETTING-STARTED.txt` e o `PRIMEROS-PASOS.txt` são o mesmo manual em
+inglês e em espanhol. Depois de aberto, o manual completo está em **Ajuda › Manual do HaradaER**
+(F1).
 
 ## Observações
 
@@ -36,18 +38,21 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
 - O pacote do macOS é gerado e testado no macOS 15. Ele deve abrir no macOS 14, mas isso não é
   mais conferido automaticamente.
-- Novo **Texto** (tecla `T` na Edição rápida): caixa de texto de várias linhas para observações
-  no desenho, com Markdown (títulos, negrito, itálico, listas, tarefas, links e código), que o TerraER também
-  abre. Os textos soltos do TerraER (Texto, Papel) viram Texto
-  ao abrir, com um aviso, e o Localizar (Ctrl+F) procura dentro deles.
-- A conexão livre não existe mais: ao abrir um arquivo que tenha alguma, ela é apagada, com um
-  aviso dizendo entre quais elementos estava. O arquivo só muda quando você salvar.
+- **Espanhol:** a interface inteira e o manual em espanhol. O idioma se troca em
+  **Configurações › Preferências** (ou **Ajuda › Trocar o idioma…**) e vale ao reabrir.
+- **Menus novos**, iguais nos três sistemas: Arquivo, Editar, Organizar, Exibir,
+  **Configurações** (tema, barras, verificação, Edição rápida e Preferências) e Ajuda. O botão
+  direito no desenho traz copiar, colar, duplicar, excluir, ordem, agrupar e alinhar.
+- **Manual dentro do programa:** **Ajuda › Manual do HaradaER** (F1) abre o manual numa janela,
+  sem internet, com busca.
+- **Barra de status:** o zoom se digita, e a contagem de erros e avisos abre o painel Mensagens
+  com um clique.
+- **Ctrl+D** volta a duplicar no Linux, onde antes não fazia nada.
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
   **Ajuda › Sugerir uma melhoria**, no próprio programa.
 - Uma vez por dia, ao abrir, o programa avisa se há versão nova (desliga em
-  **Ajuda › Verificar ao abrir**). Desde a 1.4.0, **Atualizar e reiniciar** instala a versão
-  nova pelo próprio programa, sem precisar baixar à mão (quem tem a 1.3.1 ou anterior instala a
-  1.4.0 à mão uma vez).
+  **Configurações › Preferências › Verificar ao abrir**). **Atualizar e reiniciar** instala a
+  versão nova pelo próprio programa, sem precisar baixar à mão.
 - Os avisos de licença das bibliotecas incluídas estão em `AVISOS-DE-LICENCA.txt`.
 
 ---
@@ -55,8 +60,8 @@ fazer se não abrir. O `GETTING-STARTED.txt` é o mesmo manual em inglês.
 ## English
 
 Entity-Relationship modeling tool compatible with TerraER 3.14's `.xml` file. The interface is
-available in Portuguese and English (**View › Language**; the first time, it follows the
-system's language).
+available in Portuguese, English and Spanish (**Settings › Preferences**; the first time, it
+follows the system's language).
 
 | System | File | Requirements |
 |---|---|---|
@@ -81,21 +86,26 @@ it can't verify the developer: right-click the app › **Open** › **Open** (or
 Privacy & Security › **Open Anyway**).
 
 The first start may take a few seconds. Each package includes `GETTING-STARTED.txt` for its
-system: the full step-by-step guide, with what to do if it doesn't open.
+system: the full step-by-step guide, with what to do if it doesn't open. Once it's open, the full
+manual is in **Help › HaradaER Handbook** (F1).
 
 - HaradaER was developed and tested on Linux. On Windows and macOS the automated tests pass,
   but real use is just starting: let us know if anything odd happens.
 - The macOS package is built and tested on macOS 15. It should open on macOS 14, but that is no
   longer checked automatically.
-- New **Text** (`T` key in Quick edit): a multi-line text box for notes on the drawing, with
-  Markdown (headings, bold, italic, lists, tasks, links and code), which TerraER also opens. TerraER's loose texts (Text, Role) become Text on opening, with a notice,
-  and Find (Ctrl+F) searches inside them.
-- The free connection no longer exists: when a file has any, they are deleted on opening, with a
-  notice saying which elements they connected. The file only changes when you save.
+- **Spanish:** the whole interface and the manual in Spanish. Change the language in
+  **Settings › Preferences** (or **Help › Switch application language…**); it applies on reopening.
+- **New menus**, the same on the three systems: File, Edit, Arrange, View, **Settings** (theme,
+  bars, checking, Quick editing and Preferences) and Help. Right-clicking the drawing gives copy,
+  paste, duplicate, delete, order, group and align.
+- **Manual inside the program:** **Help › HaradaER Handbook** (F1) opens the manual in a window,
+  offline, with search.
+- **Status bar:** you can type the zoom, and clicking the error and warning count opens the
+  Messages panel.
+- **Ctrl+D** duplicates again on Linux, where it did nothing before.
 - To report a problem or suggest an improvement: **Help › Report a problem** or
   **Help › Suggest an improvement**, inside the program.
 - Once a day, when opening, the program tells you if there's a new version (turn it off in
-  **Help › Check when opening**). Since 1.4.0, **Update and restart** installs the new version
-  from the program itself, with no manual download (if you have 1.3.1 or older, install 1.4.0
-  by hand once).
+  **Settings › Preferences › Check when opening**). **Update and restart** installs the new
+  version from the program itself, with no manual download.
 - The license notices of the bundled libraries are in `AVISOS-DE-LICENCA.txt`.
