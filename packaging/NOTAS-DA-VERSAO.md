@@ -47,6 +47,11 @@ inglês e em espanhol. Depois de aberto, o manual completo está em **Ajuda › 
   sem internet, com busca.
 - **Barra de status:** o zoom se digita, e a contagem de erros e avisos abre o painel Mensagens
   com um clique.
+- **Atalhos novos, iguais nos três sistemas** (no Mac, Ctrl é Cmd e Alt é Option), para não
+  colidir com os atalhos padrão do Mac e do KDE: Agrupar **Ctrl+Alt+G**, Desagrupar
+  **Ctrl+Alt+Shift+G**, Trazer para a frente **Home** e Enviar para trás **End** (ou
+  Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B), Selecionar do mesmo tipo **Ctrl+Alt+A** e o novo
+  **Desmarcar tudo**, Ctrl+Shift+A.
 - **Ctrl+D** volta a duplicar no Linux, onde antes não fazia nada.
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
   **Ajuda › Sugerir uma melhoria**, no próprio programa.
@@ -102,6 +107,11 @@ manual is in **Help › HaradaER Handbook** (F1).
   offline, with search.
 - **Status bar:** you can type the zoom, and clicking the error and warning count opens the
   Messages panel.
+- **New shortcuts, the same on the three systems** (on a Mac, Ctrl is Cmd and Alt is Option),
+  so they don't clash with the standard Mac and KDE shortcuts: Group **Ctrl+Alt+G**, Ungroup
+  **Ctrl+Alt+Shift+G**, Bring to front **Home** and Send to back **End** (or Ctrl+Alt+Shift+F
+  and Ctrl+Alt+Shift+B), Select same kind **Ctrl+Alt+A** and the new **Deselect all**,
+  Ctrl+Shift+A.
 - **Ctrl+D** duplicates again on Linux, where it did nothing before.
 - To report a problem or suggest an improvement: **Help › Report a problem** or
   **Help › Suggest an improvement**, inside the program.
