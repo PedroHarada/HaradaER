@@ -17,7 +17,7 @@ from haradaer.gui.settings import RecentFiles, saved_language
 from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.window import DocumentWindow
-from haradaer.i18n import _, language, language_for_locale, set_language
+from haradaer.i18n import LOCALES, _, language, language_for_locales, set_language
 
 ICON_PATH = Path(haradaer.__file__).parent / "resources" / "haradaer.svg"
 ICON_SIZES = (16, 24, 32, 48, 64, 128, 256)
@@ -91,25 +91,39 @@ class WindowManager(QObject):
             self.open_path(Path(arquivo))
 
 
-def choose_language() -> str:
-    """O idioma escolhido em Exibir › Idioma ou, na primeira vez, o do sistema (RNF-06).
+QT_TRANSLATIONS = {"pt": "qtbase_pt_BR", "es": "qtbase_es"}
 
-    Vale até fechar o programa: trocar no menu só tem efeito ao reabrir.
+
+def choose_language() -> str:
+    """O idioma escolhido em Configurações › Preferências ou, na primeira vez, o do sistema
+    (RNF-06).
+
+    Vale até fechar o programa: trocar o idioma só tem efeito ao reabrir.
     """
-    set_language(saved_language() or language_for_locale(QLocale.system().name()))
+    escolhido = saved_language()
+    if escolhido is None:
+        # A lista de idiomas da interface do sistema, e não o formato regional: respeita o
+        # idioma escolhido para o app no macOS (Apple) e a variável LANGUAGE no Linux
+        sistema = QLocale.system()
+        escolhido = language_for_locales(sistema.uiLanguages() or [sistema.name()])
+    set_language(escolhido)
+    # O idioma também vai para o Qt, para os leitores de tela saberem em que língua ler
+    # (WCAG2ICT 3.1.1, idioma do software determinado por programa)
+    QLocale.setDefault(QLocale(LOCALES[language()]))
     return language()
 
 
 def install_translator(app: QApplication) -> bool:
     """Traduz os textos do próprio Qt (botões Salvar/Descartar/Cancelar, diálogos de arquivo).
 
-    Só em português: em inglês o Qt já fala a língua dele.
+    Em inglês o Qt já fala a língua dele.
     """
-    if language() != "pt":
+    arquivo = QT_TRANSLATIONS.get(language())
+    if arquivo is None:
         return False
     tradutor = QTranslator(app)
     pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
-    if not tradutor.load("qtbase_pt_BR", pasta):
+    if not tradutor.load(arquivo, pasta):
         return False
     return app.installTranslator(tradutor)
 

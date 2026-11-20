@@ -19,7 +19,7 @@ from haradaer.i18n import N_, _
 ERROR_LABEL = N_("Erro")
 WARNING_LABEL = N_("Aviso")
 EMPTY_TEXT = N_("Nenhum problema no modelo.")
-OFF_TEXT = N_("A verificação está desligada (Exibir › Verificar modelo).")
+OFF_TEXT = N_("A verificação está desligada (Configurações › Verificar modelo).")
 
 
 class MessagesPanel(QWidget):

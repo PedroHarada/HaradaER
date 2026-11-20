@@ -214,6 +214,7 @@ def _key_owners(documento: Document):
         if no.tag in _CHAVES and id(no) in donos:
             yield no, donos[id(no)]
 
+
 def find_texts(documento: Document, texto: str) -> list[Element]:
     """Textos (RF-26) cujo conteúdo, sem os marcadores do Markdown (RF-28), contém o texto
     procurado, na ordem do desenho."""

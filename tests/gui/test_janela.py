@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMessageBox
 
 from haradaer.gui.app import WindowManager
@@ -67,11 +68,31 @@ def test_zoom_aparece_na_barra_de_status(qtbot, referencia):
     qtbot.addWidget(janela)
     janela.load(referencia / "amostra-basica.xml")
     janela.action_zoom_in.trigger()
-    assert janela._zoom_label.text() == "125%"
+    assert janela._zoom_field.text() == "125%"
     janela.action_zoom_actual.trigger()
-    assert janela._zoom_label.text() == "100%"
+    assert janela._zoom_field.text() == "100%"
     janela.action_zoom_out.trigger()
-    assert janela._zoom_label.text() == "80%"
+    assert janela._zoom_field.text() == "75%"  # os níveis comuns: 100 -> 75
+
+
+@pytest.mark.parametrize(
+    ("digitado", "esperado"), [("137", 1.37), ("137%", 1.37), ("62,5", 0.625), ("abc", 1.0)]
+)
+def test_zoom_digitado(qtbot, digitado, esperado):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela._zoom_field.setText(digitado)
+    janela._zoom_field.returnPressed.emit()
+    assert janela.view.zoom == pytest.approx(esperado)
+    assert janela._zoom_field.text() == f"{round(esperado * 100)}%"
+
+
+def test_zoom_digitado_respeita_os_limites(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela._zoom_field.setText("99999")
+    janela._zoom_field.returnPressed.emit()
+    assert janela._zoom_field.text() == "2000%"
 
 
 def test_uma_janela_por_documento(gerenciador, referencia):
@@ -142,3 +163,35 @@ def test_paineis_tem_largura_minima_para_nao_cortar_os_nomes(qtbot):
     qtbot.addWidget(janela)
     assert janela.inspector_dock.minimumWidth() >= 230
     assert janela.properties_dock.minimumWidth() >= 230
+
+
+def test_zoom_pelos_niveis_comuns_mesmo_depois_de_zoom_livre(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    janela.view.set_zoom(1.37)
+    janela.action_zoom_in.trigger()
+    assert janela.view.zoom == pytest.approx(1.5)
+    janela.view.set_zoom(1.37)
+    janela.action_zoom_out.trigger()
+    assert janela.view.zoom == pytest.approx(1.25)
+    janela.view.set_zoom(20.0)
+    janela.action_zoom_in.trigger()
+    assert janela.view.zoom == pytest.approx(20.0)  # no limite, fica
+
+
+def test_nenhum_atalho_repetido_e_atalhos_fixos(qtbot):
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    vistos: dict[str, str] = {}
+    repetidos = []
+    for acao in janela.findChildren(QAction):
+        for tecla in acao.shortcuts():
+            texto = tecla.toString()
+            if texto in vistos and vistos[texto] != acao.text():
+                repetidos.append(f"{texto}: {vistos[texto]} / {acao.text()}")
+            vistos[texto] = acao.text()
+    assert repetidos == []
+    assert [k.toString() for k in janela.action_delete.shortcuts()] == ["Del"]
+    assert janela.action_close.shortcut().toString() == "Ctrl+W"
+    assert janela.action_quit.shortcut().toString() == "Ctrl+Q"
+    assert janela.action_redo.shortcut().toString() == "Ctrl+Shift+Z"

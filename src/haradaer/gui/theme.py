@@ -4,7 +4,7 @@ O PySide6 traz um Qt próprio, sem o plugin do qt6ct que o sistema usa para dar 
 programas Qt (o `QT_QPA_PLATFORMTHEME=qt6ct` não faz efeito nele). Por isso o HaradaER lê a
 configuração do qt6ct por conta própria (`~/.config/qt6ct/qt6ct.conf` e o arquivo de cores para
 onde ela aponta) e acompanha as trocas de tema enquanto está aberto. Os temas claro e escuro
-são paletas próprias sobre o estilo Fusion. A escolha fica em Exibir › Tema e é lembrada.
+são paletas próprias sobre o estilo Fusion. A escolha fica em Configurações › Tema e é lembrada.
 
 No diagrama, as formas mantêm as cores do TerraER (claras, com texto preto dentro) em qualquer
 tema. Mudam o fundo, a grade, o destaque da seleção e o que fica direto sobre o fundo: linhas
@@ -20,8 +20,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from PySide6.QtCore import QFileSystemWatcher, QObject, Signal
-from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication, QStyleFactory
+from PySide6.QtGui import QColor, QIcon, QPalette
+from PySide6.QtWidgets import QApplication, QProxyStyle, QStyle, QStyleFactory
 
 from haradaer.core.appearance.style import BLACK, RGBA
 from haradaer.gui.settings import settings
@@ -260,14 +260,31 @@ def saved_theme() -> Theme:
     return theme_named(str(settings().value(THEME_KEY, LIGHT.name))) or LIGHT
 
 
+class TextButtonsStyle(QProxyStyle):
+    """Fusion com os botões dos diálogos (Fechar, Salvar, Descartar, Cancelar...) só com texto:
+    o autor não quer desenho nesses botões (2026-11-19). Os outros desenhos do Qt ficam.
+    Só `standardIcon` passa pelo Python; ele é chamado pouco."""
+
+    _SEM_ICONE = frozenset(
+        p
+        for p in QStyle.StandardPixmap
+        if p.name.startswith("SP_Dialog") and p.name.endswith("Button")
+    )
+
+    def standardIcon(self, pixmap, opcao=None, widget=None):  # noqa: N802 (nome do Qt)
+        if pixmap in self._SEM_ICONE:
+            return QIcon()
+        return super().standardIcon(pixmap, opcao, widget)
+
+
 def apply_theme(tema: Theme, *, save: bool = True) -> None:
     """Troca o tema do programa inteiro (todas as janelas) e, se pedido, guarda a escolha."""
     app = QApplication.instance()
     if isinstance(app, QApplication):
-        if app.style().name().lower() != "fusion":  # trocar o estilo é caro: só se preciso
+        if not isinstance(app.style(), TextButtonsStyle):  # trocar o estilo é caro: só se preciso
             estilo = QStyleFactory.create("Fusion")
             if estilo is not None:
-                app.setStyle(estilo)
+                app.setStyle(TextButtonsStyle(estilo))
         paleta = _palette(tema)
         if app.palette() != paleta:
             app.setPalette(paleta)

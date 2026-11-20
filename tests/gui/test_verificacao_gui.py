@@ -290,20 +290,21 @@ def _duas_entidades_sem_chave(janela):
 
 def test_resumo_na_barra_diz_quais_elementos_tem_aviso(janela):
     _duas_entidades_sem_chave(janela)
-    rotulo = janela._verification_label
-    assert rotulo.isVisible()
-    assert rotulo.text() == (
+    botao = janela.issues_button
+    assert botao.text() == "0 erros  2 avisos"
+    assert botao.toolTip() == (
         "2 avisos de estrutura: Entidade1 e Entidade2 (entidade sem atributo chave)"
     )
     janela.action_structure.setChecked(False)
-    assert not rotulo.isVisible()
+    assert botao.text() == "0 erros  0 avisos"
 
 
 def test_resumo_com_erros_e_avisos_conta_e_manda_ao_painel(janela, referencia):
     janela.load(referencia / "amostra-conexoes-incompletas.xml")
-    texto = janela._verification_label.text()
-    assert texto.startswith("6 erros de conexão e ")
-    assert texto.endswith("(veja o painel Mensagens)")
+    assert janela.issues_button.text().startswith("6 erros  ")
+    dica = janela.issues_button.toolTip()
+    assert dica.startswith("6 erros de conexão e ")
+    assert dica.endswith("(veja o painel Mensagens)")
 
 
 def test_painel_mensagens_lista_e_leva_ao_elemento(janela):
@@ -322,7 +323,21 @@ def test_painel_mensagens_lista_e_leva_ao_elemento(janela):
 def test_painel_mensagens_sem_problemas(janela):
     assert janela.messages.rows() == []
     assert janela.messages.status.text() == "Nenhum problema no modelo."
-    assert not janela._verification_label.isVisible()
+    assert janela.issues_button.text() == "0 erros  0 avisos"
+    assert janela.issues_button.toolTip() == "Nenhum problema no modelo."
+
+
+def test_clicar_no_resumo_traz_o_painel_mensagens(janela):
+    janela.show()
+    janela.inspector_dock.raise_()
+    janela.messages_dock.hide()
+    janela.issues_button.click()
+    assert janela.messages_dock.isVisible()
+
+
+def test_resumo_com_verificacao_desligada(janela):
+    janela.action_validate.setChecked(False)
+    assert janela.issues_button.text() == "Verificação desligada"
 
 
 def test_paineis_comecam_em_abas_com_o_inspetor_a_frente(janela):

@@ -60,6 +60,21 @@ def check_markdown() -> str:
     return "markdown: ok"
 
 
+def check_manual() -> str:
+    """Os manuais dos três idiomas foram para o pacote e abrem na janela (Ajuda › Manual)."""
+    from haradaer.gui.manual_dialog import MANUAL_FILES, manual_html, manual_path
+
+    for idioma in MANUAL_FILES:
+        caminho = manual_path(idioma)
+        if caminho is None:
+            raise RuntimeError(f"manual em {idioma} não está no pacote")
+        if "<h1>" not in manual_html(caminho.read_text(encoding="utf-8")).replace(
+            '<h1><a name="', "<h1>"
+        ):
+            raise RuntimeError(f"manual em {idioma} sem título")
+    return "manuais: ok"
+
+
 def check_tls() -> str:
     """Só a conexão segura importa: qualquer resposta HTTP (até 404 ou limite de consultas)
     prova que o certificado do GitHub foi aceito."""
@@ -77,7 +92,7 @@ def run(saida: Path) -> int:
     linhas: list[str] = []
     falhou = False
     pasta = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else None  # dentro do pacote
-    verificacoes = [check_window, check_markdown, check_tls]
+    verificacoes = [check_window, check_markdown, check_manual, check_tls]
     for verificar in verificacoes:
         try:
             linhas.append(verificar())

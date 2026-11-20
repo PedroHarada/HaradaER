@@ -103,6 +103,7 @@ jobs:
           cp packaging/AVISOS-DE-LICENCA.txt packaging/linux/* src/haradaer/resources/haradaer.svg pacote/
           python packaging/manual_do_sistema.py linux pacote/PRIMEIROS-PASSOS.txt
           python packaging/manual_do_sistema.py linux pacote/GETTING-STARTED.txt en
+          python packaging/manual_do_sistema.py linux pacote/PRIMEROS-PASOS.txt es
           chmod +x pacote/instalar.sh
           tar -czf "$NOME.tar.gz" -C pacote .
       - name: Empacotar (Windows)
@@ -114,6 +115,7 @@ jobs:
           Copy-Item packaging/AVISOS-DE-LICENCA.txt pacote/
           python packaging/manual_do_sistema.py windows pacote/PRIMEIROS-PASSOS.txt
           python packaging/manual_do_sistema.py windows pacote/GETTING-STARTED.txt en
+          python packaging/manual_do_sistema.py windows pacote/PRIMEROS-PASOS.txt es
           Compress-Archive -Path pacote/* -DestinationPath "$env:NOME.zip"
       - name: Empacotar (macOS)
         if: matrix.sistema == 'macos'
@@ -121,6 +123,7 @@ jobs:
           mkdir pacote && cp -R dist/HaradaER.app pacote/ && cp packaging/AVISOS-DE-LICENCA.txt pacote/
           python packaging/manual_do_sistema.py macos pacote/PRIMEIROS-PASSOS.txt
           python packaging/manual_do_sistema.py macos pacote/GETTING-STARTED.txt en
+          python packaging/manual_do_sistema.py macos pacote/PRIMEROS-PASOS.txt es
           ditto -c -k pacote "$NOME.zip"  # sem a pasta pacote/ dentro do zip
       # A atualização pelo próprio programa (RF-22): uma cópia "instalada" do executável se
       # atualiza com o pacote recém-gerado, servido localmente. Única vez em que a troca roda de

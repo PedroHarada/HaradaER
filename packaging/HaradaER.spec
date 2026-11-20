@@ -44,7 +44,12 @@ NAO_USADOS = [
 
 a = Analysis(
     ["entrada.py"],
-    datas=[("AVISOS-DE-LICENCA.txt", "."), (ICONE_SVG, "haradaer/resources")],
+    datas=[("AVISOS-DE-LICENCA.txt", "."), (ICONE_SVG, "haradaer/resources")]
+    # Os manuais abrem dentro do programa (Ajuda › Manual), sem internet
+    + [
+        (os.path.join(SPECPATH, "..", "docs", nome), "haradaer/manuais")
+        for nome in ("PRIMEIROS-PASSOS.md", "GETTING-STARTED.md", "PRIMEROS-PASOS.md")
+    ],
     excludes=NAO_USADOS,
     noarchive=False,
 )

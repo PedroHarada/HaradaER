@@ -2,7 +2,8 @@
 
 How to download, open and install HaradaER on each system. This manual only covers what already
 works in each version; it is updated as the program is tested in more places. The Portuguese
-version is [Primeiros passos](PRIMEIROS-PASSOS.md).
+version is [Primeiros passos](PRIMEIROS-PASSOS.md), and the Spanish one is
+[Primeros pasos](PRIMEROS-PASOS.md).
 
 The files are on the repository's **Releases** page, in the latest version. You don't need to
 install Python or anything else.
@@ -114,8 +115,8 @@ Applications). You can also drag the new version to Applications and choose **Re
 
 ## After opening
 
-Use is the same on every system. HaradaER starts in the system's language (Portuguese or
-English); to change it, use **View › Language** and open the program again. To get started:
+Use is the same on every system. HaradaER starts in the system's language (Portuguese,
+English or Spanish); to change it, use **Settings › Preferences** and open the program again. To get started:
 
 1. Choose **Entity** in the top strip and click the drawing; type the name and press Enter.
 2. Create a **Relationship** and another entity the same way.
@@ -123,8 +124,11 @@ English); to change it, use **View › Language** and open the program again. To
    fit the pair are highlighted in blue in the strip. Click one of them to link the two.
 4. **File › Save** writes an `.xml` that also opens in TerraER 3.14.
 
+Right-clicking the drawing or the selection shows copy, paste, duplicate, delete, the order
+(front and back), group and align.
+
 Orange outlines and the **Messages** panel point out what the model is missing, such as an entity
-without a key attribute. You can turn them off in **View › Structure warnings**.
+without a key attribute. You can turn them off in **Settings › Structure warnings**.
 
 The **Logical schema** panel shows the tables the diagram produces (relational schema); with
 **File › Save logical schema on save**, they also go to a `.logic.md` next to the model.
@@ -159,7 +163,8 @@ Found a problem or have an idea? **Help › Report a problem** and **Help › Su
 improvement** open the GitHub page already filled in (a GitHub account is needed).
 
 Once a day, when opening, HaradaER checks GitHub for a new version and lets you know; nothing
-is downloaded by itself. To turn it off, uncheck **Help › Check when opening**.
+is downloaded by itself. To turn it off, uncheck
+**Settings › Preferences › Check when opening**.
 
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).
 
@@ -167,8 +172,10 @@ All commands are in [Como usar](../README.md#como-usar), in the README (in Portu
 
 ## Keyboard shortcuts
 
-The same list is in **Help › Keyboard shortcuts** (F1), with search. The one-key shortcuts work
-with **Edit › Quick editing** on (Ctrl+Shift+E, or the button on the status bar). With Select
+The same list is in **Help › Keyboard shortcuts**, with search; F1 opens this manual
+(**Help › HaradaER Handbook**). The one-key shortcuts work
+with **Quick editing** on (Ctrl+Shift+E, the button on the status bar, or
+**Settings › Quick editing**). With Select
 active and one element selected, its family letter changes its type (for example, A on an
 attribute makes it a key).
 
@@ -183,33 +190,34 @@ attribute makes it a key).
 | Save | `Ctrl+S` |
 | Save as | `Ctrl+Shift+S` |
 | Export drawing | `Ctrl+E` |
-| Close | `Ctrl+F4` |
+| Copy as image | `Ctrl+Shift+C` |
+| Close | `Ctrl+W` |
+| Quit | `Ctrl+Q` |
 
 **Edit**
 
 | Action | Shortcut |
 |---|---|
 | Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Y` |
+| Redo | `Ctrl+Shift+Z` |
 | Cut | `Ctrl+X` |
 | Copy | `Ctrl+C` |
 | Paste | `Ctrl+V` |
 | Duplicate | `Ctrl+D` |
 | Delete | `Del` |
 | Select all | `Ctrl+A` |
-| Select same kind | `Ctrl+Shift+A` |
+| Deselect all | `Ctrl+Shift+A` |
+| Select same kind | `Ctrl+Alt+A` |
 | Find | `Ctrl+F` |
-| Copy as image | `Ctrl+Shift+C` |
-| Quick editing | `Ctrl+Shift+E` |
 
 **Arrange**
 
 | Action | Shortcut |
 |---|---|
-| Bring to front | `Ctrl+]` |
-| Send to back | `Ctrl+[` |
-| Group | `Ctrl+G` |
-| Ungroup | `Ctrl+Shift+G` |
+| Bring to front | `Home` `Ctrl+Alt+Shift+F` |
+| Send to back | `End` `Ctrl+Alt+Shift+B` |
+| Group | `Ctrl+Alt+G` |
+| Ungroup | `Ctrl+Alt+Shift+G` |
 
 **View**
 
@@ -220,14 +228,22 @@ attribute makes it a key).
 | Actual size | `Ctrl+0` |
 | Fit to window | `Ctrl+9` |
 | Grid | `Ctrl+'` |
+| Full screen | `F11` |
+
+**Settings**
+
+| Action | Shortcut |
+|---|---|
+| Quick editing | `Ctrl+Shift+E` |
+| Preferences | `Ctrl+,` |
 
 **Help**
 
 | Action | Shortcut |
 |---|---|
-| Keyboard shortcuts | `F1` |
+| HaradaER Handbook | `F1` |
 
-**Quick editing (Edit › Quick editing)**
+**Quick editing (Ctrl+Shift+E)**
 
 | Action | Shortcut |
 |---|---|

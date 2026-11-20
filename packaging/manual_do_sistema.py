@@ -1,8 +1,9 @@
 """Tira do manual o de um sistema só, para ir dentro do pacote dele.
 
-    python packaging/manual_do_sistema.py linux|windows|macos SAIDA.txt [pt|en]
+    python packaging/manual_do_sistema.py linux|windows|macos SAIDA.txt [pt|en|es]
 
-O idioma é `pt` (`docs/PRIMEIROS-PASSOS.md`) se não for dito; `en` usa `docs/GETTING-STARTED.md`.
+O idioma é `pt` (`docs/PRIMEIROS-PASSOS.md`) se não for dito; `en` usa `docs/GETTING-STARTED.md`
+e `es`, `docs/PRIMEROS-PASOS.md`.
 Fica a introdução (com a linha da tabela só daquele sistema), a seção do sistema e "Depois de
 abrir". As seções do manual são separadas por `---`; cada uma começa com `## <Sistema>`.
 """
@@ -46,6 +47,15 @@ IDIOMAS = {
         "Ctrl-click; on a Mac, Cmd-click",
         "Ctrl-click",
         "Cmd-click",
+    ),
+    "es": Idioma(
+        DOCS / "PRIMEROS-PASOS.md",
+        "Después de abrir",
+        "abrir e instalar HaradaER en cada sistema",
+        "abrir e instalar HaradaER en {nome}",
+        "Ctrl + clic; en Mac, Cmd + clic",
+        "Ctrl + clic",
+        "Cmd + clic",
     ),
 }
 MANUAL = IDIOMAS["pt"].manual

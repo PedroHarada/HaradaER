@@ -6,14 +6,16 @@ import errno
 from pathlib import Path
 
 import shiboken6
-from PySide6.QtCore import QMimeData, Qt, QUrl, Signal
+from PySide6.QtCore import QEvent, QMimeData, Qt, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
     QDockWidget,
     QFileDialog,
     QLabel,
+    QLineEdit,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QToolBar,
     QToolButton,
@@ -42,12 +44,14 @@ from haradaer.core.rules import (
     validate,
 )
 from haradaer.core.rules.tables import RECOMMENDATION_ORDER
-from haradaer.feedback import Tipo, issue_url, system_description
+from haradaer.feedback import REPOSITORIO, Tipo, issue_url, system_description
 from haradaer.gui.editor import Editor
 from haradaer.gui.export import EXPORT_FORMATS, EmptyDiagramError, export_diagram, render_image
 from haradaer.gui.inspector import ObjectInspector, display_name
-from haradaer.gui.messages import MessagesPanel
+from haradaer.gui.manual_dialog import ManualDialog, manual_path
+from haradaer.gui.messages import OFF_TEXT, MessagesPanel
 from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
+from haradaer.gui.preferences_dialog import PreferencesDialog
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.qt_utils import QtMeasurer
 from haradaer.gui.scene import DiagramScene
@@ -62,14 +66,16 @@ from haradaer.gui.settings import (
     set_quick_edit_enabled,
     set_saved_language,
     set_schema_file_enabled,
+    set_status_bar_enabled,
     set_structure_warnings_enabled,
     set_update_check_enabled,
+    status_bar_enabled,
     structure_warnings_enabled,
     update_check_enabled,
     window_layout,
 )
-from haradaer.gui.shortcuts import key_of, next_tool, position
-from haradaer.gui.shortcuts_dialog import ShortcutsDialog
+from haradaer.gui.shortcuts import FAMILIES, key_of, next_tool, position
+from haradaer.gui.shortcuts_dialog import MANUALS, ShortcutsDialog
 from haradaer.gui.theme import apply_theme, available_themes, current_theme, theme_named
 from haradaer.gui.theme import manager as theme_manager
 from haradaer.gui.tool_icons import (
@@ -80,8 +86,8 @@ from haradaer.gui.tool_icons import (
 )
 from haradaer.gui.tool_strip import ToolStrip
 from haradaer.gui.updates import UpdateChecker
-from haradaer.gui.verification import name_of, pairs_text, summary_text
-from haradaer.gui.view import SELECT, DiagramView, Tool
+from haradaer.gui.verification import issue_count, name_of, pairs_text, summary_text
+from haradaer.gui.view import INVALID_COLOR, SELECT, DiagramView, Tool
 from haradaer.i18n import LANGUAGES, N_, _, language, translate
 
 TITLE = "HaradaER"
@@ -102,6 +108,27 @@ _SAVE_ERRORS = {
     errno.ENOSPC: N_("Não há espaço livre no disco."),
     errno.EROFS: N_("O disco é somente leitura."),
 }
+
+
+class _ZoomField(QLineEdit):
+    """Campo do zoom na barra de status: Esc desiste do que foi digitado."""
+
+    def keyPressEvent(self, evento) -> None:  # noqa: N802 (nome do Qt)
+        if evento.key() == Qt.Key.Key_Escape:
+            self.clearFocus()  # `editingFinished` reescreve o zoom atual
+            return
+        super().keyPressEvent(evento)
+
+
+def _menu_actions(barra, *, todas: bool = False) -> list[QAction]:
+    """As ações com atalho dos menus (ou todas, com `todas`), inclusive dos submenus."""
+    acoes = []
+    for acao in barra.actions():
+        if acao.menu() is not None:
+            acoes += _menu_actions(acao.menu(), todas=todas)
+        elif todas or not acao.shortcut().isEmpty():
+            acoes.append(acao)
+    return acoes
 
 
 def save_error_text(erro: OSError) -> str:
@@ -135,17 +162,26 @@ class DocumentWindow(QMainWindow):
         self.setCentralWidget(self.view)
         self.resize(960, 640)
         self._tool_actions: dict[Tool, QAction] = {}
+        self._manual: ManualDialog | None = None
 
-        self._zoom_label = QLabel("100%")
-        self._verification_label = QLabel()  # resumo dos erros e avisos; some sem nenhum
-        self._verification_label.setStyleSheet(f"color: {WARNING_COLOR.name()};")
-        self._verification_label.hide()
-        self.statusBar().addPermanentWidget(self._verification_label)
+        # Zoom que se digita (como no Inkscape): Enter aplica, Esc volta ao valor atual
+        self._zoom_field = _ZoomField("100%")
+        self._zoom_field.setAlignment(Qt.AlignmentFlag.AlignRight)
+        largura = self._zoom_field.fontMetrics().horizontalAdvance("88888%")
+        self._zoom_field.setFixedWidth(largura + 12)
+        self._zoom_field.setToolTip(_("Digite a porcentagem e tecle Enter"))
+        self._zoom_field.returnPressed.connect(self._zoom_typed)
+        self._zoom_field.editingFinished.connect(lambda: self._show_zoom(self.view.zoom))
+        # Erros e avisos à esquerda, sempre à vista, e o clique abre o painel Mensagens
+        # (como no VS Code); o resumo detalhado fica na dica
+        self.issues_button = QToolButton()
+        self.issues_button.setAutoRaise(True)
+        self.issues_button.clicked.connect(self.show_messages)
         self._recommendation_label = QLabel()
         self._recommendation_label.setStyleSheet("font-weight: bold;")
         self._recommendation_label.hide()
         self.statusBar().addPermanentWidget(self._recommendation_label)  # mensagens não a cobrem
-        self.statusBar().addPermanentWidget(self._zoom_label)
+        self.statusBar().addPermanentWidget(self._zoom_field)
         self.view.zoom_changed.connect(self._show_zoom)
         self.view.message.connect(self.statusBar().showMessage)
         self.view.tool_changed.connect(self._tool_changed)
@@ -154,11 +190,15 @@ class DocumentWindow(QMainWindow):
         self._build_docks()
         self.update_checker = UpdateChecker(self)  # aviso de versão nova (RF-22)
         self._build_menus()
+        self._same_menus_everywhere()
+        self._add_shortcut_actions()
+        self.view.context_filler = self._fill_context_menu
         self._build_toolbar()
         self._quick_edit_button = QToolButton()  # indicador clicável na barra de status
         self._quick_edit_button.setDefaultAction(self.action_quick_edit)
         self._quick_edit_button.setAutoRaise(True)
         self.statusBar().insertPermanentWidget(0, self._quick_edit_button)
+        self.statusBar().insertPermanentWidget(0, self.issues_button)
         self._quick_edit_toggled(self.action_quick_edit.isChecked())
         self._restore_layout()
         self._attach(Document.new(), None)
@@ -174,6 +214,7 @@ class DocumentWindow(QMainWindow):
 
     def _build_menus(self) -> None:
         arquivo = self.menuBar().addMenu(_("&Arquivo"))
+        self.file_menu = arquivo
         self.action_new = self._action(
             _("&Novo"), QKeySequence.StandardKey.New, self.new_requested.emit
         )
@@ -184,16 +225,23 @@ class DocumentWindow(QMainWindow):
         self.action_save_as = self._action(
             _("Salvar &como..."), QKeySequence.StandardKey.SaveAs, self.save_as
         )
-        self.action_close = self._action(_("&Fechar"), QKeySequence.StandardKey.Close, self.close)
-        self.action_quit = self._action(_("&Sair"), QKeySequence.StandardKey.Quit, self._quit)
+        # Atalhos fixos onde o padrão do Qt muda de um sistema para outro (e os manuais, gerados
+        # sem tela, mostravam os do Windows): o primeiro é o que aparece no menu. No macOS, o
+        # Qt troca Ctrl por Cmd sozinho.
+        self.action_close = self._action(_("&Fechar"), None, self.close)
+        self.action_close.setShortcuts([QKeySequence("Ctrl+W"), QKeySequence("Ctrl+F4")])
+        self.action_quit = self._action(_("Sa&ir"), "Ctrl+Q", self._quit)
         arquivo.addActions([self.action_new, self.action_open])
         self.recent_menu = arquivo.addMenu(_("Abrir &recente"))
         self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
         arquivo.addSeparator()
         arquivo.addActions([self.action_save, self.action_save_as])
         arquivo.addSeparator()
-        self.action_export = self._action(_("&Exportar desenho..."), "Ctrl+E", self.export)
-        arquivo.addAction(self.action_export)
+        self.action_export = self._action(_("Exportar &desenho..."), "Ctrl+E", self.export)
+        self.action_copy_image = self._action(
+            _("Copiar como ima&gem"), "Ctrl+Shift+C", self.copy_image
+        )
+        arquivo.addActions([self.action_export, self.action_copy_image])
         self.action_schema_file = QAction(_("Gravar esquema &lógico ao salvar"), self)
         self.action_schema_file.setCheckable(True)
         self.action_schema_file.setChecked(schema_file_enabled())
@@ -203,10 +251,16 @@ class DocumentWindow(QMainWindow):
         arquivo.addActions([self.action_close, self.action_quit])
 
         editar = self.menuBar().addMenu(_("&Editar"))
+        self.edit_menu = editar
         self.action_undo = self._action(_("&Desfazer"), QKeySequence.StandardKey.Undo, self._undo)
-        self.action_redo = self._action(_("&Refazer"), QKeySequence.StandardKey.Redo, self._redo)
+        self.action_redo = self._action(_("&Refazer"), None, self._redo)
+        self.action_redo.setShortcuts([QKeySequence("Ctrl+Shift+Z"), QKeySequence("Ctrl+Y")])
         self.action_delete = self._action(
-            _("E&xcluir"), QKeySequence.StandardKey.Delete, self._delete
+            # Só Del: no Linux o padrão do Qt inclui Ctrl+D, que é o Duplicar, e um atalho
+            # repetido não faz nada
+            _("E&xcluir"),
+            "Del",
+            self._delete,
         )
         editar.addActions([self.action_undo, self.action_redo])
         editar.addSeparator()
@@ -220,42 +274,57 @@ class DocumentWindow(QMainWindow):
         editar.addAction(self.action_delete)
         editar.addSeparator()
         self.action_select_all = self._action(
-            _("Selecionar &tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
+            _("&Selecionar tudo"), QKeySequence.StandardKey.SelectAll, self._select_all
         )
         self.action_select_same = self._action(
-            _("Selecionar do &mesmo tipo"), "Ctrl+Shift+A", self._select_same_kind
+            # Ctrl+Alt+A, como o "selecionar iguais" do Figma: Ctrl+Shift+A é Desmarcar tudo
+            # na Apple e no KDE
+            _("Selecionar do &mesmo tipo"),
+            "Ctrl+Alt+A",
+            self._select_same_kind,
         )
-        editar.addActions([self.action_select_all, self.action_select_same])
+        self.action_deselect = self._action(
+            _("D&esmarcar tudo"), "Ctrl+Shift+A", self.diagram_scene.clearSelection
+        )
+        editar.addActions([self.action_select_all, self.action_deselect, self.action_select_same])
         editar.addSeparator()
         self.action_find = self._action(
             _("&Localizar..."), QKeySequence.StandardKey.Find, self._find
         )
         editar.addAction(self.action_find)
-        editar.addSeparator()
-        self.action_copy_image = self._action(
-            _("Copiar como &imagem"), "Ctrl+Shift+C", self.copy_image
-        )
-        editar.addAction(self.action_copy_image)
-        editar.addSeparator()
         self.action_quick_edit = self._action(_("Edição rápid&a"), "Ctrl+Shift+E", lambda: None)
         self.action_quick_edit.setCheckable(True)
         self.action_quick_edit.setChecked(quick_edit_enabled())
         self.action_quick_edit.setStatusTip(
-            _("Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)")
+            _("Atalhos de uma tecla para as ferramentas ({teclas})").format(
+                teclas=", ".join(tecla for tecla, _ferramentas in FAMILIES)  # nunca desatualiza
+            )
         )
         self.action_quick_edit.toggled.connect(self._quick_edit_toggled)
-        editar.addAction(self.action_quick_edit)
 
-        organizar = self.menuBar().addMenu(_("&Organizar"))
-        self.action_front = self._action(_("&Trazer para a frente"), "Ctrl+]", self._bring_to_front)
-        self.action_back = self._action(_("&Enviar para trás"), "Ctrl+[", self._send_to_back)
+        organizar = self.menuBar().addMenu(_("&Organizar"))  # e também no botão direito
+        self.arrange_menu = organizar
+        # Atalhos iguais nos três sistemas, sem colidir com a Apple nem com o KDE (2026-11-19):
+        # Home e End, como no Inkscape (Fn+setas nos notebooks e no Mac), e uma combinação de
+        # letras para teclados sem nenhum jeito de mandar Home e End. Só valem no desenho: num
+        # campo de texto, Home e End continuam indo ao começo e ao fim da linha.
+        self.action_front = self._action(_("&Trazer para a frente"), None, self._bring_to_front)
+        self.action_front.setShortcuts([QKeySequence("Home"), QKeySequence("Ctrl+Alt+Shift+F")])
+        self.action_back = self._action(_("&Enviar para trás"), None, self._send_to_back)
+        self.action_back.setShortcuts([QKeySequence("End"), QKeySequence("Ctrl+Alt+Shift+B")])
+        for acao in (self.action_front, self.action_back):
+            acao.setShortcutContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+            acao.setProperty("todos_os_atalhos", True)  # a lista do F1 mostra os dois
+            self.view.addAction(acao)
         organizar.addActions([self.action_front, self.action_back])
         organizar.addSeparator()
-        self.action_group = self._action(_("A&grupar"), "Ctrl+G", self.group)
-        self.action_ungroup = self._action(_("&Desagrupar"), "Ctrl+Shift+G", self.ungroup)
+        # Como no Keynote e no Pages: Ctrl+G e Ctrl+Shift+G são buscar o próximo e o anterior
+        self.action_group = self._action(_("A&grupar"), "Ctrl+Alt+G", self.group)
+        self.action_ungroup = self._action(_("&Desagrupar"), "Ctrl+Alt+Shift+G", self.ungroup)
         organizar.addActions([self.action_group, self.action_ungroup])
         organizar.addSeparator()
         alinhar = organizar.addMenu(_("&Alinhar"))
+        self.align_menu = alinhar
         self.align_actions: dict[str, QAction] = {}
         for modo, texto in ALIGN_NAMES:
             acao = self._action(_(texto), None, lambda _x=False, m=modo: self._align(m))
@@ -265,6 +334,7 @@ class DocumentWindow(QMainWindow):
                 alinhar.addSeparator()
 
         exibir = self.menuBar().addMenu(_("E&xibir"))
+        self.view_menu = exibir
         self.action_zoom_in = self._action(
             _("&Ampliar"), QKeySequence.StandardKey.ZoomIn, self.view.zoom_in
         )
@@ -281,12 +351,11 @@ class DocumentWindow(QMainWindow):
                 self.action_zoom_fit,
             ]
         )
-        exibir.addSeparator()
         self.action_validate = QAction(_("&Verificar modelo"), self)
         self.action_validate.setCheckable(True)
         self.action_validate.setChecked(True)
         self.action_validate.toggled.connect(self._refresh_issues)
-        self.action_structure = QAction(_("&Avisos de estrutura"), self)
+        self.action_structure = QAction(_("Avisos de &estrutura"), self)
         self.action_structure.setCheckable(True)
         self.action_structure.setChecked(structure_warnings_enabled())
         self.action_structure.setToolTip(
@@ -300,8 +369,7 @@ class DocumentWindow(QMainWindow):
         self.action_grid.setShortcut("Ctrl+'")
         self.action_grid.setCheckable(True)
         self.action_grid.toggled.connect(self.view.set_grid)
-        exibir.addActions([self.action_validate, self.action_structure, self.action_grid])
-        tema = exibir.addMenu(_("&Tema"))
+        self.extra_menus: list[QMenu] = []  # menus fora da barra, para os atalhos e o F1
         temas = QActionGroup(self)
         self.theme_actions: dict[str, QAction] = {}
         for opcao in available_themes():
@@ -313,10 +381,8 @@ class DocumentWindow(QMainWindow):
                 lambda _=False, n=nome: apply_theme(theme_named(n) or current_theme())
             )
             temas.addAction(acao)
-            tema.addAction(acao)
             self.theme_actions[nome] = acao
         theme_manager().changed.connect(self._theme_changed)
-        idioma = exibir.addMenu(_("&Idioma"))
         idiomas = QActionGroup(self)
         self.language_actions: dict[str, QAction] = {}
         escolhido = saved_language() or language()
@@ -325,7 +391,6 @@ class DocumentWindow(QMainWindow):
             acao.setChecked(codigo == escolhido)
             acao.triggered.connect(lambda _x=False, c=codigo: self._language_chosen(c))
             idiomas.addAction(acao)
-            idioma.addAction(acao)
             self.language_actions[codigo] = acao
         exibir.addSeparator()
         exibir.addActions(
@@ -336,24 +401,160 @@ class DocumentWindow(QMainWindow):
                 self.schema_dock.toggleViewAction(),
             ]
         )
+        # A grade mostra ou esconde parte da vista: fica em Exibir e nas Preferências (Apple)
+        exibir.insertAction(self.inspector_dock.toggleViewAction(), self.action_grid)
+        exibir.insertSeparator(self.inspector_dock.toggleViewAction())
+        exibir.addSeparator()
+        # O Qt só tem o atalho padrão de tela cheia em alguns sistemas (no Linux, nenhum): F11
+        tela_cheia = QKeySequence.StandardKey.FullScreen
+        self.action_full_screen = self._action(
+            _("Tela c&heia"),
+            tela_cheia if QKeySequence.keyBindings(tela_cheia) else "F11",
+            self._toggle_full_screen,
+        )
+        self.action_full_screen.setCheckable(True)
+        exibir.addAction(self.action_full_screen)
+
+        # Configurações antes de Ajuda, como o menu padrão do KDE: o tema (o "esquema de
+        # cores" do Kate e do Okular), as barras que se mostram e as Preferências ("Configurar
+        # o aplicativo"). No macOS, o Qt leva as Preferências para o menu do app (Apple).
+        configuracoes = self.menuBar().addMenu(_("&Configurações"))
+        self.settings_menu = configuracoes
+        tema_menu = configuracoes.addMenu(_("&Tema"))
+        tema_menu.addActions(list(self.theme_actions.values()))
+        configuracoes.addSeparator()
+        self.action_show_tools = QAction(_("Mostrar &faixa de ferramentas"), self)
+        self.action_show_tools.setCheckable(True)
+        self.action_show_tools.setChecked(True)
+        self.action_show_tools.toggled.connect(lambda ligado: self.tool_bar.setVisible(ligado))
+        self.action_show_status = QAction(_("Mostrar &barra de status"), self)
+        self.action_show_status.setCheckable(True)
+        self.action_show_status.setChecked(status_bar_enabled())
+        self.action_show_status.toggled.connect(self._status_bar_toggled)
+        configuracoes.addActions([self.action_show_tools, self.action_show_status])
+        configuracoes.addSeparator()
+        # Usados durante o trabalho: ficam no menu, e não na janela (Apple, Settings)
+        configuracoes.addActions(
+            [self.action_validate, self.action_structure, self.action_quick_edit]
+        )
+        configuracoes.addSeparator()
+        self.action_preferences = self._action(_("&Preferências…"), "Ctrl+,", self.show_preferences)
+        configuracoes.addAction(self.action_preferences)
 
         ajuda = self.menuBar().addMenu(_("Aj&uda"))
-        self.shortcuts_action = self._action(
-            _("Atalhos do &teclado…"), QKeySequence.StandardKey.HelpContents, self.show_shortcuts
+        self.help_menu = ajuda
+        # Como no menu Ajuda padrão do KDE: o manual primeiro, com F1
+        self.manual_action = self._action(
+            _("&Manual do HaradaER"), QKeySequence.StandardKey.HelpContents, self.open_manual
         )
-        ajuda.addAction(self.shortcuts_action)
+        self.shortcuts_action = self._action(_("Atalhos do &teclado…"), None, self.show_shortcuts)
+        ajuda.addActions([self.manual_action, self.shortcuts_action])
         ajuda.addSeparator()
         self.report_action = ajuda.addAction(_("&Relatar um problema…"))
         self.report_action.triggered.connect(lambda: self._open_issue("bug"))
         self.suggest_action = ajuda.addAction(_("&Sugerir uma melhoria…"))
         self.suggest_action.triggered.connect(lambda: self._open_issue("melhoria"))
         ajuda.addSeparator()
-        self.check_updates_action = ajuda.addAction(_("Verificar &atualizações…"))
+        # Como no menu Ajuda padrão do KDE; abre as Preferências, onde está o idioma
+        self.language_action = ajuda.addAction(_("Trocar o &idioma…"))
+        self.language_action.triggered.connect(lambda: self.show_preferences())
+        self.about_action = ajuda.addAction(_("S&obre o HaradaER"))
+        self.about_action.triggered.connect(self.show_about)
+        self.check_updates_action = QAction(_("Verificar &atualizações…"), self)  # Preferências
         self.check_updates_action.triggered.connect(lambda: self.update_checker.check(manual=True))
-        self.auto_updates_action = ajuda.addAction(_("Verificar ao a&brir"))
+        self.auto_updates_action = QAction(_("Verificar ao a&brir"), self)
         self.auto_updates_action.setCheckable(True)
         self.auto_updates_action.setChecked(update_check_enabled())
         self.auto_updates_action.toggled.connect(set_update_check_enabled)
+
+    def _toggle_full_screen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
+    def changeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        if event.type() == QEvent.Type.WindowStateChange:
+            self.action_full_screen.setChecked(self.isFullScreen())  # também se saiu pelo sistema
+        super().changeEvent(event)
+
+    def show_about(self) -> QMessageBox:
+        """Ajuda › Sobre o HaradaER: versão, licença e repositório, só com texto."""
+        caixa = QMessageBox(self)
+        caixa.setWindowTitle(_("Sobre o HaradaER"))
+        caixa.setIcon(QMessageBox.Icon.NoIcon)
+        caixa.setTextFormat(Qt.TextFormat.RichText)
+        caixa.setText(f"<b>{TITLE} {haradaer.__version__}</b>")
+        caixa.setInformativeText(
+            _("Ferramenta de modelagem Entidade-Relacionamento compatível com o TerraER 3.14.")
+            + "<br><br>"
+            + _("Software livre, sob a licença GNU GPL versão 3.")
+            + f'<br><a href="{REPOSITORIO}">{REPOSITORIO}</a>'
+        )
+        caixa.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        caixa.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        caixa.open()
+        return caixa
+
+    def _same_menus_everywhere(self) -> None:
+        """A interface é igual nos três sistemas (decisão do autor): no macOS o Qt não leva
+        Preferências, Sobre e Sair para o menu do app, e cada item fica no seu menu."""
+        for acao in _menu_actions(self.menuBar(), todas=True):
+            acao.setMenuRole(QAction.MenuRole.NoRole)
+
+    def _add_shortcut_actions(self) -> None:
+        """As ações das opções que só estão nas Preferências também entram na janela, para os
+        atalhos valerem sem estarem na barra."""
+        for menu in self.extra_menus:
+            self.addActions(_menu_actions(menu))
+
+    def _fill_context_menu(self, menu: QMenu) -> None:
+        """As ações sobre a seleção no botão direito, depois do que o desenho já pôs (trocar
+        tipo, vértices). São cópias das ações da janela, com o atalho escrito ao lado; ficam
+        cinza quando não se aplicam, sem desligar as originais (e os atalhos delas)."""
+        selecao = self.diagram_scene.selected_figures()
+        tem = bool(selecao)
+        varios = len(selecao) > 1
+
+        def copia(acao: QAction, ligada: bool = True, onde: QMenu = menu) -> None:
+            texto = acao.text()
+            atalho = acao.shortcut().toString(QKeySequence.SequenceFormat.NativeText)
+            nova = onde.addAction(f"{texto}\t{atalho}" if atalho else texto)
+            nova.setEnabled(ligada)
+            nova.triggered.connect(acao.trigger)
+
+        if not menu.isEmpty():
+            menu.addSeparator()
+        for acao in (self.action_cut, self.action_copy):
+            copia(acao, tem)
+        copia(self.action_paste)
+        copia(self.action_duplicate, tem)
+        copia(self.action_delete, tem)
+        menu.addSeparator()
+        if not tem:
+            copia(self.action_select_all)
+            return
+        copia(self.action_front)
+        copia(self.action_back)
+        menu.addSeparator()
+        copia(self.action_group, varios)
+        copia(self.action_ungroup, any(f.tag == "g" for f in selecao))
+        alinhar = menu.addMenu(self.align_menu.title())
+        alinhar.setEnabled(varios)
+        for modo, _texto in ALIGN_NAMES:
+            copia(self.align_actions[modo], onde=alinhar)
+            if modo == "right":
+                alinhar.addSeparator()
+
+    def _status_bar_toggled(self, ligado: bool) -> None:
+        self.statusBar().setVisible(ligado)
+        set_status_bar_enabled(ligado)
+
+    def show_preferences(self) -> PreferencesDialog:
+        dialogo = PreferencesDialog(self)
+        dialogo.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialogo.show()
+        return dialogo
 
     def _build_docks(self) -> None:
         """Painéis acopláveis à direita do desenho (RNF-09)."""
@@ -787,6 +988,8 @@ class DocumentWindow(QMainWindow):
             self.restoreGeometry(geometria)
         if estado is not None:
             self.restoreState(estado)
+        self.action_show_tools.setChecked(not self.tool_bar.isHidden())
+        self.statusBar().setVisible(self.action_show_status.isChecked())
 
     def _selection_changed(self) -> None:
         if not shiboken6.isValid(self.diagram_scene) or not shiboken6.isValid(self.inspector):
@@ -914,9 +1117,28 @@ class DocumentWindow(QMainWindow):
         self.diagram_scene.show_issues(problemas)
         self.diagram_scene.show_warnings(avisos)
         self.messages.show_messages(problemas, avisos, ligada)
-        resumo = summary_text(problemas, avisos, display_name)
-        self._verification_label.setText(resumo)
-        self._verification_label.setVisible(bool(resumo))
+        self._show_issue_counts(ligada, problemas, avisos)
+
+    def _show_issue_counts(self, ligada: bool, problemas: list, avisos: list) -> None:
+        botao = self.issues_button
+        if not ligada:
+            botao.setText(_("Verificação desligada"))
+            botao.setToolTip(_(OFF_TEXT))
+            cor = None
+        else:
+            erros = issue_count(len(problemas), N_("erro"), N_("erros"))
+            alertas = issue_count(len(avisos), N_("aviso"), N_("avisos"))
+            botao.setText(f"{erros}  {alertas}")
+            botao.setToolTip(
+                summary_text(problemas, avisos, display_name) or _("Nenhum problema no modelo.")
+            )
+            cor = INVALID_COLOR if problemas else WARNING_COLOR if avisos else None
+        botao.setStyleSheet(f"color: {cor.name()};" if cor is not None else "")
+
+    def show_messages(self) -> None:
+        """Traz o painel Mensagens para a frente, mesmo atrás de outra aba ou fechado."""
+        self.messages_dock.show()
+        self.messages_dock.raise_()
 
     def _language_chosen(self, codigo: str) -> None:
         """Guarda o idioma para a próxima vez que o programa abrir (RNF-06) e avisa, já no
@@ -933,6 +1155,25 @@ class DocumentWindow(QMainWindow):
             translate(N_("O idioma muda quando o HaradaER for fechado e aberto de novo."), codigo),
         )
 
+    def open_manual(self) -> ManualDialog | None:
+        """Ajuda › Manual: o manual instalado, numa janela (KDE e Apple). Sem ele no pacote,
+        abre o do repositório no navegador; sem navegador, mostra o endereço para copiar."""
+        if manual_path(language()) is not None:
+            if self._manual is None:
+                self._manual = ManualDialog(self, language())
+            self._manual.show()
+            self._manual.raise_()
+            self._manual.activateWindow()
+            return self._manual
+        url = f"{REPOSITORIO}/blob/main/{MANUALS[language()]}"
+        if not QDesktopServices.openUrl(QUrl(url)):
+            QMessageBox.information(
+                self,
+                _("Abrir no navegador"),
+                _("Não foi possível abrir o navegador. Copie este endereço:") + f"\n\n{url}",
+            )
+        return None
+
     def _open_issue(self, tipo: Tipo) -> None:
         """Abre no navegador a issue já preenchida (RF-21). Sem navegador, mostra o endereço."""
         url = issue_url(tipo, haradaer.__version__, system_description(), language())
@@ -944,7 +1185,12 @@ class DocumentWindow(QMainWindow):
             )
 
     def show_shortcuts(self) -> ShortcutsDialog:
-        dialogo = ShortcutsDialog(self, self.menuBar(), lambda t: self._tool_actions[t].statusTip())
+        dialogo = ShortcutsDialog(
+            self,
+            self.menuBar(),
+            lambda t: self._tool_actions[t].statusTip(),
+            self.extra_menus,
+        )
         dialogo.show()
         return dialogo
 
@@ -1020,7 +1266,21 @@ class DocumentWindow(QMainWindow):
         self.setWindowModified(self._editor.history.is_dirty)
 
     def _show_zoom(self, zoom: float) -> None:
-        self._zoom_label.setText(f"{round(zoom * 100)}%")
+        if not self._zoom_field.hasFocus():
+            self._zoom_field.setText(f"{round(zoom * 100)}%")
+
+    def _zoom_typed(self) -> None:
+        """Aplica a porcentagem digitada (137, 137% ou 137,5); um texto inválido volta ao atual."""
+        texto = self._zoom_field.text().replace("%", "").replace(",", ".").strip()
+        try:
+            valor = float(texto)
+        except ValueError:
+            valor = None
+        if valor is not None and valor > 0:
+            self.view.set_zoom(valor / 100)
+        self._zoom_field.clearFocus()
+        self._show_zoom(self.view.zoom)
+        self.view.setFocus()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self._editor.history.is_dirty and not self._confirm_discard():

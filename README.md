@@ -39,7 +39,8 @@ cp docs/referencia-terraer/criados-no-haradaer/todos-os-tipos.xml /tmp/
 | Excluir | Delete (leva junto as conexões ligadas) |
 | Copiar, recortar, colar | Ctrl+C, Ctrl+X, Ctrl+V (também de uma janela para outra); as conexões vão junto quando os dois elementos ligados são copiados |
 | Duplicar | Ctrl+D |
-| Agrupar e desagrupar | Ctrl+G e Ctrl+Shift+G (as conexões continuam ligadas aos elementos de dentro) |
+| Agrupar e desagrupar | Ctrl+Alt+G e Ctrl+Alt+Shift+G (as conexões continuam ligadas aos elementos de dentro) |
+| Trazer para a frente e enviar para trás | Home e End, com o desenho em foco (ou Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B) |
 | Desfazer e refazer | Ctrl+Z e Ctrl+Shift+Z |
 
 **Linhas das conexões** (com a conexão selecionada)
@@ -85,7 +86,8 @@ está em `docs/REQUISITOS.md` (seção 10).
 ## Documentação
 
 - [Primeiros passos](docs/PRIMEIROS-PASSOS.md): baixar, abrir e instalar em cada sistema
-  (em inglês: [Getting started](docs/GETTING-STARTED.md))
+  (em inglês: [Getting started](docs/GETTING-STARTED.md); em espanhol:
+  [Primeros pasos](docs/PRIMEROS-PASOS.md))
 - [Requisitos](docs/REQUISITOS.md)
 - [Arquitetura e design](docs/ARQUITETURA.md)
 - [Investigações sobre o TerraER](docs/INVESTIGACOES.md)
@@ -102,17 +104,28 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 
 ## Lançar uma versão
 
+Primeiro, gere e teste os pacotes dos três sistemas **sem publicar**, com o mesmo workflow da
+versão (ou **Run workflow** na aba Actions):
+
 ```
-git tag v1.4.0
-git push origin v1.4.0
+git push origin main
+gh workflow run versao.yml --ref main
 ```
 
-O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
+Se passar nos três sistemas, publique com a etiqueta (o número de `pyproject.toml` e de
+`src/haradaer/__init__.py`):
+
+```
+git tag v1.5.2
+git push origin v1.5.2
+```
+
+O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS (com o HaradaER
+instalado pelo pip, e não a partir da pasta do código), gera os executáveis
 (`packaging/HaradaER.spec`), roda neles o autoteste (`HaradaER --autoteste SAIDA.txt`: janela,
-módulos fora do pacote e conexão segura com o GitHub; no Linux, também no Fedora e no Arch) e
-publica a versão em Releases. Para gerar e testar os pacotes sem publicar, use **Run workflow**
-na aba Actions (ou `gh workflow run versao.yml`). Se algum teste falhar, nada é
-publicado. O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento, sem tirar a versão final de
+manuais, módulos fora do pacote e conexão segura com o GitHub; no Linux, também no Fedora e no
+Arch) e publica a versão em Releases. Se algum teste falhar, nada é publicado; corrija e, como a
+versão não saiu, apague e recrie a etiqueta (`git push origin :refs/tags/v1.5.2`). O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento, sem tirar a versão final de
 Releases. Cada versão final substitui as anteriores em Releases (as etiquetas antigas continuam
 no git). A cada envio ao
 `main` e a cada pull request, só o lint e os testes rodam (no Linux).

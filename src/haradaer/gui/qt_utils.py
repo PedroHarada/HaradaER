@@ -1,8 +1,10 @@
-"""Conversões entre os tipos do núcleo (cores, fontes) e os do Qt."""
+"""Conversões entre os tipos do núcleo (cores, fontes) e os do Qt, e pequenos ajudantes de Qt."""
 
 from __future__ import annotations
 
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetricsF
+from PySide6.QtWidgets import QLineEdit
 
 from haradaer.core.appearance import FontSpec
 from haradaer.core.appearance.style import RGBA
@@ -38,3 +40,24 @@ class QtMeasurer:
     def size(self, text: str, font: FontSpec) -> tuple[float, float]:
         metricas = QFontMetricsF(qfont(font))
         return (metricas.horizontalAdvance(text), metricas.height())
+
+
+class ClearOnEscape(QObject):
+    """Esc num campo de busca com texto apaga o texto; vazio, o Esc segue adiante (fecha a
+    janela, por exemplo). Soma-se ao botão de limpar do campo."""
+
+    def eventFilter(self, campo, evento) -> bool:  # noqa: N802 (nome do Qt)
+        if (
+            evento.type() == QEvent.Type.KeyPress
+            and evento.key() == Qt.Key.Key_Escape
+            and isinstance(campo, QLineEdit)
+            and campo.text()
+        ):
+            campo.clear()
+            return True
+        return False
+
+
+def clear_on_escape(campo: QLineEdit) -> None:
+    filtro = ClearOnEscape(campo)
+    campo.installEventFilter(filtro)

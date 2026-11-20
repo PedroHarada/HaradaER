@@ -1,10 +1,11 @@
-"""Idioma da interface (RNF-06): a janela em inglês e a troca pelo menu Exibir › Idioma."""
+"""Idioma da interface (RNF-06): a janela em inglês e em espanhol e a troca pelo menu
+Exibir › Idioma."""
 
 import pytest
-from PySide6.QtCore import QLocale
+from PySide6.QtCore import QLibraryInfo, QLocale, QTranslator
 from PySide6.QtWidgets import QMessageBox
 
-from haradaer.gui.app import choose_language, install_translator
+from haradaer.gui.app import QT_TRANSLATIONS, choose_language, install_translator
 from haradaer.gui.settings import saved_language, set_saved_language
 from haradaer.gui.window import DocumentWindow
 from haradaer.i18n import language, set_language
@@ -26,14 +27,21 @@ def _menus(janela: DocumentWindow) -> list[str]:
 def test_janela_em_portugues(qtbot):
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&Arquivo", "&Editar", "&Organizar", "E&xibir", "Aj&uda"]
+    assert _menus(janela) == [
+        "&Arquivo",
+        "&Editar",
+        "&Organizar",
+        "E&xibir",
+        "&Configurações",
+        "Aj&uda",
+    ]
 
 
 def test_janela_em_ingles(qtbot):
     set_language("en")
     janela = DocumentWindow()
     qtbot.addWidget(janela)
-    assert _menus(janela) == ["&File", "&Edit", "&Arrange", "&View", "&Help"]
+    assert _menus(janela) == ["&File", "&Edit", "Arran&ge", "&View", "&Settings", "&Help"]
     assert janela.report_action.text() == "&Report a problem…"
     assert janela.windowTitle() == "Untitled[*] - HaradaER"
     assert janela.action_save.text() == "&Save"
@@ -59,8 +67,10 @@ def test_menu_idioma_marca_o_atual(qtbot):
     assert {c: a.isChecked() for c, a in janela.language_actions.items()} == {
         "pt": True,
         "en": False,
+        "es": False,
     }
     assert janela.language_actions["en"].text() == "English"  # cada idioma no próprio nome
+    assert janela.language_actions["es"].text() == "Español"
 
 
 def test_trocar_idioma_grava_e_avisa_no_idioma_novo(qtbot, avisos):
@@ -100,3 +110,67 @@ def test_na_primeira_vez_vale_o_idioma_do_sistema(monkeypatch):
 def test_tradutor_do_qt_so_em_portugues(qapp):
     set_language("en")
     assert not install_translator(qapp)
+
+
+def test_tradutor_do_qt_em_espanhol_existe():
+    pasta = QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)
+    assert QTranslator().load(QT_TRANSLATIONS["es"], pasta)
+
+
+def test_janela_em_espanhol(qtbot, monkeypatch):
+    monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.StandardButton.Discard)
+    set_language("es")
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert _menus(janela) == [
+        "&Archivo",
+        "&Editar",
+        "&Organizar",
+        "&Ver",
+        "&Configuración",
+        "Ay&uda",
+    ]
+    no = janela.editor.create("ent", 0, 0)
+    assert no.name == "Entidad"
+
+
+def _letras_repetidas(menu) -> list[str]:
+    vistas: dict[str, str] = {}
+    repetidas = []
+    for acao in menu.actions():
+        if acao.menu() is not None:
+            repetidas += _letras_repetidas(acao.menu())
+        texto = acao.text()
+        if "&" not in texto:
+            continue
+        letra = texto[texto.index("&") + 1].lower()
+        if letra in vistas:
+            repetidas.append(f"{vistas[letra]} / {texto}")
+        vistas[letra] = texto
+    return repetidas
+
+
+@pytest.mark.parametrize("idioma", ["pt", "en", "es"])
+def test_menus_sem_letra_de_atalho_repetida(qtbot, idioma):
+    set_language(idioma)
+    janela = DocumentWindow()
+    qtbot.addWidget(janela)
+    assert _letras_repetidas(janela.menuBar()) == []
+
+
+def test_idioma_escolhido_vai_para_o_qt(monkeypatch):
+    set_saved_language("es")
+    assert choose_language() == "es"
+    assert QLocale().name() == "es_ES"  # leitores de tela sabem a língua (WCAG2ICT 3.1.1)
+
+
+def test_primeira_vez_usa_a_lista_de_idiomas_do_sistema(monkeypatch):
+    class Sistema:
+        def uiLanguages(self):  # noqa: N802 (nome do Qt)
+            return ["es-MX", "en-US"]
+
+        def name(self):
+            return "pt_BR"  # formato regional brasileiro, interface em espanhol
+
+    monkeypatch.setattr(QLocale, "system", lambda: Sistema())
+    assert choose_language() == "es"

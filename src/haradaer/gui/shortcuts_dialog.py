@@ -1,8 +1,8 @@
 """Ajuda › Atalhos do teclado: a lista sai das ações dos menus, então um atalho novo entra nela
 sozinho e segue o idioma da interface. Só a parte da Edição rápida e a do mouse são escritas.
 
-A mesma lista vai para os manuais (`docs/PRIMEIROS-PASSOS.md` e `docs/GETTING-STARTED.md`),
-entre os marcadores `MARK_BEGIN` e `MARK_END`. Para atualizá-los:
+A mesma lista vai para os manuais (`docs/PRIMEIROS-PASSOS.md`, `docs/GETTING-STARTED.md` e
+`docs/PRIMEROS-PASOS.md`), entre os marcadores `MARK_BEGIN` e `MARK_END`. Para atualizá-los:
 `python -m haradaer.gui.shortcuts_dialog`; `tests/gui/test_atalhos_manual.py` falha se ficarem
 diferentes do programa.
 """
@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from haradaer.gui.qt_utils import clear_on_escape
 from haradaer.gui.shortcuts import FAMILIES
 from haradaer.i18n import N_, _
 
@@ -40,13 +41,14 @@ def _plain(texto: str) -> str:
     return texto.replace("&", "").replace("...", "").replace("…", "").strip()
 
 
-def menu_shortcuts(barra: QMenuBar, *, nativo: bool = True) -> list[tuple[str, str, str]]:
-    """(menu, ação, atalho) de cada ação com atalho, na ordem dos menus."""
+def menu_shortcuts(
+    barra: QMenuBar, *, nativo: bool = True, extras=()
+) -> list[tuple[str, str, str]]:
+    """(menu, ação, atalho) de cada ação com atalho, na ordem dos menus, e depois a dos menus
+    `extras`, que não estão na barra (as opções que só ficam nas Preferências)."""
     linhas = []
-    for menu_acao in barra.actions():
-        menu = menu_acao.menu()
-        if menu is None:
-            continue
+    menus = [a.menu() for a in barra.actions() if a.menu() is not None] + list(extras)
+    for menu in menus:
         pilha = list(menu.actions())
         while pilha:
             acao: QAction = pilha.pop(0)
@@ -54,11 +56,12 @@ def menu_shortcuts(barra: QMenuBar, *, nativo: bool = True) -> list[tuple[str, s
                 pilha[0:0] = acao.menu().actions()
                 continue
             formato = QKeySequence.SequenceFormat
-            atalho = acao.shortcut().toString(
-                formato.NativeText if nativo else formato.PortableText
-            )
+            tipo = formato.NativeText if nativo else formato.PortableText
+            # só o primeiro atalho, salvo quando a ação pede todos (Home e a combinação de letras)
+            teclas = acao.shortcuts() if acao.property("todos_os_atalhos") else [acao.shortcut()]
+            atalho = ", ".join(t.toString(tipo) for t in teclas if not t.isEmpty())
             if atalho:
-                linhas.append((_plain(menu_acao.text()), _plain(acao.text()), atalho))
+                linhas.append((_plain(menu.title()), _plain(acao.text()), atalho))
     return linhas
 
 
@@ -77,12 +80,12 @@ def quick_edit_rows(nome_da_ferramenta) -> list[tuple[str, str]]:
 
 
 def all_rows(
-    barra: QMenuBar, nome_da_ferramenta, *, nativo: bool = True
+    barra: QMenuBar, nome_da_ferramenta, extras=(), *, nativo: bool = True
 ) -> list[tuple[str, str, str]]:
-    """(grupo, ação, atalho): os menus, a Edição rápida e o mouse. Sem `nativo`, as teclas saem
-    iguais em qualquer sistema (Ctrl, e não ⌘), como nos manuais."""
-    linhas: list[tuple[str, str, str]] = list(menu_shortcuts(barra, nativo=nativo))
-    grupo = _("Edição rápida (Editar › Edição rápida)")
+    """(grupo, ação, atalho): os menus da barra e os `extras`, a Edição rápida e o mouse. Sem
+    `nativo`, as teclas saem iguais em qualquer sistema (Ctrl, e não Cmd), como nos manuais."""
+    linhas = menu_shortcuts(barra, nativo=nativo, extras=extras)
+    grupo = _("Edição rápida (Ctrl+Shift+E)")
     linhas += [(grupo, a, t) for a, t in quick_edit_rows(nome_da_ferramenta)]
     linhas += [(_("Mouse e gestos"), _(a), _(t)) for a, t in MOUSE]
     return linhas
@@ -114,7 +117,11 @@ def replace_block(texto: str, bloco: str) -> str:
     return texto[:inicio] + "\n\n" + bloco + "\n" + texto[fim:]
 
 
-MANUALS = {"pt": "docs/PRIMEIROS-PASSOS.md", "en": "docs/GETTING-STARTED.md"}
+MANUALS = {
+    "pt": "docs/PRIMEIROS-PASSOS.md",
+    "en": "docs/GETTING-STARTED.md",
+    "es": "docs/PRIMEROS-PASOS.md",
+}
 
 
 def manual_block(idioma: str) -> str:
@@ -127,7 +134,12 @@ def manual_block(idioma: str) -> str:
     try:
         janela = DocumentWindow()
         bloco = markdown(
-            all_rows(janela.menuBar(), lambda t: janela._tool_actions[t].statusTip(), nativo=False)
+            all_rows(
+                janela.menuBar(),
+                lambda t: janela._tool_actions[t].statusTip(),
+                janela.extra_menus,
+                nativo=False,
+            )
         )
         janela.deleteLater()
         return bloco
@@ -136,13 +148,14 @@ def manual_block(idioma: str) -> str:
 
 
 class ShortcutsDialog(QDialog):
-    def __init__(self, parent: QWidget, barra: QMenuBar, nome_da_ferramenta) -> None:
+    def __init__(self, parent: QWidget, barra: QMenuBar, nome_da_ferramenta, extras=()) -> None:
         super().__init__(parent)
         self.setWindowTitle(_("Atalhos do teclado"))
         self.resize(560, 600)
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Buscar atalho…"))
         self.search.setClearButtonEnabled(True)
+        clear_on_escape(self.search)
         self.table = QTableWidget(0, 2)
         self.table.horizontalHeader().hide()
         self.table.verticalHeader().hide()
@@ -156,7 +169,7 @@ class ShortcutsDialog(QDialog):
         layout.addWidget(self.search)
         layout.addWidget(self.table)
 
-        self._rows = all_rows(barra, nome_da_ferramenta)
+        self._rows = all_rows(barra, nome_da_ferramenta, extras)
         self.search.textChanged.connect(self._fill)
         self._fill("")
 

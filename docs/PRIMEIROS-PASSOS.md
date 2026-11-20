@@ -2,7 +2,8 @@
 
 Como baixar, abrir e instalar o HaradaER em cada sistema. Este manual só traz o que já funciona
 em cada versão; ele é atualizado conforme o programa for testado em mais lugares. A versão em
-inglês é o [Getting started](GETTING-STARTED.md).
+inglês é o [Getting started](GETTING-STARTED.md), e a em espanhol, o
+[Primeros pasos](PRIMEROS-PASOS.md).
 
 Os arquivos ficam na página **Releases** do repositório, na versão mais recente. Não é preciso
 instalar Python nem nada mais.
@@ -116,8 +117,8 @@ Aplicativos). Também dá para arrastar a versão nova para Aplicativos e escolh
 
 ## Depois de abrir
 
-O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português ou inglês);
-para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
+O uso é o mesmo em qualquer sistema. O HaradaER abre no idioma do sistema (português, inglês ou espanhol);
+para trocar, use **Configurações › Preferências** e abra o programa de novo. Para começar:
 
 1. Escolha **Entidade** na faixa de cima e clique no desenho; digite o nome e Enter.
 2. Crie um **Relacionamento** e outra entidade do mesmo jeito.
@@ -125,8 +126,11 @@ para trocar, use **Exibir › Idioma** e abra o programa de novo. Para começar:
    que servem para o par ficam destacadas em azul na faixa. Clique numa delas para ligar os dois.
 4. **Arquivo › Salvar** grava um `.xml` que também abre no TerraER 3.14.
 
+Com o botão direito sobre o desenho ou sobre o que está selecionado, aparecem copiar, colar,
+duplicar, excluir, a ordem (frente e trás), agrupar e alinhar.
+
 Contornos laranja e o painel **Mensagens** apontam o que falta no modelo, como uma entidade sem
-atributo chave. Dá para desligá-los em **Exibir › Avisos de estrutura**.
+atributo chave. Dá para desligá-los em **Configurações › Avisos de estrutura**.
 
 O painel **Esquema lógico** mostra as tabelas que o diagrama gera (esquema relacional); com
 **Arquivo › Gravar esquema lógico ao salvar**, elas vão também para um `.logic.md` ao lado
@@ -162,7 +166,8 @@ Achou um problema ou tem uma ideia? **Ajuda › Relatar um problema** e **Ajuda 
 melhoria** abrem a página do GitHub já preenchida (é preciso uma conta no GitHub).
 
 Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e avisa; nada é
-baixado sozinho. Para desligar, desmarque **Ajuda › Verificar ao abrir**.
+baixado sozinho. Para desligar, desmarque
+**Configurações › Preferências › Verificar ao abrir**.
 
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
@@ -170,8 +175,10 @@ Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
 ## Atalhos do teclado
 
-A mesma lista está em **Ajuda › Atalhos do teclado** (F1), com busca. Os atalhos de uma tecla
-valem com **Editar › Edição rápida** ligada (Ctrl+Shift+E, ou o botão na barra de status).
+A mesma lista está em **Ajuda › Atalhos do teclado**, com busca; o F1 abre este manual
+(**Ajuda › Manual do HaradaER**). Os atalhos de uma tecla
+valem com a **Edição rápida** ligada (Ctrl+Shift+E, o botão na barra de status ou
+**Configurações › Edição rápida**).
 Com Selecionar ativo e um elemento selecionado, a letra da família dele troca o tipo (por
 exemplo, A num atributo o faz virar chave).
 
@@ -186,33 +193,34 @@ exemplo, A num atributo o faz virar chave).
 | Salvar | `Ctrl+S` |
 | Salvar como | `Ctrl+Shift+S` |
 | Exportar desenho | `Ctrl+E` |
-| Fechar | `Ctrl+F4` |
+| Copiar como imagem | `Ctrl+Shift+C` |
+| Fechar | `Ctrl+W` |
+| Sair | `Ctrl+Q` |
 
 **Editar**
 
 | Ação | Atalho |
 |---|---|
 | Desfazer | `Ctrl+Z` |
-| Refazer | `Ctrl+Y` |
+| Refazer | `Ctrl+Shift+Z` |
 | Recortar | `Ctrl+X` |
 | Copiar | `Ctrl+C` |
 | Colar | `Ctrl+V` |
 | Duplicar | `Ctrl+D` |
 | Excluir | `Del` |
 | Selecionar tudo | `Ctrl+A` |
-| Selecionar do mesmo tipo | `Ctrl+Shift+A` |
+| Desmarcar tudo | `Ctrl+Shift+A` |
+| Selecionar do mesmo tipo | `Ctrl+Alt+A` |
 | Localizar | `Ctrl+F` |
-| Copiar como imagem | `Ctrl+Shift+C` |
-| Edição rápida | `Ctrl+Shift+E` |
 
 **Organizar**
 
 | Ação | Atalho |
 |---|---|
-| Trazer para a frente | `Ctrl+]` |
-| Enviar para trás | `Ctrl+[` |
-| Agrupar | `Ctrl+G` |
-| Desagrupar | `Ctrl+Shift+G` |
+| Trazer para a frente | `Home` `Ctrl+Alt+Shift+F` |
+| Enviar para trás | `End` `Ctrl+Alt+Shift+B` |
+| Agrupar | `Ctrl+Alt+G` |
+| Desagrupar | `Ctrl+Alt+Shift+G` |
 
 **Exibir**
 
@@ -223,14 +231,22 @@ exemplo, A num atributo o faz virar chave).
 | Tamanho real | `Ctrl+0` |
 | Ajustar à janela | `Ctrl+9` |
 | Grade | `Ctrl+'` |
+| Tela cheia | `F11` |
+
+**Configurações**
+
+| Ação | Atalho |
+|---|---|
+| Edição rápida | `Ctrl+Shift+E` |
+| Preferências | `Ctrl+,` |
 
 **Ajuda**
 
 | Ação | Atalho |
 |---|---|
-| Atalhos do teclado | `F1` |
+| Manual do HaradaER | `F1` |
 
-**Edição rápida (Editar › Edição rápida)**
+**Edição rápida (Ctrl+Shift+E)**
 
 | Ação | Atalho |
 |---|---|

@@ -4,7 +4,7 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
-## Não lançado — esquema lógico (1.5.0 planejada)
+## Não lançado — esquema lógico (1.6.0 planejada)
 
 ### Adicionado
 
@@ -17,6 +17,72 @@ para mudanças que quebram algo que já funcionava.
   `<modelo>.logic.md`, ao lado do `.xml`, em Markdown básico. Nada muda no `.xml`.
 - `docs/CONCEITOS.md` e `docs/REVISAO-TEORICA.md`: a base teórica do HaradaER e os pontos ainda
   em aberto em relação ao livro.
+
+## 1.5.2 — 2026-11-19
+
+### Corrigido
+
+- Letras de acesso repetidas nos menus (Alt+letra): em Arquivo, Sair passa à letra **I** e
+  Copiar como imagem à **G**; em Editar, Selecionar tudo passa à **S**; em inglês, Duplicate
+  passa à **I**. Um teste confere as letras nos três idiomas.
+- Nos campos de busca do Inspetor e da janela de Atalhos, **Esc** apaga o que foi digitado (com o
+  campo vazio, Esc fecha a janela de Atalhos).
+- As caixas de mensagem voltam com os desenhos do Qt (o ponto de interrogação, o aviso), como
+  até a 1.4.0. Os botões dos diálogos (Fechar, Salvar, Descartar, Cancelar) continuam só com
+  texto.
+- Dica do campo de zoom mais curta, começando pelo verbo, como pede o guia da Apple.
+
+## 1.5.1 — 2026-11-19
+
+### Mudado
+
+- **Atalhos que colidiam com os padrões da Apple e do KDE**, agora iguais nos três sistemas:
+  Agrupar **Ctrl+Alt+G** e Desagrupar **Ctrl+Alt+Shift+G** (como no Keynote e no Pages);
+  Trazer para a frente **Home** e Enviar para trás **End** (como no Inkscape; também
+  Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B, para teclados sem Home e End); Selecionar do mesmo
+  tipo **Ctrl+Alt+A** (como o "selecionar iguais" do Figma). No macOS, Ctrl é Cmd e Alt é
+  Option.
+
+### Adicionado
+
+- **Editar › Desmarcar tudo** (Ctrl+Shift+A), o atalho padrão da Apple e do KDE.
+- Teste que confere os atalhos contra os reservados pela Apple e pelo KDE.
+
+## 1.5.0 — 2026-11-19
+
+### Adicionado
+
+- **Espanhol:** a interface inteira em espanhol, em **Configurações › Preferências** (na primeira
+  vez, vale o idioma do sistema), com os botões e diálogos do Qt também em espanhol e os nomes
+  padrão dos elementos novos no idioma. Manual `docs/PRIMEROS-PASOS.md`, que vai nos pacotes
+  como `PRIMEROS-PASOS.txt`.
+- **Menus mais curtos:** Copiar como imagem fica em Arquivo. Menu **Configurações**, antes de
+  Ajuda, como no KDE: Tema, Mostrar faixa de ferramentas, Mostrar barra de status, Verificar
+  modelo, Avisos de estrutura, Edição rápida e Preferências.
+- **Ajuda › Manual do HaradaER** (F1; no macOS, Cmd+?), como no KDE e na Apple: o manual vai
+  dentro do pacote e abre numa janela do próprio programa, no idioma escolhido, sem internet,
+  com busca (Ctrl+F; Enter e F3 andam nos resultados) e tamanho do texto (Ctrl++,
+  Ctrl+-, Ctrl+0). Atalhos do teclado continua
+  em Ajuda, sem o F1.
+- **Ajuda › Sobre o HaradaER** (versão, licença e repositório), **Ajuda › Trocar o idioma…**
+  (como no KDE; abre as Preferências) e **Exibir › Tela cheia** (F11).
+- **Os mesmos menus nos três sistemas:** no macOS, Preferências, Sobre e Sair ficam nos mesmos
+  menus que no Linux e no Windows, sem ir para o menu do app.
+- **Idioma:** na primeira vez, vale a lista de idiomas da interface do sistema (e não o formato
+  regional), o que respeita o idioma escolhido para o app no macOS e a variável `LANGUAGE` no
+  Linux; o idioma escolhido também vai para o Qt, para os leitores de tela lerem na língua certa.
+- Caixas de mensagem e botões dos diálogos só com texto, sem os desenhos do Qt (ponto de
+  interrogação, disquete, lixeira, X).
+- **Preferências** (Configurações › Preferências, Ctrl+,): só o que muda raramente, numa página:
+  idioma, atualizações (verificar ao abrir e verificar agora) e Restaurar todos os padrões, com
+  confirmação na própria janela (o idioma e os recentes não mudam).
+- **Barra de status:** a contagem de erros e avisos fica sempre à vista, à esquerda, e o clique
+  abre o painel Mensagens; o zoom virou um campo onde se digita a porcentagem (Enter aplica,
+  Esc desiste).
+- **Exibir:** a Grade e os painéis ficam em Exibir.
+- **Botão direito** no desenho com as ações sobre a seleção: recortar, copiar, colar, duplicar,
+  excluir, trazer para a frente, enviar para trás, agrupar, desagrupar e alinhar, com o atalho
+  ao lado; o que não se aplica fica cinza. Clicar num elemento já selecionado mantém a seleção.
 
 ## 1.4.0 — 2026-11-15
 

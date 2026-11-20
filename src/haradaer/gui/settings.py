@@ -19,6 +19,7 @@ LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
 SCHEMA_KEY = "esquema/gravar-ao-salvar"
+STATUS_BAR_KEY = "janela/barra-de-status"
 
 
 def settings() -> QSettings:
@@ -72,7 +73,7 @@ def window_layout() -> tuple[QByteArray | None, QByteArray | None]:
 
 
 def structure_warnings_enabled() -> bool:
-    """Os avisos de estrutura (Exibir › Avisos de estrutura) começam ligados."""
+    """Os avisos de estrutura (Configurações › Avisos de estrutura) começam ligados."""
     return str(settings().value(STRUCTURE_KEY, "true")).lower() == "true"
 
 
@@ -83,7 +84,7 @@ def set_structure_warnings_enabled(ligado: bool) -> None:
 
 
 def quick_edit_enabled() -> bool:
-    """A Edição rápida (Editar › Edição rápida) começa desligada."""
+    """A Edição rápida (Configurações › Edição rápida, Ctrl+Shift+E) começa desligada."""
     return str(settings().value(QUICK_EDIT_KEY, "false")).lower() == "true"
 
 
@@ -94,7 +95,8 @@ def set_quick_edit_enabled(ligado: bool) -> None:
 
 
 def saved_language() -> str | None:
-    """O idioma escolhido em Exibir › Idioma (RNF-06); `None` se nunca foi escolhido."""
+    """O idioma escolhido em Configurações › Preferências (RNF-06); `None` se nunca foi
+    escolhido."""
     valor = settings().value(LANGUAGE_KEY)
     return str(valor) if valor else None
 
@@ -135,4 +137,15 @@ def schema_file_enabled() -> bool:
 def set_schema_file_enabled(ligado: bool) -> None:
     config = settings()
     config.setValue(SCHEMA_KEY, "true" if ligado else "false")
+    config.sync()
+
+
+def status_bar_enabled() -> bool:
+    """Configurações › Mostrar barra de status: ligada por padrão."""
+    return settings().value(STATUS_BAR_KEY, True, type=bool)
+
+
+def set_status_bar_enabled(ligado: bool) -> None:
+    config = settings()
+    config.setValue(STATUS_BAR_KEY, ligado)
     config.sync()

@@ -1,8 +1,9 @@
-"""Idioma da interface (RNF-06): português, o padrão, ou inglês.
+"""Idioma da interface (RNF-06): português, o padrão, inglês ou espanhol.
 
 O texto em português é a própria chave, como no gettext: `_("Salvar")` devolve "Salvar" em
-português e "Save" em inglês. As traduções ficam em `en.py`. Um texto sem tradução sai em
-português; o teste `test_idioma.py` confere que todos os `_("...")` do código têm uma.
+português, "Save" em inglês e "Guardar" em espanhol. As traduções ficam em `en.py` e
+`es.py`. Um texto sem tradução sai em português; o teste `test_idioma.py` confere que todos
+os `_("...")` do código têm uma.
 
 O idioma é escolhido uma vez, ao abrir o programa (`set_language`), antes de criar as janelas;
 trocar no menu só vale ao reabrir. Não importa nada de Qt: o núcleo também usa (RNF-08).
@@ -11,10 +12,12 @@ trocar no menu só vale ao reabrir. Não importa nada de Qt: o núcleo também u
 from __future__ import annotations
 
 from haradaer.i18n.en import EN
+from haradaer.i18n.es import ES
 
 DEFAULT = "pt"
-LANGUAGES = {"pt": "Português", "en": "English"}
-_CATALOGS = {"en": EN}
+LANGUAGES = {"pt": "Português", "en": "English", "es": "Español"}
+LOCALES = {"pt": "pt_BR", "en": "en_US", "es": "es_ES"}  # o idioma, para o Qt (QLocale)
+_CATALOGS = {"en": EN, "es": ES}
 
 _language = DEFAULT
 
@@ -23,6 +26,16 @@ def language_for_locale(nome: str) -> str:
     """O idioma para um local do sistema ("en_US" -> "en"); o padrão para os outros."""
     codigo = nome.split("_")[0].split("-")[0].lower()
     return codigo if codigo in LANGUAGES else DEFAULT
+
+
+def language_for_locales(nomes: list[str]) -> str:
+    """O primeiro idioma conhecido de uma lista em ordem de preferência ("de-DE", "es-MX" ->
+    "es"); o padrão se nenhum for conhecido."""
+    for nome in nomes:
+        codigo = nome.split("_")[0].split("-")[0].lower()
+        if codigo in LANGUAGES:
+            return codigo
+    return DEFAULT
 
 
 def set_language(codigo: str) -> None:

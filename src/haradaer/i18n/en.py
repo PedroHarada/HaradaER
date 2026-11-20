@@ -58,9 +58,9 @@ EN: dict[str, str] = {
     "Abrir &recente": "Open &recent",
     "&Salvar": "&Save",
     "Salvar &como...": "Save &as...",
-    "&Exportar desenho...": "&Export drawing...",
+    "Exportar &desenho...": "Export &drawing...",
     "&Fechar": "&Close",
-    "&Sair": "&Quit",
+    "Sa&ir": "&Quit",
     "Nenhum arquivo recente": "No recent files",
     "&Limpar lista": "&Clear list",
     "&Editar": "&Edit",
@@ -69,13 +69,13 @@ EN: dict[str, str] = {
     "Recor&tar": "Cu&t",
     "&Copiar": "&Copy",
     "C&olar": "&Paste",
-    "D&uplicar": "D&uplicate",
+    "D&uplicar": "Dupl&icate",
     "E&xcluir": "&Delete",
-    "Selecionar &tudo": "Select &all",
+    "&Selecionar tudo": "Select &all",
     "Selecionar do &mesmo tipo": "Select same &kind",
     "&Localizar...": "&Find...",
-    "Copiar como &imagem": "Copy as &image",
-    "&Organizar": "&Arrange",
+    "Copiar como ima&gem": "Copy as &image",
+    "&Organizar": "Arran&ge",
     "&Trazer para a frente": "Bring to &front",
     "&Enviar para trás": "Send to &back",
     "A&grupar": "&Group",
@@ -93,16 +93,14 @@ EN: dict[str, str] = {
     "&Tamanho real": "&Actual size",
     "A&justar à janela": "&Fit to window",
     "&Verificar modelo": "&Check model",
-    "&Avisos de estrutura": "&Structure warnings",
+    "Avisos de &estrutura": "St&ructure warnings",
     "Laranja: o que a teoria do modelo ER pede além das ligações (entidade sem chave,"
     " relacionamento com um participante só...)": "Orange: what ER model theory asks for beyond"
     " the links (entity without a key, relationship with a single participant...)",
     "&Grade": "&Grid",
-    "&Tema": "T&heme",
     "&Claro": "&Light",
     "&Escuro": "&Dark",
     "Do &sistema (qt6ct)": "&System (qt6ct)",
-    "&Idioma": "&Language",
     "Idioma": "Language",
     "O idioma muda quando o HaradaER for fechado e aberto de novo.": "The language changes"
     " when HaradaER is closed and opened again.",
@@ -131,8 +129,6 @@ EN: dict[str, str] = {
     "Elemento": "Element",
     "Mensagem": "Message",
     "Nenhum problema no modelo.": "No problems in the model.",
-    "A verificação está desligada (Exibir › Verificar modelo).": "Checking is off"
-    " (View › Check model).",
     "{erros} erro(s), {avisos} aviso(s)": "{erros} error(s), {avisos} warning(s)",
     "Tipo:": "Kind:",
     "Nome:": "Name:",
@@ -387,7 +383,6 @@ EN: dict[str, str] = {
         "in the generalization, the superclass was inferred (link the superclass with a "
         "participation line and the subclasses with the simple generalization)"
     ),
-
     "Atualizar e &reiniciar": "Update and &restart",
     "Baixando o HaradaER {versao}…": "Downloading HaradaER {versao}…",
     "Conferindo a versão nova…": "Checking the new version…",
@@ -428,9 +423,8 @@ EN: dict[str, str] = {
     "Não foi possível verificar agora ({erro}).": "Couldn't check right now ({erro}).",
     # Edição rápida
     "Edição rápid&a": "Quick edit&ing",
-    "Atalhos de uma tecla para as ferramentas (E, R, A, G, 1, N, L, H, C, V)": (
-        "One-key shortcuts for the tools (E, R, A, G, 1, N, L, H, C, V)"
-    ),
+    "Atalhos de uma tecla para as ferramentas ({teclas})": "One-key shortcuts for the tools"
+    " ({teclas})",
     "Espaço cria um elemento: escolha antes um elemento.": (
         "Space creates an element: choose an element first."
     ),
@@ -440,7 +434,7 @@ EN: dict[str, str] = {
     "Atalhos do &teclado…": "&Keyboard shortcuts…",
     "Atalhos do teclado": "Keyboard shortcuts",
     "Buscar atalho…": "Search shortcuts…",
-    "Edição rápida (Editar › Edição rápida)": "Quick editing (Edit › Quick editing)",
+    "Edição rápida (Ctrl+Shift+E)": "Quick editing (Ctrl+Shift+E)",
     "Ação": "Action",
     "Trocar o tipo do elemento selecionado (com Selecionar)": (
         "Change the selected element's type (with Select)"
@@ -475,4 +469,52 @@ EN: dict[str, str] = {
     ),
     "a instrução SQL do atributo derivado": "the derived attribute's SQL statement",
     "o tipo SQL e a anulabilidade do atributo": "the attribute's SQL type and nullability",
+    # Preferências e barra de comandos
+    "&Preferências…": "Preference&s…",
+    "Preferências": "Preferences",
+    "Vale quando o HaradaER for fechado e aberto de novo.": (
+        "Takes effect when HaradaER is closed and opened again."
+    ),
+    "Verificar &agora": "Check &now",
+    "Você tem a {atual}.": "You have {atual}.",
+    "No máximo uma vez por dia, no GitHub.": "At most once a day, on GitHub.",
+    # Sobre, tela cheia e menu Janela (macOS)
+    "S&obre o HaradaER": "&About HaradaER",
+    "Sobre o HaradaER": "About HaradaER",
+    "Ferramenta de modelagem Entidade-Relacionamento compatível com o TerraER 3.14.": (
+        "Entity-Relationship modeling tool compatible with TerraER 3.14."
+    ),
+    "Software livre, sob a licença GNU GPL versão 3.": (
+        "Free software, under the GNU GPL version 3 license."
+    ),
+    "Tela c&heia": "Full &screen",
+    # Zoom digitado, contagem de erros e Restaurar padrões
+    "Digite a porcentagem e tecle Enter": "Type the percentage and press Enter",
+    "erro": "error",
+    "erros": "errors",
+    "aviso": "warning",
+    "avisos": "warnings",
+    "Verificação desligada": "Checking off",
+    "Restaurar": "Restore",
+    "&Configurações": "&Settings",
+    "&Tema": "T&heme",
+    "Mostrar &faixa de ferramentas": "Show &tool strip",
+    "Mostrar &barra de status": "Show status &bar",
+    "&Restaurar todos os padrões": "&Restore all defaults",
+    "A verificação está desligada (Configurações › Verificar modelo).": (
+        "Checking is off (Settings › Check model)."
+    ),
+    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
+    " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam.": (
+        "Reset the theme, bars, grid, panels, checking, Quick editing and updates to the"
+        " defaults? The language and recent files don't change."
+    ),
+    "Trocar o &idioma…": "Switch application &language…",
+    "&Manual do HaradaER": "HaradaER &Handbook",
+    "Manual do HaradaER": "HaradaER Handbook",
+    "Buscar no manual…": "Search the handbook…",
+    "&Anterior": "&Previous",
+    "Pró&ximo": "&Next",
+    "{atual} de {total}": "{atual} of {total}",
+    "D&esmarcar tudo": "Dese&lect all",
 }
