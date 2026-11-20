@@ -53,6 +53,9 @@ inglês e em espanhol. Depois de aberto, o manual completo está em **Ajuda › 
   Ctrl+Alt+Shift+F e Ctrl+Alt+Shift+B), Selecionar do mesmo tipo **Ctrl+Alt+A** e o novo
   **Desmarcar tudo**, Ctrl+Shift+A.
 - **Ctrl+D** volta a duplicar no Linux, onde antes não fazia nada.
+- Pequenos ajustes: letras de acesso (Alt+letra) sem repetição nos menus, **Esc** limpa os
+  campos de busca, e as caixas de mensagem voltam com os desenhos do sistema (os botões ficam
+  só com texto).
 - Para relatar um problema ou sugerir uma melhoria: **Ajuda › Relatar um problema** ou
   **Ajuda › Sugerir uma melhoria**, no próprio programa.
 - Uma vez por dia, ao abrir, o programa avisa se há versão nova (desliga em
@@ -113,6 +116,8 @@ manual is in **Help › HaradaER Handbook** (F1).
   and Ctrl+Alt+Shift+B), Select same kind **Ctrl+Alt+A** and the new **Deselect all**,
   Ctrl+Shift+A.
 - **Ctrl+D** duplicates again on Linux, where it did nothing before.
+- Small fixes: menu access keys (Alt+letter) without repeats, **Esc** clears the search fields,
+  and message boxes have the system's pictures again (buttons stay text only).
 - To report a problem or suggest an improvement: **Help › Report a problem** or
   **Help › Suggest an improvement**, inside the program.
 - Once a day, when opening, the program tells you if there's a new version (turn it off in
