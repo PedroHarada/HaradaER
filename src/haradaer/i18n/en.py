@@ -446,7 +446,7 @@ EN: dict[str, str] = {
     ),
     "Tela c&heia": "Full &screen",
     # Zoom digitado, contagem de erros e Restaurar padrões
-    "Zoom: digite a porcentagem e tecle Enter": "Zoom: type the percentage and press Enter",
+    "Digite a porcentagem e tecle Enter": "Type the percentage and press Enter",
     "erro": "error",
     "erros": "errors",
     "aviso": "warning",

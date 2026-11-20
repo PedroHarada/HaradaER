@@ -11,6 +11,12 @@ para mudanças que quebram algo que já funcionava.
 - Letras de acesso repetidas nos menus (Alt+letra): em Arquivo, Sair passa à letra **I** e
   Copiar como imagem à **G**; em Editar, Selecionar tudo passa à **S**; em inglês, Duplicate
   passa à **I**. Um teste confere as letras nos três idiomas.
+- Nos campos de busca do Inspetor e da janela de Atalhos, **Esc** apaga o que foi digitado (com o
+  campo vazio, Esc fecha a janela de Atalhos).
+- As caixas de mensagem voltam com os desenhos do Qt (o ponto de interrogação, o aviso), como
+  até a 1.4.0. Os botões dos diálogos (Fechar, Salvar, Descartar, Cancelar) continuam só com
+  texto.
+- Dica do campo de zoom mais curta, começando pelo verbo, como pede o guia da Apple.
 
 ## 1.5.1 — 2026-11-19
 

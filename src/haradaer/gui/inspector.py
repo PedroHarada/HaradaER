@@ -17,6 +17,7 @@ from haradaer.core.erview import ATTRIBUTE_TAGS, attribute_owners, normalize
 from haradaer.core.figures.types import ConnectionFigure, NodeFigure
 from haradaer.core.model.document import Document
 from haradaer.core.model.element import Element
+from haradaer.gui.qt_utils import clear_on_escape
 from haradaer.gui.verification import name_of
 from haradaer.i18n import N_, _
 
@@ -56,6 +57,7 @@ class ObjectInspector(QWidget):
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Localizar elemento ou texto..."))
         self.search.setClearButtonEnabled(True)
+        clear_on_escape(self.search)
         self.search.textChanged.connect(self._apply_filter)
         self.search.returnPressed.connect(self._locate_first)
         self.tree = QTreeWidget()

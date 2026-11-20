@@ -260,18 +260,15 @@ def saved_theme() -> Theme:
     return theme_named(str(settings().value(THEME_KEY, LIGHT.name))) or LIGHT
 
 
-class TextOnlyStyle(QProxyStyle):
-    """Fusion sem os desenhos que o Qt põe nas caixas de mensagem (o ponto de interrogação, o
-    aviso, o erro) e nos botões dos diálogos (disquete, lixeira, X): só texto, decisão do autor
-    em 2026-11-18."""
+class TextButtonsStyle(QProxyStyle):
+    """Fusion com os botões dos diálogos (Fechar, Salvar, Descartar, Cancelar...) só com texto:
+    o autor não quer desenho nesses botões (2026-11-19). Os outros desenhos do Qt ficam.
+    Só `standardIcon` passa pelo Python; ele é chamado pouco."""
 
-    # Os desenhos das caixas de mensagem e todos os dos botões de diálogo (SP_Dialog...Button).
-    # Só `standardIcon` passa pelo Python: ele é chamado pouco, ao contrário de `styleHint`.
     _SEM_ICONE = frozenset(
         p
         for p in QStyle.StandardPixmap
-        if p.name.startswith("SP_MessageBox")
-        or (p.name.startswith("SP_Dialog") and p.name.endswith("Button"))
+        if p.name.startswith("SP_Dialog") and p.name.endswith("Button")
     )
 
     def standardIcon(self, pixmap, opcao=None, widget=None):  # noqa: N802 (nome do Qt)
@@ -284,10 +281,10 @@ def apply_theme(tema: Theme, *, save: bool = True) -> None:
     """Troca o tema do programa inteiro (todas as janelas) e, se pedido, guarda a escolha."""
     app = QApplication.instance()
     if isinstance(app, QApplication):
-        if not isinstance(app.style(), TextOnlyStyle):  # trocar o estilo é caro: só se preciso
+        if not isinstance(app.style(), TextButtonsStyle):  # trocar o estilo é caro: só se preciso
             estilo = QStyleFactory.create("Fusion")
             if estilo is not None:
-                app.setStyle(TextOnlyStyle(estilo))
+                app.setStyle(TextButtonsStyle(estilo))
         paleta = _palette(tema)
         if app.palette() != paleta:
             app.setPalette(paleta)

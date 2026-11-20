@@ -166,7 +166,7 @@ class DocumentWindow(QMainWindow):
         self._zoom_field.setAlignment(Qt.AlignmentFlag.AlignRight)
         largura = self._zoom_field.fontMetrics().horizontalAdvance("88888%")
         self._zoom_field.setFixedWidth(largura + 12)
-        self._zoom_field.setToolTip(_("Zoom: digite a porcentagem e tecle Enter"))
+        self._zoom_field.setToolTip(_("Digite a porcentagem e tecle Enter"))
         self._zoom_field.returnPressed.connect(self._zoom_typed)
         self._zoom_field.editingFinished.connect(lambda: self._show_zoom(self.view.zoom))
         # Erros e avisos à esquerda, sempre à vista, e o clique abre o painel Mensagens

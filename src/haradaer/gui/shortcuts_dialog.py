@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from haradaer.gui.qt_utils import clear_on_escape
 from haradaer.gui.shortcuts import FAMILIES
 from haradaer.i18n import N_, _
 
@@ -154,6 +155,7 @@ class ShortcutsDialog(QDialog):
         self.search = QLineEdit()
         self.search.setPlaceholderText(_("Buscar atalho…"))
         self.search.setClearButtonEnabled(True)
+        clear_on_escape(self.search)
         self.table = QTableWidget(0, 2)
         self.table.horizontalHeader().hide()
         self.table.verticalHeader().hide()

@@ -102,17 +102,28 @@ cada versão e, com mais detalhes, em [Primeiros passos](docs/PRIMEIROS-PASSOS.m
 
 ## Lançar uma versão
 
+Primeiro, gere e teste os pacotes dos três sistemas **sem publicar**, com o mesmo workflow da
+versão (ou **Run workflow** na aba Actions):
+
 ```
-git tag v1.4.0
-git push origin v1.4.0
+git push origin main
+gh workflow run versao.yml --ref main
 ```
 
-O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS, gera os executáveis
+Se passar nos três sistemas, publique com a etiqueta (o número de `pyproject.toml` e de
+`src/haradaer/__init__.py`):
+
+```
+git tag v1.5.2
+git push origin v1.5.2
+```
+
+O GitHub Actions roda o lint e os testes no Linux, no Windows e no macOS (com o HaradaER
+instalado pelo pip, e não a partir da pasta do código), gera os executáveis
 (`packaging/HaradaER.spec`), roda neles o autoteste (`HaradaER --autoteste SAIDA.txt`: janela,
-módulos fora do pacote e conexão segura com o GitHub; no Linux, também no Fedora e no Arch) e
-publica a versão em Releases. Para gerar e testar os pacotes sem publicar, use **Run workflow**
-na aba Actions (ou `gh workflow run versao.yml`). Se algum teste falhar, nada é
-publicado. O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento, sem tirar a versão final de
+manuais, módulos fora do pacote e conexão segura com o GitHub; no Linux, também no Fedora e no
+Arch) e publica a versão em Releases. Se algum teste falhar, nada é publicado; corrija e, como a
+versão não saiu, apague e recrie a etiqueta (`git push origin :refs/tags/v1.5.2`). O número segue a seção 13 do [ARQUITETURA](docs/ARQUITETURA.md), e o que muda em cada versão fica no [CHANGELOG](CHANGELOG.md). Etiquetas com hífen (`v1.1.0-beta`) saem como pré-lançamento, sem tirar a versão final de
 Releases. Cada versão final substitui as anteriores em Releases (as etiquetas antigas continuam
 no git). A cada envio ao
 `main` e a cada pull request, só o lint e os testes rodam (no Linux).

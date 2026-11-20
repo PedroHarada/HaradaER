@@ -74,21 +74,6 @@ def test_atalho_abre_preferencias(janela, qtbot):
     assert dialogo.testAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
 
-def test_caixas_de_mensagem_e_botoes_sem_desenho(qapp):
-    from PySide6.QtWidgets import QStyle
-
-    from haradaer.gui.theme import TextOnlyStyle, apply_theme
-
-    apply_theme(current_theme(), save=False)
-    estilo = qapp.style()
-    assert isinstance(estilo, TextOnlyStyle)
-    assert estilo.standardIcon(QStyle.StandardPixmap.SP_MessageBoxQuestion).isNull()
-    assert estilo.standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning).isNull()
-    assert estilo.standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton).isNull()
-    assert estilo.standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton).isNull()
-    assert not estilo.standardIcon(QStyle.StandardPixmap.SP_ArrowUp).isNull()
-
-
 def test_sobre_o_haradaer(janela, qtbot):
     import haradaer
 
@@ -180,3 +165,16 @@ def test_ajuda_comeca_pelo_manual_com_f1(janela):
     assert janela.help_menu.actions()[0] is janela.manual_action
     assert janela.manual_action.shortcut().toString() in ("F1", "Ctrl+?")
     assert janela.shortcuts_action.shortcut().isEmpty()
+
+
+def test_botoes_dos_dialogos_sem_desenho_e_os_outros_desenhos_ficam(qapp):
+    from PySide6.QtWidgets import QStyle
+
+    from haradaer.gui.theme import TextButtonsStyle, apply_theme, current_theme
+
+    apply_theme(current_theme(), save=False)
+    estilo = qapp.style()
+    assert isinstance(estilo, TextButtonsStyle)
+    for botao in ("SP_DialogCloseButton", "SP_DialogSaveButton", "SP_DialogDiscardButton"):
+        assert estilo.standardIcon(getattr(QStyle.StandardPixmap, botao)).isNull()
+    assert not estilo.standardIcon(QStyle.StandardPixmap.SP_MessageBoxQuestion).isNull()
