@@ -22,3 +22,10 @@ docs/referencia-terraer/criados-no-haradaer/*pelo-terraer*
 
 # Livro da disciplina (direitos autorais): só na máquina do autor
 sistemas-de-banco-de-dados-*.pdf
+
+# Cópias de segurança (podem levar o livro e os gabaritos do TerraER junto)
+*.zip
+# Senhas e chaves de API, se um dia existirem
+.env
+# Permissões do Claude Code aprovadas nesta máquina
+.claude/settings.local.json
