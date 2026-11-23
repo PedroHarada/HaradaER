@@ -362,7 +362,7 @@ Conferência de cada requisito com o programa e os testes (1533 testes automáti
 | RF-26 | Pronto (1.3.0) | `core/commands/text.py` (criar, editar, redimensionar); quebra de linha em `core/appearance/describe.py`; ferramenta, editor e tecla `T` na interface (`ARQUITETURA.md` seção 4.3.2) |
 | RF-27 | Pronto (1.3.0) | `convert_free_texts` em `core/commands/text.py`; aviso ao abrir em `gui/window.py` |
 | RF-28 | Pronto (1.3.0) | `core/appearance/markdown.py` (leitura pelo markdown-it-py) e o desenho em `core/appearance/describe.py` (`ARQUITETURA.md` seção 4.3.2, D-13) |
-| RF-29 | Pronto (não lançado) | `gui/recovery.py`; relógio em `gui/window.py`, pergunta ao abrir em `gui/app.py` |
+| RF-29 | Pronto (1.6.0) | `gui/recovery.py`; relógio em `gui/window.py`, pergunta ao abrir em `gui/app.py` |
 
 Além do pedido: edição dos vértices das conexões e reconexão de pontas (`INVESTIGACOES.md` seção 16) e desvio automático das conexões repetidas (seção 15).
 

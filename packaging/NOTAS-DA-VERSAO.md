@@ -38,6 +38,10 @@ inglês e em espanhol. Depois de aberto, o manual completo está em **Ajuda › 
   passam, mas o uso real ainda está começando: avise se algo estranho acontecer.
 - O pacote do macOS é gerado e testado no macOS 15. Ele deve abrir no macOS 14, mas isso não é
   mais conferido automaticamente.
+- **Novo na 1.6.0 — cópia de recuperação:** enquanto há alterações não salvas, o programa guarda
+  uma cópia a cada minuto, fora do seu arquivo. Se ele fechar de repente, na próxima vez que
+  abrir oferece recuperar as alterações. O intervalo fica em
+  **Configurações › Preferências › Cópia de recuperação**.
 - **Espanhol:** a interface inteira e o manual em espanhol. O idioma se troca em
   **Configurações › Preferências** (ou **Ajuda › Trocar o idioma…**) e vale ao reabrir.
 - **Menus novos**, iguais nos três sistemas: Arquivo, Editar, Organizar, Exibir,
@@ -101,6 +105,9 @@ manual is in **Help › HaradaER Handbook** (F1).
   but real use is just starting: let us know if anything odd happens.
 - The macOS package is built and tested on macOS 15. It should open on macOS 14, but that is no
   longer checked automatically.
+- **New in 1.6.0 — recovery copy:** while there are unsaved changes, the program keeps a copy
+  every minute, outside your file. If it closes unexpectedly, the next time it opens it offers
+  to recover the changes. The interval is in **Settings › Preferences › Recovery copy**.
 - **Spanish:** the whole interface and the manual in Spanish. Change the language in
   **Settings › Preferences** (or **Help › Switch application language…**); it applies on reopening.
 - **New menus**, the same on the three systems: File, Edit, Arrange, View, **Settings** (theme,
