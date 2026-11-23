@@ -1,8 +1,8 @@
 """Configurações › Preferências (Ctrl+,): o que muda raramente e precisa de explicação.
 
 Pelo guia da Apple (Settings), a janela guarda só opções gerais e mudadas raramente: o idioma,
-as atualizações e o Restaurar padrões. O que se usa durante o trabalho fica nos menus
-(Configurações e Exibir), como no menu Configurações do KDE. Uma página só, sem abas.
+as atualizações, a cópia de recuperação e o Restaurar padrões. O que se usa durante o trabalho
+fica nos menus (Configurações e Exibir), como no menu Configurações do KDE. Uma página só, sem abas.
 
 Cada caixa é a mesma ação da janela (`DocumentWindow`), ligada nos dois sentidos, e vale na
 hora; só o idioma vale ao reabrir, como sempre (RNF-06).
@@ -22,12 +22,19 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
 import haradaer
-from haradaer.gui.settings import saved_language
+from haradaer.gui.settings import (
+    RECOVERY_DEFAULT,
+    RECOVERY_MAX,
+    recovery_interval,
+    saved_language,
+    set_recovery_interval,
+)
 from haradaer.gui.theme import LIGHT
 from haradaer.i18n import LANGUAGES, _, language
 
@@ -89,13 +96,24 @@ class PreferencesDialog(QDialog):
         self.check_now_button = QPushButton(_("Verificar &agora"))
         self.check_now_button.clicked.connect(janela.check_updates_action.trigger)
 
+        # 0 desliga; o texto aparece no lugar do número
+        self.recovery_box = QSpinBox()
+        self.recovery_box.setRange(0, RECOVERY_MAX)
+        self.recovery_box.setSpecialValueText(_("Desligada"))
+        self.recovery_box.setSuffix(" " + _("min"))
+        self.recovery_box.setValue(recovery_interval())
+        self.recovery_box.valueChanged.connect(self._recovery_changed)
+        recovery_label = QLabel(_("Gravar a &cada:"))
+        recovery_label.setBuddy(self.recovery_box)
+
         self.restore_button = QPushButton(_("&Restaurar todos os padrões"))
         self.restore_button.clicked.connect(self._ask_restore)
         # A confirmação fica na própria janela, sem outra caixa por cima
         self.confirm_label = QLabel(
             _(
                 "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
-                " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam."
+                " Edição rápida, as atualizações e a cópia de recuperação? O idioma e os"
+                " arquivos recentes não mudam."
             )
         )
         self.confirm_label.setWordWrap(True)
@@ -133,10 +151,26 @@ class PreferencesDialog(QDialog):
                 ),
             )
         )
+        layout.addWidget(
+            _grupo(
+                _("Cópia de recuperação"),
+                _linha(recovery_label, self.recovery_box),
+                _dica(
+                    _(
+                        "Guarda as alterações não salvas fora do arquivo. Se o HaradaER fechar"
+                        " de repente, elas são oferecidas na próxima vez que ele abrir."
+                    )
+                ),
+            )
+        )
         layout.addStretch(1)
         layout.addWidget(self.confirm_row)
         layout.addWidget(botoes)
-        self.resize(460, 300)
+        self.resize(460, 380)
+
+    def _recovery_changed(self, minutos: int) -> None:
+        set_recovery_interval(minutos)
+        self._janela.apply_recovery_interval()  # as outras janelas seguem na próxima gravação
 
     def _ask_restore(self) -> None:
         self.confirm_row.show()
@@ -147,8 +181,8 @@ class PreferencesDialog(QDialog):
 
     def restore_defaults(self) -> None:
         """Tema claro, faixa e barra de status à vista, grade desligada, painéis à vista,
-        verificação e avisos ligados, Edição rápida desligada e verificação de atualizações ao
-        abrir. Idioma e recentes ficam."""
+        verificação e avisos ligados, Edição rápida desligada, verificação de atualizações ao
+        abrir e cópia de recuperação a cada minuto. Idioma e recentes ficam."""
         janela = self._janela
         janela.theme_actions[LIGHT.name].trigger()
         janela.action_show_tools.setChecked(True)
@@ -160,4 +194,5 @@ class PreferencesDialog(QDialog):
         janela.action_structure.setChecked(True)
         janela.action_quick_edit.setChecked(False)
         janela.auto_updates_action.setChecked(True)
+        self.recovery_box.setValue(RECOVERY_DEFAULT)
         self._hide_confirm()

@@ -8,6 +8,8 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # Configurações (recentes, disposição da janela) numa pasta só dos testes, nunca a do usuário.
 os.environ["XDG_CONFIG_HOME"] = tempfile.mkdtemp(prefix="haradaer-testes-")
+# Cópias de recuperação também (XDG_DATA_HOME): nunca as do usuário.
+os.environ["XDG_DATA_HOME"] = tempfile.mkdtemp(prefix="haradaer-dados-")
 
 
 @pytest.fixture(autouse=True)

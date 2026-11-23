@@ -165,6 +165,12 @@ Uma vez por dia, ao abrir, o HaradaER confere no GitHub se há versão nova e av
 baixado sozinho. Para desligar, desmarque
 **Configurações › Preferências › Verificar ao abrir**.
 
+Enquanto há alterações não salvas, o HaradaER guarda a cada minuto uma cópia de recuperação,
+fora do seu arquivo. Se o programa fechar de repente, na próxima vez que abrir ele pergunta se
+você quer recuperar as alterações; o modelo volta como não salvo, e o arquivo original só muda
+quando você salvar. O intervalo (ou Desligada) fica em
+**Configurações › Preferências › Cópia de recuperação**.
+
 Todos os comandos estão em [Como usar](../README.md#como-usar), no README.
 
 ---

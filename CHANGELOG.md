@@ -4,6 +4,18 @@ O que mudou em cada versão do HaradaER. A numeração segue a seção 13 do
 [ARQUITETURA](docs/ARQUITETURA.md): `z` para correções, `y` para funcionalidades novas e `x`
 para mudanças que quebram algo que já funcionava.
 
+## Não lançado
+
+### Adicionado
+
+- **Cópia de recuperação** (RF-29): enquanto há alterações não salvas, cada janela grava uma
+  cópia do modelo a cada minuto na pasta de dados do programa (no Linux,
+  `~/.local/share/HaradaER/recuperacao/`), nunca no arquivo do usuário. A cópia some ao salvar
+  ou ao fechar a janela. Se o programa fechar de repente, na próxima abertura ele oferece
+  **Recuperar**, **Descartar** ou **Decidir depois** (Esc não apaga nada); o modelo recuperado
+  abre como não salvo. O intervalo (1 a 30 minutos, ou Desligada) fica em Configurações ›
+  Preferências › Cópia de recuperação e volta a 1 minuto no Restaurar todos os padrões.
+
 ## 1.5.2 — 2026-11-19
 
 ### Corrigido

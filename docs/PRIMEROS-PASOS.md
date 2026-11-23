@@ -169,6 +169,12 @@ Una vez al día, al abrir, HaradaER comprueba en GitHub si hay versión nueva y 
 descarga nada solo. Para desactivarlo, desmarque
 **Configuración › Preferencias › Buscar al abrir**.
 
+Mientras haya cambios sin guardar, HaradaER guarda cada minuto una copia de recuperación,
+fuera de su archivo. Si el programa se cierra de repente, la próxima vez que se abra pregunta
+si quiere recuperar los cambios; el modelo vuelve sin guardar, y el archivo original solo cambia
+cuando usted guarde. El intervalo (o Desactivada) está en
+**Configuración › Preferencias › Copia de recuperación**.
+
 Todos los comandos están en [Como usar](../README.md#como-usar), en el README (en portugués).
 
 ---

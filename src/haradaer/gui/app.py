@@ -6,13 +6,14 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from PySide6.QtCore import QLibraryInfo, QLocale, QObject, QRectF, QTranslator
+from PySide6.QtCore import QDateTime, QLibraryInfo, QLocale, QObject, QRectF, QTranslator
 from PySide6.QtGui import QIcon, QImage, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtWidgets import QApplication, QFileDialog
+from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 import haradaer
 from haradaer import selfupdate
+from haradaer.gui.recovery import Leftover, leftovers
 from haradaer.gui.settings import RecentFiles, saved_language
 from haradaer.gui.theme import apply_theme, saved_theme
 from haradaer.gui.theme import manager as theme_manager
@@ -80,6 +81,14 @@ class WindowManager(QObject):
         janela.raise_()
         return janela
 
+    def restore(self, sobras: list[Leftover]) -> None:
+        """Abre cada cópia de recuperação numa janela vazia ou nova."""
+        for sobra in sobras:
+            vazia = next((j for j in self.windows if j.is_empty), None)
+            janela = vazia or self.new_window()
+            if not janela.restore(sobra) and vazia is None:
+                janela.close()
+
     def ask_and_open(self, pai: DocumentWindow) -> None:
         arquivos, _filtro = QFileDialog.getOpenFileNames(
             pai,
@@ -89,6 +98,52 @@ class WindowManager(QObject):
         )
         for arquivo in arquivos:
             self.open_path(Path(arquivo))
+
+
+def recovery_question(sobras: list[Leftover]) -> str:
+    """Pergunta se recupera as cópias que sobraram. Devolve "recuperar", "descartar" ou
+    "depois" (as cópias ficam para a próxima abertura)."""
+    linhas = [
+        f"• {s.original.name if s.original else _('Sem título')}"
+        f" ({s.original.parent if s.original else _('nunca salvo')}),"
+        f" {QLocale().toString(QDateTime(s.when), QLocale.FormatType.ShortFormat)}"
+        for s in sobras
+    ]
+    caixa = QMessageBox()
+    caixa.setWindowTitle(_("Recuperar alterações"))
+    caixa.setText(
+        _("O HaradaER fechou sem salvar estes modelos. Recuperar as alterações?")
+        + "\n\n"
+        + "\n".join(linhas)
+    )
+    caixa.setInformativeText(
+        _("Os modelos abrem como não salvos; os arquivos originais só mudam quando você salvar.")
+    )
+    recuperar = caixa.addButton(_("Recuperar"), QMessageBox.ButtonRole.AcceptRole)
+    descartar = caixa.addButton(_("Descartar"), QMessageBox.ButtonRole.DestructiveRole)
+    depois = caixa.addButton(_("Decidir depois"), QMessageBox.ButtonRole.RejectRole)
+    caixa.setDefaultButton(recuperar)
+    caixa.setEscapeButton(depois)  # Esc nunca apaga nada
+    caixa.exec()
+    clicado = caixa.clickedButton()
+    if clicado is recuperar:
+        return "recuperar"
+    if clicado is descartar:
+        return "descartar"
+    return "depois"
+
+
+def offer_recovery(gerenciador: WindowManager) -> None:
+    """Na abertura, oferece as cópias de recuperação que sobraram de um fechamento repentino."""
+    sobras = leftovers()
+    if not sobras:
+        return
+    resposta = recovery_question(sobras)
+    if resposta == "recuperar":
+        gerenciador.restore(sobras)
+    elif resposta == "descartar":
+        for sobra in sobras:
+            sobra.discard()
 
 
 QT_TRANSLATIONS = {"pt": "qtbase_pt_BR", "es": "qtbase_es"}
@@ -146,6 +201,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         gerenciador.open_path(caminho)
     if not gerenciador.windows:
         return 1
+    offer_recovery(gerenciador)
     selfupdate.cleanup_old(selfupdate.install_target())  # o .old de uma atualização anterior
     gerenciador.windows[0].update_checker.check_if_due()  # no máximo uma vez por dia (RF-22)
     return app.exec()

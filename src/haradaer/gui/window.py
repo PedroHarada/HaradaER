@@ -6,7 +6,7 @@ import errno
 from pathlib import Path
 
 import shiboken6
-from PySide6.QtCore import QEvent, QMimeData, Qt, QUrl, Signal
+from PySide6.QtCore import QEvent, QMimeData, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -54,11 +54,13 @@ from haradaer.gui.palette import CONNECTIONS, ELEMENTS, TEXTS
 from haradaer.gui.preferences_dialog import PreferencesDialog
 from haradaer.gui.properties import PropertiesPanel
 from haradaer.gui.qt_utils import QtMeasurer
+from haradaer.gui.recovery import Leftover, RecoveryCopy
 from haradaer.gui.scene import DiagramScene
 from haradaer.gui.scene.items import WARNING_COLOR
 from haradaer.gui.settings import (
     RecentFiles,
     quick_edit_enabled,
+    recovery_interval,
     save_window_layout,
     saved_language,
     set_quick_edit_enabled,
@@ -198,6 +200,12 @@ class DocumentWindow(QMainWindow):
         self.statusBar().insertPermanentWidget(0, self.issues_button)
         self._quick_edit_toggled(self.action_quick_edit.isChecked())
         self._restore_layout()
+        # Cópia de recuperação de tempos em tempos, fora do arquivo do usuário
+        self.recovery = RecoveryCopy()
+        self._recovery_failed = False
+        self._recovery_timer = QTimer(self)
+        self._recovery_timer.timeout.connect(self.save_recovery)
+        self.apply_recovery_interval()
         self._attach(Document.new(), None)
 
     # --- menus e ferramentas -----------------------------------------------------------------
@@ -828,6 +836,52 @@ class DocumentWindow(QMainWindow):
             + "\n".join(linhas),
         )
 
+    def restore(self, sobra: Leftover) -> bool:
+        """Abre uma cópia de recuperação que sobrou, como modelo alterado e ainda não salvo:
+        o arquivo original só muda quando o usuário salvar."""
+        try:
+            documento = io.load(sobra.copy)
+        except (ArquivoInvalidoError, OSError) as erro:
+            QMessageBox.critical(
+                self, _("Não foi possível recuperar o modelo"), f"{sobra.copy.name}\n\n{erro}"
+            )
+            return False
+        self._attach(documento, sobra.original)
+        self._editor.history.mark_dirty()
+        self.save_recovery()  # a cópia passa a ser desta janela antes de apagar a antiga
+        sobra.discard()
+        return True
+
+    def apply_recovery_interval(self) -> None:
+        """Segue o intervalo das Preferências; 0 desliga a cópia de recuperação."""
+        minutos = recovery_interval()
+        if minutos:
+            self._recovery_timer.start(minutos * 60_000)
+        else:
+            self._recovery_timer.stop()
+
+    def save_recovery(self) -> None:
+        """Grava a cópia de recuperação se houver alteração não salva."""
+        minutos = recovery_interval()
+        ativo = self._recovery_timer.isActive()
+        if (ativo and self._recovery_timer.interval()) != minutos * 60_000:
+            self.apply_recovery_interval()  # mudado nas Preferências de outra janela
+        if not minutos or not self._editor.history.is_dirty:
+            return
+        try:
+            self.recovery.write(self._editor.document, self.path)
+        except OSError as erro:
+            if not self._recovery_failed:  # avisa uma vez só, na barra de status
+                self._recovery_failed = True
+                self.statusBar().showMessage(
+                    _("Não foi possível gravar a cópia de recuperação: {erro}").format(
+                        erro=erro.strerror or erro
+                    ),
+                    8000,
+                )
+            return
+        self._recovery_failed = False
+
     def save(self) -> bool:
         """Grava no arquivo atual (ou pergunta onde). Devolve `False` se não gravou."""
         if self.path is None:
@@ -1062,6 +1116,8 @@ class DocumentWindow(QMainWindow):
         self.action_undo.setText(f"{_('&Desfazer')} {_(historico.undo_label)}".rstrip())
         self.action_redo.setText(f"{_('&Refazer')} {_(historico.redo_label)}".rstrip())
         self._update_title()
+        if not historico.is_dirty and self.recovery.exists:
+            self.recovery.remove()  # salvo: a cópia não serve mais
         self._refresh_issues()
         self.inspector.refresh(self._editor.document)
         self._selection_changed()
@@ -1245,6 +1301,8 @@ class DocumentWindow(QMainWindow):
         if self._editor.history.is_dirty and not self._confirm_discard():
             event.ignore()
             return
+        self._recovery_timer.stop()
+        self.recovery.remove()  # salvo ou descartado: nada a recuperar
         save_window_layout(self.saveGeometry(), self.saveState())
         self.closed.emit(self)
         super().closeEvent(event)

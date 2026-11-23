@@ -461,11 +461,6 @@ EN: dict[str, str] = {
     "A verificação está desligada (Configurações › Verificar modelo).": (
         "Checking is off (Settings › Check model)."
     ),
-    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
-    " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam.": (
-        "Reset the theme, bars, grid, panels, checking, Quick editing and updates to the"
-        " defaults? The language and recent files don't change."
-    ),
     "Trocar o &idioma…": "Switch application &language…",
     "&Manual do HaradaER": "HaradaER &Handbook",
     "Manual do HaradaER": "HaradaER Handbook",
@@ -474,4 +469,35 @@ EN: dict[str, str] = {
     "Pró&ximo": "&Next",
     "{atual} de {total}": "{atual} of {total}",
     "D&esmarcar tudo": "Dese&lect all",
+    # Cópia de recuperação (Preferências e pergunta ao abrir)
+    "Cópia de recuperação": "Recovery copy",
+    "Gravar a &cada:": "Save &every:",
+    "Desligada": "Off",
+    "min": "min",
+    "Guarda as alterações não salvas fora do arquivo. Se o HaradaER fechar"
+    " de repente, elas são oferecidas na próxima vez que ele abrir.": (
+        "Keeps unsaved changes outside the file. If HaradaER closes unexpectedly, they are"
+        " offered the next time it opens."
+    ),
+    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
+    " Edição rápida, as atualizações e a cópia de recuperação? O idioma e os arquivos"
+    " recentes não mudam.": (
+        "Reset the theme, bars, grid, panels, checking, Quick editing, updates and recovery"
+        " copy to the defaults? The language and recent files don't change."
+    ),
+    "Recuperar alterações": "Recover changes",
+    "O HaradaER fechou sem salvar estes modelos. Recuperar as alterações?": (
+        "HaradaER closed without saving these models. Recover the changes?"
+    ),
+    "Os modelos abrem como não salvos; os arquivos originais só mudam quando você salvar.": (
+        "The models open as unsaved; the original files only change when you save."
+    ),
+    "Recuperar": "Recover",
+    "Descartar": "Discard",
+    "Decidir depois": "Decide later",
+    "nunca salvo": "never saved",
+    "Não foi possível recuperar o modelo": "Could not recover the model",
+    "Não foi possível gravar a cópia de recuperação: {erro}": (
+        "Could not save the recovery copy: {erro}"
+    ),
 }

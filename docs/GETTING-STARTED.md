@@ -163,6 +163,11 @@ Once a day, when opening, HaradaER checks GitHub for a new version and lets you 
 is downloaded by itself. To turn it off, uncheck
 **Settings › Preferences › Check when opening**.
 
+While there are unsaved changes, HaradaER keeps a recovery copy every minute, outside your
+file. If the program closes unexpectedly, the next time it opens it asks whether you want to
+recover the changes; the model comes back unsaved, and the original file only changes when you
+save. The interval (or Off) is in **Settings › Preferences › Recovery copy**.
+
 All commands are in [Como usar](../README.md#como-usar), in the README (in Portuguese).
 
 ---

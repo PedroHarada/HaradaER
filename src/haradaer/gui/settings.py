@@ -19,6 +19,9 @@ LANGUAGE_KEY = "aparencia/idioma"
 UPDATES_KEY = "atualizacoes/verificar"
 LAST_CHECK_KEY = "atualizacoes/ultima-verificacao"
 STATUS_BAR_KEY = "janela/barra-de-status"
+RECOVERY_KEY = "recuperacao/intervalo-minutos"
+RECOVERY_DEFAULT = 1
+RECOVERY_MAX = 30
 
 
 def settings() -> QSettings:
@@ -136,4 +139,19 @@ def status_bar_enabled() -> bool:
 def set_status_bar_enabled(ligado: bool) -> None:
     config = settings()
     config.setValue(STATUS_BAR_KEY, ligado)
+    config.sync()
+
+
+def recovery_interval() -> int:
+    """Minutos entre as cópias de recuperação (Preferências); 0 desliga. Padrão: 1 minuto."""
+    try:
+        minutos = int(settings().value(RECOVERY_KEY, RECOVERY_DEFAULT))
+    except TypeError, ValueError:
+        return RECOVERY_DEFAULT
+    return min(max(minutos, 0), RECOVERY_MAX)
+
+
+def set_recovery_interval(minutos: int) -> None:
+    config = settings()
+    config.setValue(RECOVERY_KEY, int(minutos))
     config.sync()

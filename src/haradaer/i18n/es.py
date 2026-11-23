@@ -459,12 +459,6 @@ ES: dict[str, str] = {
     "A verificação está desligada (Configurações › Verificar modelo).": (
         "La verificación está desactivada (Configuración › Verificar modelo)."
     ),
-    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
-    " Edição rápida e as atualizações? O idioma e os arquivos recentes não mudam.": (
-        "¿Volver a los valores predeterminados el tema, las barras, la cuadrícula, los"
-        " paneles, la verificación, la Edición rápida y las actualizaciones? El idioma y los"
-        " archivos recientes no cambian."
-    ),
     "Trocar o &idioma…": "Cambiar el idio&ma…",
     "&Manual do HaradaER": "Ma&nual de HaradaER",
     "Manual do HaradaER": "Manual de HaradaER",
@@ -473,4 +467,36 @@ ES: dict[str, str] = {
     "Pró&ximo": "&Siguiente",
     "{atual} de {total}": "{atual} de {total}",
     "D&esmarcar tudo": "D&eseleccionar todo",
+    # Cópia de recuperação (Preferências e pergunta ao abrir)
+    "Cópia de recuperação": "Copia de recuperación",
+    "Gravar a &cada:": "Guardar &cada:",
+    "Desligada": "Desactivada",
+    "min": "min",
+    "Guarda as alterações não salvas fora do arquivo. Se o HaradaER fechar"
+    " de repente, elas são oferecidas na próxima vez que ele abrir.": (
+        "Guarda los cambios sin guardar fuera del archivo. Si HaradaER se cierra de repente,"
+        " se ofrecen la próxima vez que se abra."
+    ),
+    "Voltar ao padrão o tema, as barras, a grade, os painéis, a verificação, a"
+    " Edição rápida, as atualizações e a cópia de recuperação? O idioma e os arquivos"
+    " recentes não mudam.": (
+        "¿Volver a los valores predeterminados el tema, las barras, la cuadrícula, los"
+        " paneles, la verificación, la Edición rápida, las actualizaciones y la copia de"
+        " recuperación? El idioma y los archivos recientes no cambian."
+    ),
+    "Recuperar alterações": "Recuperar cambios",
+    "O HaradaER fechou sem salvar estes modelos. Recuperar as alterações?": (
+        "HaradaER se cerró sin guardar estos modelos. ¿Recuperar los cambios?"
+    ),
+    "Os modelos abrem como não salvos; os arquivos originais só mudam quando você salvar.": (
+        "Los modelos se abren sin guardar; los archivos originales solo cambian al guardar."
+    ),
+    "Recuperar": "Recuperar",
+    "Descartar": "Descartar",
+    "Decidir depois": "Decidir después",
+    "nunca salvo": "nunca guardado",
+    "Não foi possível recuperar o modelo": "No se pudo recuperar el modelo",
+    "Não foi possível gravar a cópia de recuperação: {erro}": (
+        "No se pudo guardar la copia de recuperación: {erro}"
+    ),
 }
